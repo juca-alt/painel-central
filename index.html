@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Painel Central",
+  "schemaVersion": 1,
+  "description": "Painel Central do Gustavo (Jucá2.0) — painel único: agenda viva do Google Calendar (8 categorias), Tarefas ao vivo da planilha Central de Tarefas (Backlog + Bússola + atrasadas), Inbox Geral (email #inbox + Dump da planilha), Feira estoque-driven, Saúde, Provas Camila, atalhos pré-conectados ao ecossistema (Google Tasks, Gmail, Kommo, Trello, Organizze, Gemini) e Fôlego discreto.",
+  "mcpTools": [
+    "mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__list_events",
+    "mcp__52f54413-7c52-4d16-842e-ab7145324b3d__read_file_content",
+    "mcp__66384105-b7c1-4a11-b7e4-8b3258bcfadf__search_threads"
+  ],
+  "mcpServerNames": [
+    "Google Calendar",
+    "Google Drive",
+    "Gmail"
+  ]
+}
+</script>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Central</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1c2128">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Painel">
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#f5f6f8; --card:#ffffff; --line:#e4e7ec; --txt:#1c2430; --muted:#6b7585;
+    --accent:#2f6bdc; --accent-soft:#eaf1fd;
+    --side:#1c2128; --side-txt:#e7e9ee; --side-muted:#9aa3b2; --side-line:#2a2f3a; --side-active:#262c36;
+    --ok:#1f9d61; --ok-soft:#e7f6ee; --warn:#b97b12; --warn-soft:#fdf3e2; --danger:#cf4438; --danger-soft:#fdecea;
+    --chip:#eef1f5;
+    --c-comercial:#2f6bdc; --c-mfb:#4f5ed1; --c-pipeline:#0e8a8a; --c-gael:#1f9d61;
+    --c-pessoal:#b97b12; --c-rotina:#6b7585; --c-lembrete:#a35cc4; --c-camila:#d4567f; --c-bo:#5d6b7e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--txt);font-size:15px}
+  .app{display:flex;min-height:100vh}
+  .side{width:212px;background:var(--side);color:var(--side-txt);padding:18px 12px;flex-shrink:0;
+    display:flex;flex-direction:column;border-right:1px solid var(--side-line)}
+  .brand{font-weight:700;font-size:17px;padding:6px 10px 16px;letter-spacing:.2px}
+  .brand small{display:block;color:var(--side-muted);font-weight:400;font-size:11px;margin-top:2px}
+  .nav a{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;color:var(--side-muted);
+    text-decoration:none;font-size:14px;margin-bottom:3px;cursor:pointer}
+  .nav a.active{background:var(--side-active);color:var(--side-txt)}
+  .nav a:hover{color:var(--side-txt)}
+  .nav .tag{margin-left:auto;font-size:9px;background:#2a2f3a;color:var(--side-muted);padding:2px 6px;border-radius:20px}
+  .nav .bdg{margin-left:auto;font-size:10px;background:var(--danger);color:#fff;padding:1px 7px;border-radius:20px;display:none}
+  .side-foot{margin-top:auto;padding:10px}
+  .folego{background:#22272f;border:1px solid var(--side-line);border-radius:10px;padding:10px 12px}
+  .folego .fl-t{font-size:12px;color:var(--side-muted);display:flex;align-items:center;gap:6px}
+  .folego .fl-n{font-size:22px;font-weight:700;color:#7fd9a8;margin:3px 0 1px}
+  .folego .fl-s{font-size:10.5px;color:var(--side-muted)}
+  .folego button{margin-top:8px;width:100%;background:#2a313c;border:1px solid #343b47;color:#cdd3dd;
+    border-radius:7px;padding:5px 0;font-size:11.5px;cursor:pointer}
+  .folego button:disabled{opacity:.45;cursor:default}
+  .main{flex:1;padding:22px 26px;max-width:1100px}
+  h1{font-size:21px;margin:0}
+  .sub{color:var(--muted);font-size:13px;margin:2px 0 18px}
+  .head{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .card.click{cursor:pointer}
+  .card.click:hover{border-color:var(--accent)}
+  .card .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .card .v{font-size:22px;font-weight:700;margin-top:4px}
+  .card .v.red{color:var(--danger)}
+  .card .s{font-size:12px;color:var(--muted);margin-top:2px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .panel h3{margin:0;padding:11px 15px;background:#fafbfc;border-bottom:1px solid var(--line);font-size:14px;
+    display:flex;align-items:center;gap:8px}
+  .panel h3 .count{margin-left:auto;color:var(--muted);font-size:12px;font-weight:400}
+  .row{display:flex;align-items:center;gap:10px;padding:10px 15px;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .row .tm{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12.5px;width:88px;flex-shrink:0}
+  .row .tm.late{color:var(--danger);font-weight:600}
+  .row .nm{flex:1;min-width:0}
+  .row .nm small{color:var(--muted);display:block;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chip{font-size:10.5px;padding:2px 9px;border-radius:20px;color:#fff;white-space:nowrap}
+  .alert{border:1px solid var(--line);border-left:4px solid var(--c-camila);background:var(--card);
+    border-radius:12px;padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+  .alert .a-t{font-weight:600}
+  .alert .a-s{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .alert .a-d{margin-left:auto;font-size:24px;font-weight:700;color:var(--c-camila)}
+  .alert .a-d small{font-size:11px;color:var(--muted);display:block;font-weight:400;text-align:right}
+  .btn{background:var(--card);border:1px solid var(--line);color:var(--txt);padding:8px 12px;border-radius:9px;
+    cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .empty{color:var(--muted);padding:26px;text-align:center;border:1px dashed var(--line);border-radius:12px;background:var(--card)}
+  .loading{color:var(--muted);padding:20px;text-align:center;font-size:13px}
+  .errbox{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--card);border-radius:12px;
+    padding:13px 16px;margin-bottom:14px;font-size:13.5px}
+  .errbox .e-t{font-weight:600;margin-bottom:3px}
+  .errbox .e-s{color:var(--muted);font-size:12.5px}
+  .tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+  .tabs button{background:none;border:none;color:var(--muted);padding:10px 14px;cursor:pointer;font-size:14px;
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button.active{color:var(--txt);border-bottom-color:var(--accent)}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+  .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{background:none;border:none;color:var(--muted);padding:8px 13px;cursor:pointer;font-size:13px}
+  .seg button.active{background:var(--accent);color:#fff}
+  .spacer{flex:1}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:13.5px}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px;background:#fafbfc}
+  tr:last-child td{border-bottom:none}
+  td input,td select{background:#fff;border:1px solid var(--line);color:var(--txt);border-radius:7px;
+    padding:6px 8px;font-size:13px;width:100%}
+  td.num input{width:64px}
+  .pill{font-size:11px;padding:2px 9px;border-radius:20px;display:inline-block;white-space:nowrap}
+  .pill.low{background:var(--danger-soft);color:var(--danger)}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)}
+  .pill.wn{background:var(--warn-soft);color:var(--warn)}
+  .pill.nt{background:var(--chip);color:var(--muted)}
+  .x{color:var(--muted);cursor:pointer;border:none;background:none;font-size:16px;padding:4px}
+  .x:hover{color:var(--danger)}
+  .grp{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .grp h3{margin:0;padding:11px 15px;background:#fafbfc;font-size:14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+  .grp h3 .count{margin-left:auto;color:var(--muted);font-size:12px;font-weight:400}
+  .grp .row .q{color:var(--muted);font-size:12.5px;white-space:nowrap}
+  .grp .row select{background:#fff;border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:5px 7px;font-size:12px}
+  .note{font-size:12px;color:var(--muted);margin-top:6px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--side);color:var(--side-txt);
+    padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1}
+  .mail{padding:11px 15px;border-bottom:1px solid var(--line)}
+  .mail:last-child{border-bottom:none}
+  .mail .m-s{font-weight:600;font-size:13.5px}
+  .mail .m-x{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .mail .m-f{color:var(--muted);font-size:11px;margin-top:3px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px;cursor:pointer;transition:.15s}
+  .tile:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(47,107,220,.08)}
+  .tile .t-i{font-size:22px}
+  .tile .t-n{font-weight:600;font-size:14px;margin-top:7px}
+  .tile .t-d{color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.4}
+  .tile .t-k{margin-top:8px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .tile .t-k.live{color:var(--ok)}
+  /* ===== agenda: visões estilo Google Agenda ===== */
+  .abar-t{font-weight:600;font-size:14.5px;text-transform:capitalize}
+  .cal-grid{display:grid;gap:8px;align-items:start}
+  .cal-col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;min-height:130px}
+  .cal-h{text-align:center;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:3px 0 8px}
+  .cal-h b{display:block;font-size:16px;color:var(--txt);font-weight:600;margin-top:2px}
+  .cal-h.today b{background:var(--accent);color:#fff;border-radius:50%;width:27px;height:27px;line-height:27px;margin:2px auto 0}
+  .ev{font-size:11.5px;border-left:3px solid var(--accent);background:#f6f8fb;border-radius:6px;padding:4px 7px;margin-bottom:4px;line-height:1.35;overflow:hidden}
+  .ev .ev-t{color:var(--muted);font-size:10px;display:block;font-variant-numeric:tabular-nums}
+  .ev.all{background:var(--chip)}
+  .ev.mini{padding:2px 5px;font-size:10px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5}
+  .mes-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .mes-h{text-align:center;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:3px 0}
+  .mes-cell{background:var(--card);border:1px solid var(--line);border-radius:9px;min-height:86px;padding:5px;cursor:pointer;overflow:hidden}
+  .mes-cell:hover{border-color:var(--accent)}
+  .mes-cell.out{opacity:.4}
+  .mes-cell .dnum{font-size:11.5px;font-weight:600;margin-bottom:3px}
+  .mes-cell.today .dnum{background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;line-height:20px;text-align:center}
+  .mes-more{font-size:10px;color:var(--muted)}
+  .t-sec{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px;font-weight:600}
+  .t-sec:first-child{margin-top:0}
+  /* ===== responsivo: nav NUNCA some — vira topbar ===== */
+  @media(max-width:880px){
+    .app{flex-direction:column}
+    .side{width:auto;flex-direction:row;align-items:center;gap:6px;padding:8px 10px;
+      border-right:none;border-bottom:1px solid var(--side-line);overflow-x:auto;position:sticky;top:0;z-index:5}
+    .brand{display:none}
+    .nav{display:flex;flex-direction:row;gap:2px}
+    .nav a{white-space:nowrap;padding:7px 10px;font-size:12.5px;margin-bottom:0}
+    .side-foot{margin:0;padding:0;margin-left:auto}
+    .folego{display:flex;align-items:center;gap:7px;padding:5px 9px;border-radius:9px}
+    .folego .fl-n{font-size:13px;margin:0}
+    .folego .fl-s{display:none}
+    .folego button{margin:0;width:auto;padding:4px 8px;white-space:nowrap}
+    .main{padding:14px}
+    .cal-grid{gap:5px}
+    .mes-cell{min-height:64px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">Painel Central<small>tudo é uma coisa só</small></div>
+    <nav class="nav">
+      <a id="nav-hoje" class="active" onclick="nav('hoje')">🏠 Hoje</a>
+      <a id="nav-tarefas" onclick="nav('tarefas')">✅ Tarefas <span class="bdg" id="bdg-atr"></span></a>
+      <a id="nav-inbox" onclick="nav('inbox')">📬 Inbox Geral <span class="bdg" id="bdg-inb"></span></a>
+      <a id="nav-feira" onclick="nav('feira')">🛒 Feira</a>
+      <a id="nav-saude" onclick="nav('saude')">🍃 Saúde</a>
+      <a id="nav-camila" onclick="nav('camila')">📚 Provas Camila</a>
+      <a id="nav-atalhos" onclick="nav('atalhos')">🔗 Atalhos</a>
+    </nav>
+    <div class="side-foot">
+      <div class="folego">
+        <div class="fl-t">🫁 Fôlego</div>
+        <div class="fl-n" id="fl-n">0</div>
+        <div class="fl-s" id="fl-s">dias somados</div>
+        <button id="fl-btn" onclick="folegoHoje()">✓ marcar hoje</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- ============ HOJE ============ -->
+    <section id="view-hoje">
+      <div class="head"><h1 id="saudacao">Hoje</h1></div>
+      <div class="sub" id="data-hoje"></div>
+      <div id="cutucadas"></div>
+      <div class="cards">
+        <div class="card click" onclick="nav('tarefas')"><div class="k">Tarefas abertas</div><div class="v" id="h-ab">–</div><div class="s">na Central de Tarefas</div></div>
+        <div class="card click" onclick="nav('tarefas')"><div class="k">Atrasadas</div><div class="v red" id="h-atr">–</div><div class="s">prazo vencido</div></div>
+        <div class="card click" onclick="nav('inbox')"><div class="k">Inbox geral</div><div class="v" id="h-inb">–</div><div class="s">capturas sem triagem</div></div>
+      </div>
+      <div class="bar">
+        <button class="btn sm" onclick="aShift(-1)" title="anterior">‹</button>
+        <button class="btn sm" onclick="aHoje()">Hoje</button>
+        <button class="btn sm" onclick="aShift(1)" title="próximo">›</button>
+        <div class="abar-t" id="a-titulo"></div>
+        <div class="spacer"></div>
+        <div class="seg" id="aviews">
+          <button data-v="dia" onclick="setAView('dia')">Dia</button>
+          <button class="active" data-v="d4" onclick="setAView('d4')">4 dias</button>
+          <button data-v="semana" onclick="setAView('semana')">Semana</button>
+          <button data-v="mes" onclick="setAView('mes')">Mês</button>
+        </div>
+      </div>
+      <div id="agenda-out"><div class="loading">Carregando tua agenda do Google Calendar…</div></div>
+    </section>
+
+    <!-- ============ TAREFAS ============ -->
+    <section id="view-tarefas" style="display:none">
+      <div class="head"><h1>✅ Tarefas</h1></div>
+      <div class="sub">Ao vivo da planilha Central de Tarefas (Backlog + Bússola). Edição é lá — aqui é visão e foco.</div>
+      <div class="bar">
+        <div class="seg" id="tfiltro">
+          <button class="active" data-f="abertas" onclick="setTFiltro('abertas')">Abertas</button>
+          <button data-f="atrasadas" onclick="setTFiltro('atrasadas')">Atrasadas</button>
+          <button data-f="todas" onclick="setTFiltro('todas')">Todas</button>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn" onclick="openLink(SHEET_URL)">📊 Abrir planilha</button>
+        <button class="btn" onclick="openLink('https://tasks.google.com')">☑ Google Tasks</button>
+      </div>
+      <div class="cards">
+        <div class="card"><div class="k">Abertas</div><div class="v" id="t-ab">–</div><div class="s">backlog ativo</div></div>
+        <div class="card"><div class="k">Atrasadas</div><div class="v red" id="t-atr">–</div><div class="s">prazo vencido</div></div>
+        <div class="card"><div class="k">Concluídas</div><div class="v" id="t-done">–</div><div class="s">backlog + arquivo</div></div>
+      </div>
+      <div id="bussola-out"></div>
+      <div id="tarefas-out"><div class="loading">Lendo a Central de Tarefas no Drive…</div></div>
+    </section>
+
+    <!-- ============ INBOX GERAL ============ -->
+    <section id="view-inbox" style="display:none">
+      <div class="head"><h1>📬 Inbox Geral</h1></div>
+      <div class="sub">Um funil só de captura: email <b>#inbox</b> + Dump da planilha. Joga aqui primeiro, qualifica depois.</div>
+      <div class="bar">
+        <button class="btn primary" onclick="capturar()">✉️ Capturar por email</button>
+        <button class="btn" onclick="copyText('juca@segurocomjuca.com','Endereço copiado — assunto: #inbox')">📋 Copiar endereço</button>
+        <div class="spacer"></div>
+        <button class="btn" onclick="openLink(SHEET_URL)">📊 Abrir Dump na planilha</button>
+      </div>
+      <div id="inbox-out"><div class="loading">Buscando emails #inbox…</div></div>
+      <div id="dump-out"><div class="loading">Lendo o Dump da planilha…</div></div>
+    </section>
+
+    <!-- ============ FEIRA ============ -->
+    <section id="view-feira" style="display:none">
+      <div class="head"><h1>🛒 Feira</h1></div>
+      <div class="sub">Estoque-driven: a lista cai do que está abaixo do mínimo. Elas só conferem o que acabou.</div>
+      <div class="cards">
+        <div class="card"><div class="k">Itens pra repor</div><div class="v" id="c-itens">–</div><div class="s">abaixo do mínimo</div></div>
+        <div class="card"><div class="k">Estimativa</div><div class="v" id="c-est">–</div><div class="s">pelo último preço</div></div>
+        <div class="card"><div class="k">Catálogo</div><div class="v" id="c-cat">–</div><div class="s">itens no estoque</div></div>
+      </div>
+      <div class="tabs">
+        <button id="tab-lista" class="active" onclick="show('lista')">Lista de compras</button>
+        <button id="tab-estoque" onclick="show('estoque')">Estoque</button>
+      </div>
+      <section id="view-lista">
+        <div class="bar">
+          <button class="btn primary" onclick="gerar()">⚙️ Gerar lista do estoque</button>
+          <div class="seg" id="filtro">
+            <button class="active" data-f="tudo" onclick="setFiltro('tudo')">Tudo</button>
+            <button data-f="super" onclick="setFiltro('super')">Supermercado</button>
+            <button data-f="online" onclick="setFiltro('online')">Online</button>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn" onclick="copiar()">📋 Copiar</button>
+          <button class="btn" onclick="baixarTxt()">⬇ .txt</button>
+        </div>
+        <div id="lista-out"></div>
+      </section>
+      <section id="view-estoque" style="display:none">
+        <div class="bar">
+          <button class="btn" onclick="addItem()">➕ Adicionar item</button>
+          <label class="btn" style="margin:0">📂 Importar .csv
+            <input type="file" id="csvfile" accept=".csv" style="display:none" onchange="importCsv(this)">
+          </label>
+          <button class="btn" onclick="baixarCsv()">⬇ Baixar .csv</button>
+          <div class="spacer"></div>
+          <button class="btn" onclick="restaurar()">↺ Restaurar exemplo</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Item</th><th>Marca</th><th>Categoria</th><th>Canal</th>
+            <th>Un.</th><th>Mín.</th><th>Atual</th><th>Status</th><th></th>
+          </tr></thead>
+          <tbody id="estoque-body"></tbody>
+        </table>
+        <div class="note">Formato do CSV (igual ao Sheet "Feira (Casa)"): item, marca, categoria, canal, unidade, minimo, atual, preco_ultimo. Canais: presencial, delivery, amazon, shopee, mercadolivre.</div>
+      </section>
+    </section>
+
+    <!-- ============ SAÚDE ============ -->
+    <section id="view-saude" style="display:none">
+      <div class="head"><h1>🍃 Saúde</h1></div>
+      <div class="sub">O que a Bússola e a Central de Tarefas dizem sobre saúde — tua e do Gael. Ao vivo da planilha.</div>
+      <div id="saude-out"><div class="loading">Lendo a planilha…</div></div>
+    </section>
+
+    <!-- ============ CAMILA ============ -->
+    <section id="view-camila" style="display:none">
+      <div class="head"><h1>📚 Provas Camila</h1></div>
+      <div class="sub">As provas já caem no Calendar (categoria CAMILA). Aqui é a camada de cuidado: despachar a pesquisa pro Claude.</div>
+      <div id="camila-out"><div class="loading">Procurando eventos CAMILA no Calendar…</div></div>
+      <div class="panel">
+        <h3>🔎 Despachar pesquisa pro Claude</h3>
+        <div style="padding:13px 15px;font-size:13.5px">
+          <div style="color:var(--muted);margin-bottom:10px">Clica, e eu copio um prompt pronto. É só colar no chat que eu pesquiso o assunto e trago o resumo pra ela.</div>
+          <button class="btn primary" onclick="despachoProva()">📋 Copiar prompt de pesquisa</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ATALHOS ============ -->
+    <section id="view-atalhos" style="display:none">
+      <div class="head"><h1>🔗 Atalhos</h1></div>
+      <div class="sub">Tudo que ainda não vive integrado fica pré-conectado: 1 clique abre. Se o app bloquear a aba, eu copio o link pra ti colar.</div>
+      <div id="tiles-out"></div>
+      <div class="note" style="margin-top:14px">MÓDULO = abre aqui dentro · LIVE = dado aparece no painel · LINK = abre o app/site (se a aba for bloqueada, copio o link).</div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= util ================= */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function num(n){ return (n==null||isNaN(n))?0:n; }
+function toast(m){ var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2200); }
+function copyText(t,msg){
+  function fb(){ var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast(msg);}catch(e){toast("Não consegui copiar");}a.remove(); }
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){toast(msg);},fb); } else fb();
+}
+function openLink(u){
+  var w=null;
+  try{ w=window.open(u,"_blank"); }catch(e){}
+  if(!w){ copyText(u,"Aba bloqueada — link copiado, cola no navegador"); }
+}
+function unwrap(r){
+  if(!r) throw new Error("sem resposta");
+  if(r.isError){ var m=(r.content&&r.content[0]&&r.content[0].text)||"erro no conector"; throw new Error(m); }
+  if(r.structuredContent) return r.structuredContent;
+  var t=r.content&&r.content[0]&&r.content[0].text;
+  try{ return JSON.parse(t); }catch(e){ return {raw:t}; }
+}
+function fmt2(d){ return (d<10?"0":"")+d; }
+function hora(iso){ var d=new Date(iso); return fmt2(d.getHours())+":"+fmt2(d.getMinutes()); }
+var DIAS=["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
+function isoLocal(d){ return d.getFullYear()+"-"+fmt2(d.getMonth()+1)+"-"+fmt2(d.getDate()); }
+
+/* ================= constantes de conexão ================= */
+var TOOL_CAL="mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__list_events";
+var TOOL_DRIVE="mcp__52f54413-7c52-4d16-842e-ab7145324b3d__read_file_content";
+var TOOL_GMAIL="mcp__66384105-b7c1-4a11-b7e4-8b3258bcfadf__search_threads";
+var SHEET_ID="1Am0Z2e4qoYPpy8eUNIzpPBn_30f9Fzsl64CwS1IVx9M";
+var SHEET_URL="https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/edit";
+
+/* ===== dual-mode: ao vivo no Cowork, degrada no standalone (GitHub Pages) ===== */
+var COWORK = !!(window.cowork && typeof window.cowork.callMcpTool === "function");
+function mcp(tool,args){
+  if(!COWORK) return Promise.reject(new Error("__STANDALONE__"));
+  return window.cowork.callMcpTool(tool,args);
+}
+function liveStub(titulo, btn){
+  return '<div class="errbox"><div class="e-t">🔌 '+titulo+' — ao vivo em breve</div>'+
+    '<div class="e-s">No app standalone, os dados ao vivo do Google entram na próxima atividade do projeto. '+
+    'Pra ver agora, abre o Painel no <b>Cowork</b> (desktop).'+
+    (btn?'<div style="margin-top:8px">'+btn+'</div>':'')+'</div></div>';
+}
+
+/* ================= navegação ================= */
+var VIEWS=["hoje","tarefas","inbox","feira","saude","camila","atalhos"];
+function nav(v){
+  VIEWS.forEach(function(k){
+    $('view-'+k).style.display = k===v?'block':'none';
+    $('nav-'+k).classList.toggle('active', k===v);
+  });
+  if(v==='feira'){ renderCards(); gerar(); }
+}
+
+/* ================= HOJE: agenda viva (Google Calendar) ================= */
+var CAT_RULES=[
+  {re:/camila|prova/i, cat:"CAMILA", col:"var(--c-camila)"},
+  {re:/gael|fam[ií]lia/i, cat:"GAEL+FAMÍLIA", col:"var(--c-gael)"},
+  {re:/pipe|pipeline/i, cat:"PIPELINE", col:"var(--c-pipeline)"},
+  {re:/comercial|prospec|recrut/i, cat:"COMERCIAL", col:"var(--c-comercial)"},
+  {re:/\bpa\b|btp|\bta\b|mfb|reuni[ãa]o|island/i, cat:"GESTÃO MFB", col:"var(--c-mfb)"},
+  {re:/lembrete/i, cat:"LEMBRETE", col:"var(--c-lembrete)"},
+  {re:/respirar|mentalizar|rotina|briefing|revis[ãa]o|ritual|almo[çc]o|gym|treino/i, cat:"ROTINA", col:"var(--c-rotina)"}
+];
+function categoriza(t){
+  for(var i=0;i<CAT_RULES.length;i++) if(CAT_RULES[i].re.test(t||"")) return CAT_RULES[i];
+  return {cat:"PESSOAL", col:"var(--c-pessoal)"};
+}
+var MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+var DIAS_MIN=["dom","seg","ter","qua","qui","sex","sáb"];
+var aView="d4", aDate=new Date(); aDate.setHours(0,0,0,0);
+var evCache={};
+async function fetchEvents(ini,fim){
+  var key=ini.getTime()+"|"+fim.getTime();
+  if(evCache[key]) return evCache[key];
+  var all=[], token=null, guard=0;
+  do{
+    var args={startTime:ini.toISOString(), endTime:fim.toISOString(),
+      timeZone:"America/Recife", pageSize:250, orderBy:"startTime"};
+    if(token) args.pageToken=token;
+    var data=unwrap(await mcp(TOOL_CAL,args));
+    all=all.concat(data.events||[]);
+    token=data.nextPageToken; guard++;
+  }while(token && guard<4);
+  all=all.filter(function(e){return e.status!=='cancelled';});
+  evCache[key]=all;
+  return all;
+}
+function evObj(e){
+  var allday=!!(e.start&&e.start.date&&!e.start.dateTime);
+  return {allday:allday, ini:allday?null:e.start.dateTime, fim:allday?null:(e.end&&e.end.dateTime),
+    t:e.summary||"(sem título)", loc:e.location||"",
+    dia: allday?e.start.date.slice(0,10):isoLocal(new Date(e.start.dateTime))};
+}
+function porDiaMap(evs){
+  var m={};
+  evs.forEach(function(e){
+    var o=evObj(e);
+    (m[o.dia]=m[o.dia]||[]).push(o);
+  });
+  Object.keys(m).forEach(function(k){
+    m[k].sort(function(a,b){ return (a.allday?"":a.ini) < (b.allday?"":b.ini) ? -1:1; });
+  });
+  return m;
+}
+function aRange(){
+  var ini=new Date(aDate), fim;
+  if(aView==='dia'){ fim=new Date(ini); fim.setDate(fim.getDate()+1); }
+  else if(aView==='d4'){ fim=new Date(ini); fim.setDate(fim.getDate()+4); }
+  else if(aView==='semana'){ ini=new Date(aDate); ini.setDate(ini.getDate()-ini.getDay()); fim=new Date(ini); fim.setDate(fim.getDate()+7); }
+  else { /* mes: grade completa */
+    var pm=new Date(aDate.getFullYear(), aDate.getMonth(), 1);
+    ini=new Date(pm); ini.setDate(ini.getDate()-pm.getDay());
+    var um=new Date(aDate.getFullYear(), aDate.getMonth()+1, 0);
+    fim=new Date(um); fim.setDate(fim.getDate()+(7-um.getDay()));
+  }
+  return {ini:ini, fim:fim};
+}
+function aTitulo(r){
+  if(aView==='dia') return DIAS[aDate.getDay()]+", "+fmt2(aDate.getDate())+"/"+fmt2(aDate.getMonth()+1);
+  if(aView==='mes') return MESES[aDate.getMonth()]+" "+aDate.getFullYear();
+  var f=new Date(r.fim); f.setDate(f.getDate()-1);
+  var mesIni=fmt2(r.ini.getMonth()+1), mesFim=fmt2(f.getMonth()+1);
+  return fmt2(r.ini.getDate())+(mesIni!==mesFim?"/"+mesIni:"")+" – "+fmt2(f.getDate())+"/"+mesFim;
+}
+function setAView(v){
+  aView=v;
+  document.querySelectorAll('#aviews button').forEach(function(b){ b.classList.toggle('active', b.dataset.v===v); });
+  loadAgendaView();
+}
+function aShift(dir){
+  if(aView==='dia') aDate.setDate(aDate.getDate()+dir);
+  else if(aView==='d4') aDate.setDate(aDate.getDate()+dir*4);
+  else if(aView==='semana') aDate.setDate(aDate.getDate()+dir*7);
+  else aDate=new Date(aDate.getFullYear(), aDate.getMonth()+dir, 1);
+  loadAgendaView();
+}
+function aHoje(){ aDate=new Date(); aDate.setHours(0,0,0,0); loadAgendaView(); }
+function goDia(iso){ aDate=new Date(iso+"T00:00:00"); setAView('dia'); }
+function evHtml(o,mini){
+  var c=categoriza(o.t);
+  if(mini) return '<div class="ev mini'+(o.allday?' all':'')+'" style="border-left-color:'+c.col+'" title="'+esc(o.t)+'">'+(o.allday?'':hora(o.ini)+' ')+esc(o.t)+'</div>';
+  return '<div class="ev'+(o.allday?' all':'')+'" style="border-left-color:'+c.col+'">'+
+    '<span class="ev-t">'+(o.allday?'dia todo':hora(o.ini)+(o.fim?'–'+hora(o.fim):''))+'</span>'+esc(o.t)+'</div>';
+}
+async function loadAgendaView(){
+  var r=aRange();
+  $('a-titulo').textContent=aTitulo(r);
+  $('agenda-out').innerHTML='<div class="loading">Carregando agenda…</div>';
+  try{
+    var evs=await fetchEvents(r.ini, r.fim);
+    var m=porDiaMap(evs);
+    if(aView==='dia') renderVDia(m);
+    else if(aView==='mes') renderVMes(m, r);
+    else renderVCols(m, r, aView==='d4'?4:7);
+  }catch(e){
+    if(!COWORK){ $('agenda-out').innerHTML=liveStub('Tua agenda', '<button class="btn sm" onclick="openLink(\'https://calendar.google.com\')">📅 Abrir Google Agenda</button>'); return; }
+    $('agenda-out').innerHTML='<div class="errbox"><div class="e-t">Não consegui falar com o Google Calendar</div>'+
+      '<div class="e-s">'+esc(String(e.message||e).slice(0,180))+' — recarrega o painel ou verifica o conector nas configurações.</div></div>';
+  }
+}
+function renderVDia(m){
+  var k=isoLocal(aDate);
+  var arr=m[k]||[];
+  if(!arr.length){ $('agenda-out').innerHTML='<div class="empty">Dia livre. 🎉</div>'; return; }
+  var label = k===isoLocal(new Date())?"Hoje":DIAS[aDate.getDay()]+" "+fmt2(aDate.getDate())+"/"+fmt2(aDate.getMonth()+1);
+  var html='<div class="panel"><h3>'+esc(label)+'<span class="count">'+arr.length+' evento'+(arr.length>1?'s':'')+'</span></h3>';
+  arr.forEach(function(ev){
+    var c=categoriza(ev.t);
+    html+='<div class="row"><div class="tm">'+(ev.allday?'dia todo':hora(ev.ini)+(ev.fim?'–'+hora(ev.fim):''))+'</div>'+
+      '<div class="nm">'+esc(ev.t)+(ev.loc?'<small>'+esc(ev.loc)+'</small>':'')+'</div>'+
+      '<span class="chip" style="background:'+c.col+'">'+c.cat+'</span></div>';
+  });
+  $('agenda-out').innerHTML=html+'</div>';
+}
+function renderVCols(m, r, n){
+  var hojeIso=isoLocal(new Date());
+  var html='<div class="cal-grid" style="grid-template-columns:repeat('+n+',1fr)">';
+  var d=new Date(r.ini);
+  for(var i=0;i<n;i++){
+    var k=isoLocal(d);
+    var arr=m[k]||[];
+    html+='<div class="cal-col"><div class="cal-h'+(k===hojeIso?' today':'')+'">'+DIAS_MIN[d.getDay()]+'<b>'+d.getDate()+'</b></div>';
+    if(!arr.length) html+='<div style="text-align:center;color:var(--muted);font-size:10.5px;padding:8px 0">—</div>';
+    arr.forEach(function(o){ html+=evHtml(o,false); });
+    html+='</div>';
+    d.setDate(d.getDate()+1);
+  }
+  $('agenda-out').innerHTML=html+'</div>';
+}
+function renderVMes(m, r){
+  var hojeIso=isoLocal(new Date());
+  var mes=aDate.getMonth();
+  var html='<div class="mes-grid">';
+  DIAS_MIN.forEach(function(dn){ html+='<div class="mes-h">'+dn+'</div>'; });
+  var d=new Date(r.ini);
+  while(d<r.fim){
+    var k=isoLocal(d);
+    var arr=m[k]||[];
+    html+='<div class="mes-cell'+(d.getMonth()!==mes?' out':'')+(k===hojeIso?' today':'')+'" onclick="goDia(\''+k+'\')">'+
+      '<div class="dnum">'+d.getDate()+'</div>';
+    arr.slice(0,3).forEach(function(o){ html+=evHtml(o,true); });
+    if(arr.length>3) html+='<div class="mes-more">+'+(arr.length-3)+' mais</div>';
+    html+='</div>';
+    d.setDate(d.getDate()+1);
+  }
+  $('agenda-out').innerHTML=html+'</div>';
+}
+function loadAgenda(){
+  var hoje=new Date();
+  $('saudacao').textContent = (hoje.getHours()<12?"Bom dia":hoje.getHours()<18?"Boa tarde":"Boa noite")+", Gustavo";
+  $('data-hoje').textContent = DIAS[hoje.getDay()]+", "+fmt2(hoje.getDate())+"/"+fmt2(hoje.getMonth()+1)+"/"+hoje.getFullYear()+" · Recife";
+  renderCutucadas(hoje);
+  loadAgendaView();
+}
+
+/* ================= cutucadas (gatilhos no momento certo) ================= */
+function renderCutucadas(hoje){
+  var html="";
+  var alvo=new Date("2026-06-12T00:00:00-03:00");
+  var diff=Math.ceil((alvo - new Date(isoLocal(hoje)+"T00:00:00-03:00"))/86400000);
+  if(diff>=0 && diff<=10){
+    var dtxt = diff===0?"é HOJE":diff===1?"amanhã":"em "+diff+" dias";
+    html+='<div class="alert"><div><div class="a-t">🎯 Operação 12.06 — '+dtxt+'</div>'+
+      '<div class="a-s">Você sabe a missão. Nada registrado na agenda ainda — quer ajuda pra fechar o plano? '+
+      '<button class="btn sm" style="margin-left:6px" onclick="despachoSurpresa()">📋 copiar prompt</button></div></div>'+
+      '<div class="a-d">'+(diff===0?'🔥':diff)+'<small>'+(diff===0?'agora':'dia'+(diff>1?'s':''))+'</small></div></div>';
+  }
+  $('cutucadas').innerHTML=html;
+}
+function despachoSurpresa(){
+  copyText("Plano da surpresa de 12/06 (Dia dos Namorados): me ajuda a fechar AGORA — ideia final, reserva/compra necessária e lembrete no Calendar pra execução. Considera Recife, quinta-feira à noite, e que o Gael precisa estar resolvido (quem fica). Me traz 2-3 opções prontas pra decidir em 5 minutos.","Prompt copiado — cola no chat");
+}
+function despachoProva(){
+  copyText("Pesquisa pra prova da Camila: [ASSUNTO DA PROVA AQUI]. Me traz um resumo didático do assunto, os 5 pontos que mais caem, e 10 questões de treino com gabarito comentado. Formato: direto, pra ela revisar em 1h.","Prompt copiado — preenche o assunto e cola no chat");
+}
+
+/* ================= CENTRAL DE TAREFAS (Sheet ao vivo) ================= */
+var sheetData=null, sheetPromise=null;
+function unesc(s){ return String(s==null?"":s).replace(/\\([\\\[\]!&_#.*])/g,"$1"); }
+function catName(c){
+  c=String(c||"");
+  if(/COMERCIAL/i.test(c)) return "COMERCIAL";
+  if(/PIPELINE/i.test(c)) return "PIPELINE";
+  if(/GEST/i.test(c)) return "GESTÃO MFB";
+  if(/BACK ?OFFICE/i.test(c)) return "BACK OFFICE";
+  if(/GAEL/i.test(c)) return "GAEL+FAMÍLIA";
+  if(/PESSOAL/i.test(c)) return "PESSOAL";
+  if(/ROTINA/i.test(c)) return "ROTINA";
+  if(/LEMBRETE/i.test(c)) return "LEMBRETE";
+  if(/CAMILA/i.test(c)) return "CAMILA";
+  if(/FAMILIA/i.test(c)) return "GAEL+FAMÍLIA";
+  return "OUTROS";
+}
+var CAT_COL={ "COMERCIAL":"var(--c-comercial)","GESTÃO MFB":"var(--c-mfb)","PIPELINE":"var(--c-pipeline)",
+  "GAEL+FAMÍLIA":"var(--c-gael)","PESSOAL":"var(--c-pessoal)","ROTINA":"var(--c-rotina)",
+  "LEMBRETE":"var(--c-lembrete)","CAMILA":"var(--c-camila)","BACK OFFICE":"var(--c-bo)","OUTROS":"var(--c-rotina)" };
+function statusOf(cell){
+  cell=String(cell||"");
+  if(cell.indexOf("✅")>=0) return {k:"done", lbl:"concluída", cls:"ok"};
+  if(cell.indexOf("❌")>=0) return {k:"cancel", lbl:"cancelada", cls:"nt"};
+  if(cell.indexOf("⏳")>=0) return {k:"wait", lbl:"aguardando", cls:"wn"};
+  if(cell.indexOf("⏱")>=0) return {k:"follow", lbl:"follow-up", cls:"wn"};
+  if(cell.indexOf("❇")>=0) return {k:"doing", lbl:"em andamento", cls:"wn"};
+  if(cell.indexOf("▶")>=0) return {k:"todo", lbl:"fazer", cls:"nt"};
+  return {k:"open", lbl:"aberta", cls:"nt"};
+}
+function parseDate(s){
+  var m=String(s||"").match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
+  if(!m) return null;
+  var y=m[3]?Number(m[3]):(new Date()).getFullYear();
+  return new Date(y, Number(m[2])-1, Number(m[1]));
+}
+function parseCentral(md){
+  var lines=String(md||"").split("\n"); var tables=[]; var cur=null;
+  lines.forEach(function(ln){
+    if(/^\s*\|/.test(ln)){
+      var cells=ln.split("|").slice(1,-1).map(function(c){return c.trim();});
+      if(cells.length && cells.every(function(c){return /^:?-+:?$/.test(c);})) return;
+      if(!cur){cur=[];tables.push(cur);}
+      cur.push(cells);
+    } else cur=null;
+  });
+  var res={backlog:[],arquivo:[],dump:[],bussola:[]};
+  var seenBacklog=false;
+  tables.forEach(function(t){
+    var h=t[0]||[]; var h0=(h[0]||"").toUpperCase();
+    if(h0.indexOf("DUMP")>=0){
+      res.dump = t.slice(1).map(function(r){return unesc(r[0]||"");}).filter(function(s){return s;});
+    } else if(h0.indexOf("BUSSU")>=0){
+      t.slice(1).forEach(function(r){
+        if(!(r[4]||"").trim()) return;
+        res.bussola.push({eixo:unesc(r[0]||""),projeto:unesc(r[1]||""),categoria:unesc(r[2]||""),
+          prio:(String(r[3]||"").match(/!/g)||[]).length, tarefa:unesc(r[4]||"")});
+      });
+    } else if(h0==="ID" && (h[1]||"")==="Tarefa" && (h[2]||"")==="Projeto"){
+      var dst = seenBacklog ? res.arquivo : res.backlog; seenBacklog=true;
+      t.slice(1).forEach(function(r){
+        if(!(r[1]||"").trim()) return;
+        var st=statusOf(r[4]);
+        var dt=parseDate(r[5]);
+        dst.push({id:r[0]||"", tarefa:unesc(r[1]||""), projeto:unesc(r[2]||""), categoria:catName(r[3]),
+          status:st, prazo:dt, prazoTxt:(r[5]||"").trim(), origem:r[6]||"", obs:unesc(r[7]||"")});
+      });
+    }
+  });
+  return res;
+}
+function getSheet(){
+  if(sheetPromise) return sheetPromise;
+  sheetPromise = mcp(TOOL_DRIVE,{fileId:SHEET_ID}).then(function(r){
+    var d=unwrap(r);
+    sheetData=parseCentral(d.fileContent||d.raw||"");
+    return sheetData;
+  });
+  return sheetPromise;
+}
+function isOpen(t){ return t.status.k!=="done" && t.status.k!=="cancel"; }
+function isLate(t){
+  if(!isOpen(t)||!t.prazo) return false;
+  var h=new Date(); h.setHours(0,0,0,0);
+  return t.prazo<h;
+}
+function dumpPend(d){ return (d.dump||[]).filter(function(s){ return s.indexOf("✅")<0; }); }
+
+var tFiltro="abertas";
+function setTFiltro(f){
+  tFiltro=f;
+  document.querySelectorAll('#tfiltro button').forEach(function(b){ b.classList.toggle('active', b.dataset.f===f); });
+  if(sheetData) renderTarefas(sheetData);
+}
+function renderTarefas(d){
+  var abertas=d.backlog.filter(isOpen);
+  var atrasadas=abertas.filter(isLate);
+  var done=d.backlog.concat(d.arquivo).filter(function(t){return t.status.k==="done";});
+  $('t-ab').textContent=abertas.length;
+  $('t-atr').textContent=atrasadas.length;
+  $('t-done').textContent=done.length;
+  /* bússola */
+  var bs=(d.bussola||[]).slice().sort(function(a,b){return b.prio-a.prio;});
+  var bh="";
+  if(bs.length){
+    bh='<div class="panel"><h3>🧭 Bússola — prioridades de fundo<span class="count">'+bs.length+'</span></h3>';
+    bs.forEach(function(b){
+      var bang=b.prio>0?'<span class="pill low">'+("!".repeat(b.prio))+'</span>':'<span class="pill nt">—</span>';
+      bh+='<div class="row"><div class="tm">'+bang+'</div><div class="nm">'+esc(b.tarefa)+
+        '<small>'+esc(b.projeto)+(b.categoria?' · '+esc(b.categoria):'')+'</small></div></div>';
+    });
+    bh+='</div>';
+  }
+  $('bussola-out').innerHTML=bh;
+  /* lista */
+  var lista = tFiltro==="todas"?d.backlog : tFiltro==="atrasadas"?atrasadas : abertas;
+  if(!lista.length){ $('tarefas-out').innerHTML='<div class="empty">Nada aqui nesse filtro. 🎉</div>'; return; }
+  var grupos={};
+  lista.forEach(function(t){ (grupos[t.categoria]=grupos[t.categoria]||[]).push(t); });
+  var html="";
+  Object.keys(grupos).sort().forEach(function(cat){
+    var arr=grupos[cat];
+    arr.sort(function(a,b){ return (a.prazo?a.prazo.getTime():9e15) - (b.prazo?b.prazo.getTime():9e15); });
+    html+='<div class="panel"><h3><span class="chip" style="background:'+(CAT_COL[cat]||'var(--c-rotina)')+'">'+esc(cat)+'</span><span class="count">'+arr.length+'</span></h3>';
+    arr.forEach(function(t){
+      var late=isLate(t);
+      html+='<div class="row"><div class="tm'+(late?' late':'')+'">'+esc(t.prazoTxt||"sem prazo")+'</div>'+
+        '<div class="nm">'+esc(t.tarefa)+((t.projeto||t.obs)?'<small>'+esc(t.projeto)+(t.obs?' · '+esc(t.obs):'')+'</small>':'')+'</div>'+
+        '<span class="pill '+(late?'low':t.status.cls)+'">'+(late?'atrasada':t.status.lbl)+'</span></div>';
+    });
+    html+='</div>';
+  });
+  $('tarefas-out').innerHTML=html;
+}
+function renderDump(d){
+  var pend=dumpPend(d);
+  var html='<div class="panel"><h3>🗑️ Dump da planilha — sem triagem<span class="count">'+pend.length+'</span></h3>';
+  if(!pend.length) html+='<div class="row"><div class="nm" style="color:var(--muted)">Dump limpo. ✅</div></div>';
+  pend.forEach(function(s){
+    var url=/^https?:\/\//i.test(s);
+    html+='<div class="row"><div class="nm">'+(url?'<a href="#" onclick="openLink(\''+esc(s)+'\');return false">'+esc(s.slice(0,80))+'…</a>':esc(s))+'</div></div>';
+  });
+  html+='</div><div class="note">Triagem: abre a planilha e roda o Processar Dump, ou me pede no chat: "tria o dump".</div>';
+  $('dump-out').innerHTML=html;
+}
+function renderSaude(d){
+  var bs=(d.bussola||[]).filter(function(b){ return /SA[UÚ]DE|SONHO GRANDE/i.test(b.categoria+" "+b.projeto); });
+  var minhas=bs.filter(function(b){ return /JUCA/i.test(b.categoria); });
+  var gael=bs.filter(function(b){ return !/JUCA/i.test(b.categoria); });
+  var tk=d.backlog.filter(function(t){ return isOpen(t) && /sa[uú]de|oftalmo|fono|otorrino|urolog|dentista|psic[oó]log|pediatra|videonaso|laudo|rx\b/i.test(t.tarefa+" "+t.projeto); });
+  function panel(tit, arr, mk){
+    if(!arr.length) return "";
+    var h='<div class="panel"><h3>'+tit+'<span class="count">'+arr.length+'</span></h3>';
+    arr.forEach(function(x){ h+=mk(x); });
+    return h+'</div>';
+  }
+  var html="";
+  html+=panel("🧔 Jucá — check-up pendente", minhas, function(b){
+    return '<div class="row"><div class="tm">'+(b.prio?'<span class="pill low">'+"!".repeat(b.prio)+'</span>':'')+'</div><div class="nm">'+esc(b.tarefa)+'</div></div>';
+  });
+  html+=panel("👦 Gael", gael, function(b){
+    return '<div class="row"><div class="tm">'+(b.prio?'<span class="pill low">'+"!".repeat(b.prio)+'</span>':'')+'</div><div class="nm">'+esc(b.tarefa)+'<small>'+esc(b.categoria)+'</small></div></div>';
+  });
+  html+=panel("📋 Tarefas de saúde em aberto", tk, function(t){
+    var late=isLate(t);
+    return '<div class="row"><div class="tm'+(late?' late':'')+'">'+esc(t.prazoTxt||"")+'</div><div class="nm">'+esc(t.tarefa)+(t.obs?'<small>'+esc(t.obs)+'</small>':'')+'</div><span class="pill '+(late?'low':t.status.cls)+'">'+(late?'atrasada':t.status.lbl)+'</span></div>';
+  });
+  if(!html) html='<div class="empty">Nada de saúde pendente na planilha. 🎉</div>';
+  $('saude-out').innerHTML=html;
+}
+async function loadCentral(){
+  try{
+    var d=await getSheet();
+    renderTarefas(d);
+    renderDump(d);
+    renderSaude(d);
+    /* cards do Hoje + badges */
+    var abertas=d.backlog.filter(isOpen), atrasadas=abertas.filter(isLate), pend=dumpPend(d);
+    $('h-ab').textContent=abertas.length;
+    $('h-atr').textContent=atrasadas.length;
+    $('h-inb').textContent=pend.length;
+    if(atrasadas.length){ $('bdg-atr').textContent=atrasadas.length; $('bdg-atr').style.display='inline-block'; }
+    if(pend.length){ $('bdg-inb').textContent=pend.length; $('bdg-inb').style.display='inline-block'; }
+  }catch(e){
+    if(!COWORK){
+      var st=liveStub('Tarefas e Saúde', '<button class="btn sm" onclick="openLink(SHEET_URL)">📊 Abrir a planilha</button>');
+      $('tarefas-out').innerHTML=st; $('bussola-out').innerHTML=""; $('dump-out').innerHTML=""; $('saude-out').innerHTML=st;
+      return;
+    }
+    var msg='<div class="errbox"><div class="e-t">Não consegui ler a Central de Tarefas no Drive</div>'+
+      '<div class="e-s">'+esc(String(e.message||e).slice(0,180))+' — verifica o conector do Google Drive e recarrega.</div></div>';
+    $('tarefas-out').innerHTML=msg;
+    $('dump-out').innerHTML="";
+    $('saude-out').innerHTML=msg;
+  }
+}
+
+/* ================= INBOX: captura ================= */
+function capturar(){
+  var u="mailto:juca@segurocomjuca.com?subject="+encodeURIComponent("#inbox ");
+  try{ window.location.href=u; toast("Abrindo teu email…"); }
+  catch(e){ copyText("juca@segurocomjuca.com","Endereço copiado — assunto: #inbox"); }
+}
+async function loadInbox(){
+  try{
+    var r=await mcp(TOOL_GMAIL,{ query:"subject:#inbox newer_than:60d", pageSize: 20 });
+    var data=unwrap(r);
+    var threads=data.threads||data.items||[];
+    var caps=[];
+    threads.forEach(function(th){
+      var msgs=(th.messages||th.relatedMessages||[]).filter(function(m){
+        return !/mailer-daemon|postmaster/i.test(m.sender||"") && !/delivery status notification/i.test(m.subject||"");
+      });
+      var m=msgs[0]||null;
+      if(!m) return;
+      var subj=String(m.subject||th.subject||"").replace(/#inbox/ig,"").trim();
+      var snip=String(m.snippet||th.snippet||"").trim();
+      var dt=m.date?new Date(m.date):null;
+      caps.push({titulo: subj||snip.slice(0,80)||"(captura sem texto)", corpo: subj?snip.slice(0,160):"",
+        quando: dt?fmt2(dt.getDate())+"/"+fmt2(dt.getMonth()+1)+" "+fmt2(dt.getHours())+":"+fmt2(dt.getMinutes()):""});
+    });
+    if(!caps.length){ $('inbox-out').innerHTML='<div class="panel"><h3>✉️ Email #inbox<span class="count">0</span></h3><div class="mail"><div class="m-x">Nenhum #inbox pendente. Caixa de captura limpa. ✅</div></div></div>'; return; }
+    var html='<div class="panel"><h3>✉️ Email #inbox<span class="count">'+caps.length+'</span></h3>';
+    caps.forEach(function(c){
+      html+='<div class="mail"><div class="m-s">'+esc(c.titulo)+'</div>'+
+        (c.corpo?'<div class="m-x">'+esc(c.corpo)+'</div>':'')+
+        (c.quando?'<div class="m-f">'+esc(c.quando)+'</div>':'')+'</div>';
+    });
+    html+='</div>';
+    $('inbox-out').innerHTML=html;
+  }catch(e){
+    if(!COWORK){ $('inbox-out').innerHTML=liveStub('Email #inbox', '<button class="btn sm" onclick="capturar()">✉️ Capturar por email</button>'); return; }
+    $('inbox-out').innerHTML='<div class="errbox"><div class="e-t">✉️ Email #inbox — Gmail desconectado</div>'+
+      '<div class="e-s">Reconecta em <b>Configurações → Conectores → Gmail</b> e me avisa no chat que eu religo este módulo. Enquanto isso, o Dump da planilha abaixo segue funcionando como inbox.</div></div>';
+  }
+}
+
+/* ================= CAMILA: provas do Calendar ================= */
+async function loadCamila(){
+  try{
+    var ini=new Date(); var fim=new Date(); fim.setDate(fim.getDate()+45);
+    var r=await mcp(TOOL_CAL,{
+      startTime: ini.toISOString(), endTime: fim.toISOString(),
+      timeZone:"America/Recife", pageSize: 50, fullText:"prova"
+    });
+    var data=unwrap(r);
+    var evs=(data.events||[]).filter(function(e){return /camila|prova/i.test(e.summary||"");});
+    if(!evs.length){ $('camila-out').innerHTML='<div class="empty">Nenhuma prova nos próximos 45 dias no Calendar.</div>'; return; }
+    var html='<div class="panel"><h3>Próximas provas<span class="count">'+evs.length+'</span></h3>';
+    evs.forEach(function(e){
+      var ini2=e.start&&(e.start.dateTime||e.start.date);
+      var d=new Date(ini2);
+      html+='<div class="row"><div class="tm">'+fmt2(d.getDate())+'/'+fmt2(d.getMonth()+1)+'</div>'+
+        '<div class="nm">'+esc(e.summary||"")+'</div><span class="chip" style="background:var(--c-camila)">CAMILA</span></div>';
+    });
+    html+='</div>';
+    $('camila-out').innerHTML=html;
+  }catch(e){
+    if(!COWORK){ $('camila-out').innerHTML=liveStub('Provas no Calendar', '<button class="btn sm" onclick="openLink(\'https://calendar.google.com\')">📅 Abrir Calendar</button>'); return; }
+    $('camila-out').innerHTML='<div class="errbox"><div class="e-t">Não consegui consultar o Calendar</div><div class="e-s">'+esc(String(e.message||e).slice(0,160))+'</div></div>';
+  }
+}
+
+/* ================= ATALHOS (pré-conectados) ================= */
+var ATALHOS=[
+  {i:"📅",n:"Google Agenda",d:"Tua agenda viva — também aparece no módulo Hoje.",u:"https://calendar.google.com",k:"live"},
+  {i:"☑️",n:"Google Tasks",d:"Tarefas rápidas do Google. Sem conector ainda — 1 clique e abre.",u:"https://tasks.google.com",k:"link"},
+  {i:"✉️",n:"Gmail",d:"Email + captura #inbox.",u:"https://mail.google.com",k:"link"},
+  {i:"📊",n:"Central de Tarefas",d:"A planilha-mãe: Backlog, Dump, Bússola. Lida ao vivo nos módulos.",u:SHEET_URL,k:"live"},
+  {i:"🛒",n:"Sheet Feira (Casa)",d:"Catálogo de estoque que alimenta o módulo Feira.",u:"https://docs.google.com/spreadsheets/d/1c2abcnjNSAjPm92QPJzegzr9j06m20py0TZ0ppGWves/edit",k:"link"},
+  {i:"📁",n:"Pasta Jucá2.0 (Drive)",d:"Docs do projeto, handoffs e snapshots.",u:"https://drive.google.com/drive/folders/1OZLnCM9ANDH0cWGp0oZ4RNKnmbW21VqR",k:"link"},
+  {i:"💸",n:"Central Financeira",d:"Teu PWA no GitHub Pages (Supabase + Organizze).",u:"https://juca-alt.github.io/central-financeira/",k:"link"},
+  {i:"🤝",n:"Kommo CRM",d:"Pipeline de captação de LPs.",u:"https://www.kommo.com",k:"link"},
+  {i:"📋",n:"Trello",d:"Quadros de projetos.",u:"https://trello.com",k:"link"},
+  {i:"💰",n:"Organizze",d:"Financeiro pessoal centralizado.",u:"https://app.organizze.com.br",k:"link"},
+  {i:"✨",n:"Gemini",d:"Teu Gemini Pro — melhor uso: dentro do Gmail/Docs pra resumir e triar.",u:"https://gemini.google.com",k:"link"},
+  {i:"💻",n:"GitHub (juca-alt)",d:"crm-captacao · central-financeira · my-sheet-buddy.",u:"https://github.com/juca-alt",k:"link"}
+];
+var MODULOS=[
+  {i:"🏠",n:"Hoje",d:"Agenda viva + cutucadas + visão do dia.",v:"hoje"},
+  {i:"✅",n:"Tarefas",d:"Central de Tarefas ao vivo: backlog, atrasadas, Bússola.",v:"tarefas"},
+  {i:"📬",n:"Inbox Geral",d:"Capturas #inbox + Dump sem triagem.",v:"inbox"},
+  {i:"🛒",n:"Feira",d:"Estoque-driven: lista pronta por canal.",v:"feira"},
+  {i:"🍃",n:"Saúde",d:"Pendências de saúde — tuas e do Gael.",v:"saude"},
+  {i:"📚",n:"Provas Camila",d:"Próximas provas + despacho de pesquisa.",v:"camila"}
+];
+function renderAtalhos(){
+  var html='<div class="t-sec">Módulos do painel</div><div class="tiles">';
+  MODULOS.forEach(function(m,i){
+    html+='<div class="tile" onclick="nav(MODULOS['+i+'].v)"><div class="t-i">'+m.i+'</div>'+
+      '<div class="t-n">'+esc(m.n)+'</div><div class="t-d">'+esc(m.d)+'</div>'+
+      '<div class="t-k live">● MÓDULO</div></div>';
+  });
+  html+='</div><div class="t-sec">Apps & documentos</div><div class="tiles">';
+  ATALHOS.forEach(function(a,i){
+    html+='<div class="tile" onclick="openLink(ATALHOS['+i+'].u)"><div class="t-i">'+a.i+'</div>'+
+      '<div class="t-n">'+esc(a.n)+'</div><div class="t-d">'+esc(a.d)+'</div>'+
+      '<div class="t-k'+(a.k==="live"?" live":"")+'">'+(a.k==="live"?"● LIVE":"↗ LINK")+'</div></div>';
+  });
+  html+='</div>';
+  $('tiles-out').innerHTML=html;
+}
+
+/* ================= Fôlego (discreto) ================= */
+var FKEY="folego_v1";
+function folegoLoad(){ try{ var s=localStorage.getItem(FKEY); if(s) return JSON.parse(s); }catch(e){} return {dias:[]}; }
+function folegoSave(d){ try{ localStorage.setItem(FKEY, JSON.stringify(d)); }catch(e){} }
+function folegoRender(){
+  var d=folegoLoad(); var hoje=isoLocal(new Date());
+  $('fl-n').textContent=d.dias.length;
+  var seq=0; var c=new Date();
+  while(d.dias.indexOf(isoLocal(c))>=0){ seq++; c.setDate(c.getDate()-1); }
+  $('fl-s').textContent = seq>1 ? seq+" seguidos · mais ar" : "dias somados · mais ar";
+  var feito=d.dias.indexOf(hoje)>=0;
+  $('fl-btn').disabled=feito; $('fl-btn').textContent=feito?"✓ hoje contou":"✓ marcar hoje";
+}
+function folegoHoje(){
+  var d=folegoLoad(); var hoje=isoLocal(new Date());
+  if(d.dias.indexOf(hoje)<0){ d.dias.push(hoje); folegoSave(d); }
+  folegoRender();
+}
+
+/* ================= FEIRA (canônico, tema claro) ================= */
+var GRUPO={presencial:"super",delivery:"super",amazon:"online",shopee:"online",mercadolivre:"online"};
+var CANAL_LABEL={presencial:"🏪 Presencial",delivery:"🛵 Delivery",amazon:"📦 Amazon",shopee:"🛍️ Shopee",mercadolivre:"🟡 Mercado Livre"};
+var CANAIS=["presencial","delivery","amazon","shopee","mercadolivre"];
+var SEED=[
+  {item:"Tomate",marca:"",categoria:"Hortifrúti",canal:"presencial",unidade:"kg",minimo:1,atual:0,preco_ultimo:13.85},
+  {item:"Cebola branca",marca:"",categoria:"Hortifrúti",canal:"presencial",unidade:"kg",minimo:1,atual:0,preco_ultimo:5.69},
+  {item:"Batata inglesa",marca:"",categoria:"Hortifrúti",canal:"presencial",unidade:"kg",minimo:2,atual:0,preco_ultimo:9.89},
+  {item:"Maçã nacional",marca:"",categoria:"Hortifrúti",canal:"presencial",unidade:"kg",minimo:1,atual:0,preco_ultimo:7.99},
+  {item:"Alho",marca:"",categoria:"Hortifrúti",canal:"presencial",unidade:"kg",minimo:1,atual:1,preco_ultimo:24.19},
+  {item:"Queijo mussarela",marca:"Esperança",categoria:"Frios",canal:"presencial",unidade:"kg",minimo:1,atual:1,preco_ultimo:35.55},
+  {item:"Leite longa vida zero lactose",marca:"",categoria:"Laticínios",canal:"delivery",unidade:"un",minimo:4,atual:1,preco_ultimo:7.90},
+  {item:"Iogurte pedaços morango",marca:"",categoria:"Laticínios",canal:"delivery",unidade:"un",minimo:3,atual:1,preco_ultimo:13.25},
+  {item:"Iogurte natural desnatado",marca:"Betânia",categoria:"Laticínios",canal:"delivery",unidade:"un",minimo:2,atual:2,preco_ultimo:11.90},
+  {item:"Ovo branco grande",marca:"Aliança",categoria:"Ovos",canal:"delivery",unidade:"cartela",minimo:1,atual:0,preco_ultimo:20.99},
+  {item:"Óleo de girassol 900ml",marca:"Liza",categoria:"Mercearia",canal:"delivery",unidade:"un",minimo:2,atual:1,preco_ultimo:21.95},
+  {item:"Pão de forma Artesano",marca:"Plus Vita",categoria:"Padaria",canal:"delivery",unidade:"un",minimo:2,atual:2,preco_ultimo:14.15},
+  {item:"Batata air fryer",marca:"McCain",categoria:"Congelados",canal:"delivery",unidade:"un",minimo:2,atual:0,preco_ultimo:9.99},
+  {item:"Massa de nhoque congelada",marca:"",categoria:"Congelados",canal:"delivery",unidade:"un",minimo:1,atual:0,preco_ultimo:21.99},
+  {item:"Filé de salmão em tiras",marca:"",categoria:"Congelados",canal:"delivery",unidade:"un",minimo:2,atual:2,preco_ultimo:19.15},
+  {item:"Camarão congelado descascado",marca:"",categoria:"Congelados",canal:"delivery",unidade:"un",minimo:1,atual:1,preco_ultimo:55.49},
+  {item:"Esfirra de frango (coquetel)",marca:"",categoria:"Congelados",canal:"delivery",unidade:"un",minimo:1,atual:1,preco_ultimo:34.69},
+  {item:"Café à vácuo",marca:"Santa Clara",categoria:"Mercearia",canal:"delivery",unidade:"un",minimo:3,atual:1,preco_ultimo:17.45},
+  {item:"Azeite extra virgem 0.5%",marca:"Borges",categoria:"Mercearia",canal:"amazon",unidade:"un",minimo:1,atual:0,preco_ultimo:37.69},
+  {item:"Barra de proteína cookies",marca:"",categoria:"Mercearia",canal:"amazon",unidade:"un",minimo:5,atual:1,preco_ultimo:10.89},
+  {item:"Papel higiênico compacto",marca:"",categoria:"Limpeza",canal:"shopee",unidade:"pacote",minimo:1,atual:0,preco_ultimo:39.90}
+];
+var KEY="feira_estoque_v1";
+var estoque=feiraLoad();
+var filtro="tudo";
+function feiraLoad(){ try{ var s=localStorage.getItem(KEY); if(s) return JSON.parse(s); }catch(e){} return JSON.parse(JSON.stringify(SEED)); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(estoque)); }catch(e){} renderCards(); }
+function faltantes(){ return estoque.filter(function(it){ return Number(it.atual)<Number(it.minimo); }); }
+function renderCards(){
+  var f=faltantes();
+  var est=f.reduce(function(s,it){ return s+Math.max(1,Number(it.minimo)-Number(it.atual))*Number(it.preco_ultimo||0); },0);
+  $('c-itens').textContent=f.length;
+  $('c-est').textContent="R$ "+est.toFixed(2).replace(".",",");
+  $('c-cat').textContent=estoque.length;
+}
+function show(v){
+  $('view-lista').style.display = v==='lista'?'block':'none';
+  $('view-estoque').style.display = v==='estoque'?'block':'none';
+  $('tab-lista').classList.toggle('active', v==='lista');
+  $('tab-estoque').classList.toggle('active', v==='estoque');
+  if(v==='estoque') renderEstoque();
+}
+function renderEstoque(){
+  var b=$('estoque-body'); b.innerHTML='';
+  estoque.forEach(function(it,i){
+    var baixo=Number(it.atual)<Number(it.minimo);
+    var opts=CANAIS.map(function(c){ return '<option value="'+c+'"'+(it.canal===c?' selected':'')+'>'+c+'</option>'; }).join('');
+    var tr=document.createElement('tr');
+    tr.innerHTML=
+      '<td><input value="'+esc(it.item)+'" onchange="upd('+i+',\'item\',this.value)"></td>'+
+      '<td><input value="'+esc(it.marca||"")+'" onchange="upd('+i+',\'marca\',this.value)"></td>'+
+      '<td><input value="'+esc(it.categoria||"")+'" onchange="upd('+i+',\'categoria\',this.value)"></td>'+
+      '<td><select onchange="upd('+i+',\'canal\',this.value)">'+opts+'</select></td>'+
+      '<td><input value="'+esc(it.unidade||"")+'" style="width:70px" onchange="upd('+i+',\'unidade\',this.value)"></td>'+
+      '<td class="num"><input type="number" min="0" value="'+num(it.minimo)+'" onchange="upd('+i+',\'minimo\',this.value)"></td>'+
+      '<td class="num"><input type="number" min="0" value="'+num(it.atual)+'" onchange="upd('+i+',\'atual\',this.value)"></td>'+
+      '<td>'+(baixo?'<span class="pill low">comprar</span>':'<span class="pill ok">ok</span>')+'</td>'+
+      '<td><button class="x" title="remover" onclick="rm('+i+')">✕</button></td>';
+    b.appendChild(tr);
+  });
+}
+function upd(i,k,v){
+  if(k==='minimo'||k==='atual') v=Number(v)||0;
+  estoque[i][k]=v; save();
+  if(k==='atual'||k==='minimo'||k==='canal') renderEstoque();
+}
+function addItem(){ estoque.unshift({item:"Novo item",marca:"",categoria:"",canal:"presencial",unidade:"un",minimo:1,atual:0,preco_ultimo:0}); save(); renderEstoque(); }
+function rm(i){ estoque.splice(i,1); save(); renderEstoque(); }
+function restaurar(){
+  if(confirm("Restaurar os 21 itens de exemplo? Isso substitui o estoque atual.")){
+    estoque=JSON.parse(JSON.stringify(SEED)); save(); renderEstoque(); toast("Estoque restaurado");
+  }
+}
+function importCsv(input){
+  var f=input.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var rows=parseCsv(r.result);
+      if(rows.length<2){ toast("CSV vazio"); return; }
+      var head=rows[0].map(function(h){return h.trim().toLowerCase();});
+      var idx=function(n){ return head.indexOf(n); };
+      var ci={item:idx("item"),marca:idx("marca"),categoria:idx("categoria"),canal:idx("canal"),
+              unidade:idx("unidade"),minimo:idx("minimo"),atual:idx("atual"),preco:idx("preco_ultimo")};
+      if(ci.item<0){ toast("CSV sem coluna 'item'"); return; }
+      var novo=[];
+      for(var i=1;i<rows.length;i++){
+        var c=rows[i]; if(!c.length||!(c[ci.item]||"").trim()) continue;
+        var canal=(ci.canal>=0?c[ci.canal]:"").trim().toLowerCase();
+        if(!GRUPO[canal]) canal="presencial";
+        novo.push({
+          item:(c[ci.item]||"").trim(),
+          marca:(ci.marca>=0?c[ci.marca]:"").trim(),
+          categoria:(ci.categoria>=0?c[ci.categoria]:"").trim(),
+          canal:canal,
+          unidade:(ci.unidade>=0?c[ci.unidade]:"un").trim()||"un",
+          minimo:Number(ci.minimo>=0?c[ci.minimo]:0)||0,
+          atual:Number(ci.atual>=0?c[ci.atual]:0)||0,
+          preco_ultimo:Number(ci.preco>=0?c[ci.preco]:0)||0
+        });
+      }
+      if(!novo.length){ toast("Nenhum item lido"); return; }
+      estoque=novo; save(); renderEstoque();
+      toast("Importados "+novo.length+" itens do CSV");
+    }catch(e){ toast("Erro ao ler CSV"); }
+  };
+  r.readAsText(f,"utf-8");
+  input.value="";
+}
+function parseCsv(text){
+  text=text.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+  var rows=[],row=[],cur="",q=false;
+  for(var i=0;i<text.length;i++){
+    var ch=text[i];
+    if(q){
+      if(ch=='"'){ if(text[i+1]=='"'){cur+='"';i++;} else q=false; }
+      else cur+=ch;
+    }else{
+      if(ch=='"') q=true;
+      else if(ch==',') {row.push(cur);cur="";}
+      else if(ch=='\n'){ row.push(cur);rows.push(row);row=[];cur=""; }
+      else cur+=ch;
+    }
+  }
+  if(cur!==""||row.length){ row.push(cur); rows.push(row); }
+  return rows.filter(function(r){ return r.length>1 || (r[0]&&r[0].trim()); });
+}
+function baixarCsv(){
+  var head="item,marca,categoria,canal,unidade,minimo,atual,preco_ultimo\n";
+  var body=estoque.map(function(it){
+    return [it.item,it.marca||"",it.categoria||"",it.canal,it.unidade||"",it.minimo,it.atual,it.preco_ultimo||0].map(csvCell).join(",");
+  }).join("\n");
+  download("Catalogo_Feira.csv", head+body, "text/csv");
+}
+function csvCell(v){ v=String(v==null?"":v); return /["\,\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function setFiltro(f){
+  filtro=f;
+  document.querySelectorAll('#filtro button').forEach(function(b){ b.classList.toggle('active', b.dataset.f===f); });
+  gerar();
+}
+function gerar(){
+  var faltando=faltantes();
+  if(filtro!=='tudo') faltando=faltando.filter(function(it){ return GRUPO[it.canal]===filtro; });
+  var out=$('lista-out');
+  if(!faltando.length){
+    out.innerHTML='<div class="empty">Nada abaixo do mínimo'+(filtro!=='tudo'?' nesse filtro':'')+'. 🎉</div>';
+    return;
+  }
+  var grupos={};
+  faltando.forEach(function(it){ (grupos[it.canal]=grupos[it.canal]||[]).push(it); });
+  var html="";
+  CANAIS.forEach(function(canal){
+    var arr=grupos[canal]; if(!arr) return;
+    html+='<div class="grp"><h3>'+CANAL_LABEL[canal]+'<span class="count">'+arr.length+' itens</span></h3>';
+    arr.forEach(function(it){
+      var qt=Math.max(1,Number(it.minimo)-Number(it.atual));
+      var canalOpts=CANAIS.map(function(c){return '<option value="'+c+'"'+(it.canal===c?' selected':'')+'>'+c+'</option>';}).join('');
+      var idx2=estoque.indexOf(it);
+      html+='<div class="row"><div class="nm">'+esc(it.item)+(it.marca?' <small>'+esc(it.marca)+'</small>':'')+'</div>'+
+            '<div class="q">'+qt+' '+esc(it.unidade||"un")+'</div>'+
+            '<select onchange="mudaCanal('+idx2+',this.value)">'+canalOpts+'</select></div>';
+    });
+    html+='</div>';
+  });
+  out.innerHTML=html;
+}
+function mudaCanal(i,v){ estoque[i].canal=v; save(); gerar(); }
+function listaTexto(){
+  var faltando=faltantes();
+  if(filtro!=='tudo') faltando=faltando.filter(function(it){ return GRUPO[it.canal]===filtro; });
+  var grupos={}; faltando.forEach(function(it){ (grupos[it.canal]=grupos[it.canal]||[]).push(it); });
+  var t="🛒 LISTA DA FEIRA\n";
+  CANAIS.forEach(function(canal){
+    var arr=grupos[canal]; if(!arr) return;
+    t+="\n"+CANAL_LABEL[canal].replace(/^[^ ]+ /,"").toUpperCase()+"\n";
+    arr.forEach(function(it){
+      var qt=Math.max(1,Number(it.minimo)-Number(it.atual));
+      t+="• "+it.item+(it.marca?" ("+it.marca+")":"")+" — "+qt+" "+(it.unidade||"un")+"\n";
+    });
+  });
+  return t.trim();
+}
+function copiar(){ copyText(listaTexto(),"Lista copiada"); }
+function baixarTxt(){ download("lista-feira.txt", listaTexto(), "text/plain"); }
+function download(name,content,type){
+  var b=new Blob([content],{type:type+";charset=utf-8"});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},500);
+}
+
+/* ================= boot ================= */
+renderCards(); gerar(); folegoRender(); renderAtalhos();
+loadAgenda(); loadInbox(); loadCamila(); loadCentral();
+
+/* standalone (GitHub Pages): nota discreta + service worker p/ PWA */
+if(!COWORK){
+  try{ document.querySelector('.brand small').textContent = 'modo app · Feira e Fôlego ao vivo'; }catch(e){}
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+  }
+}
+</script>
+</body>
+</html>
