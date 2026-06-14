@@ -167,20 +167,20 @@
   .mes-more{font-size:10px;color:var(--muted)}
   .t-sec{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px;font-weight:600}
   .t-sec:first-child{margin-top:0}
-  /* ===== responsivo: nav NUNCA some — vira topbar ===== */
+  /* ===== responsivo: menu vira gaveta lateral à esquerda (abre/retrai) ===== */
+  .menu-toggle{display:none}
+  .side-overlay{display:none}
   @media(max-width:880px){
-    .app{flex-direction:column}
-    .side{width:auto;flex-direction:row;align-items:center;gap:6px;padding:8px 10px;
-      border-right:none;border-bottom:1px solid var(--side-line);overflow-x:auto;position:sticky;top:0;z-index:5}
-    .brand{display:none}
-    .nav{display:flex;flex-direction:row;gap:2px}
-    .nav a{white-space:nowrap;padding:7px 10px;font-size:12.5px;margin-bottom:0}
-    .side-foot{margin:0;padding:0;margin-left:auto}
-    .folego{display:flex;align-items:center;gap:7px;padding:5px 9px;border-radius:9px}
-    .folego .fl-n{font-size:13px;margin:0}
-    .folego .fl-s{display:none}
-    .folego button{margin:0;width:auto;padding:4px 8px;white-space:nowrap}
-    .main{padding:14px}
+    .menu-toggle{display:flex;align-items:center;justify-content:center;position:fixed;top:10px;left:10px;z-index:40;
+      width:42px;height:42px;border-radius:10px;background:var(--side);color:var(--side-txt);border:none;
+      font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.28)}
+    .side{position:fixed;top:0;left:0;height:100%;width:236px;z-index:35;transform:translateX(-100%);
+      transition:transform .25s ease;box-shadow:2px 0 18px rgba(0,0,0,.35)}
+    body.side-open .side{transform:translateX(0)}
+    .side-overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;
+      opacity:0;pointer-events:none;transition:opacity .25s}
+    body.side-open .side-overlay{opacity:1;pointer-events:auto}
+    .main{padding:14px;padding-top:64px}
     .cal-grid{gap:5px}
     .mes-cell{min-height:64px}
   }
@@ -188,6 +188,8 @@
 </head>
 <body>
 <div class="app">
+  <button class="menu-toggle" id="menuToggle" onclick="toggleSide()" aria-label="Abrir menu">☰</button>
+  <div class="side-overlay" id="sideOverlay" onclick="toggleSide()"></div>
   <aside class="side">
     <div class="brand">Painel Central<small>tudo é uma coisa só</small></div>
     <nav class="nav">
@@ -402,12 +404,14 @@ function liveStub(titulo, btn){
 
 /* ================= navegação ================= */
 var VIEWS=["hoje","tarefas","inbox","feira","saude","camila","atalhos"];
+function toggleSide(){ document.body.classList.toggle('side-open'); }
 function nav(v){
   VIEWS.forEach(function(k){
     $('view-'+k).style.display = k===v?'block':'none';
     $('nav-'+k).classList.toggle('active', k===v);
   });
   if(v==='feira'){ renderCards(); gerar(); }
+  document.body.classList.remove('side-open');
 }
 
 /* ================= HOJE: agenda viva (Google Calendar) ================= */
