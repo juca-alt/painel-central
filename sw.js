@@ -1,5 +1,6 @@
-/* Painel Central — service worker (offline shell p/ PWA) */
-var CACHE = "painel-central-v1";
+/* Painel Central — service worker (PWA) */
+/* HTML = network-first (sempre fresco online, cai pro cache offline); demais assets = cache-first. */
+var CACHE = "painel-central-v2";
 var ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", function(e){
@@ -18,12 +19,26 @@ self.addEventListener("activate", function(e){
 
 self.addEventListener("fetch", function(e){
   if(e.request.method !== "GET") return;
+  var req = e.request;
+  var isNav = req.mode === "navigate" || (req.headers.get("accept") || "").indexOf("text/html") >= 0;
+  if(isNav){
+    e.respondWith(
+      fetch(req).then(function(res){
+        var cp = res.clone();
+        caches.open(CACHE).then(function(c){ c.put(req, cp); });
+        return res;
+      }).catch(function(){
+        return caches.match(req).then(function(h){ return h || caches.match("./index.html"); });
+      })
+    );
+    return;
+  }
   e.respondWith(
-    caches.match(e.request).then(function(hit){
-      return hit || fetch(e.request).then(function(res){
+    caches.match(req).then(function(hit){
+      return hit || fetch(req).then(function(res){
         if(res && res.status === 200 && res.type === "basic"){
           var cp = res.clone();
-          caches.open(CACHE).then(function(c){ c.put(e.request, cp); });
+          caches.open(CACHE).then(function(c){ c.put(req, cp); });
         }
         return res;
       }).catch(function(){ return caches.match("./index.html"); });
