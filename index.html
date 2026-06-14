@@ -402,6 +402,45 @@ function liveStub(titulo, btn){
     (btn?'<div style="margin-top:8px">'+btn+'</div>':'')+'</div></div>';
 }
 
+/* ===== Google ao vivo no standalone via OAuth client-side (GIS) — privado, só aparece após login ===== */
+var GCAL_CLIENT_ID = "63708753663-92us3rgem9s1j6rapi86b8uerc5440fr.apps.googleusercontent.com";
+var GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
+var gToken=null, gTokenClient=null;
+try{ if(!COWORK) gToken = sessionStorage.getItem('gtok') || null; }catch(e){}
+function connectPanel(titulo){
+  return '<div class="errbox"><div class="e-t">🔗 '+esc(titulo)+'</div>'+
+    '<div class="e-s">Conecta tua Conta Google pra ver ao vivo aqui no app — é privado: só aparece depois que <b>tu</b> logar.'+
+    '<div style="margin-top:8px"><button class="btn primary sm" onclick="connectGoogle()">🔗 Conectar Google</button></div></div></div>';
+}
+function gisEnsure(cb){
+  if(window.google && google.accounts && google.accounts.oauth2){ cb(); return; }
+  var s=document.createElement('script'); s.src="https://accounts.google.com/gsi/client"; s.async=true; s.defer=true;
+  s.onload=function(){ cb(); };
+  s.onerror=function(){ toast("Não consegui carregar o login do Google"); };
+  document.head.appendChild(s);
+}
+function connectGoogle(){
+  gisEnsure(function(){
+    try{
+      if(!gTokenClient){
+        gTokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: GCAL_CLIENT_ID, scope: GCAL_SCOPE,
+          callback: function(resp){
+            if(resp && resp.access_token){
+              gToken = resp.access_token;
+              try{ sessionStorage.setItem('gtok', gToken); }catch(e){}
+              evCache={};
+              toast("Google conectado ✓");
+              loadAgenda(); loadCamila();
+            }
+          }
+        });
+      }
+      gTokenClient.requestAccessToken();
+    }catch(e){ toast("Erro ao conectar: "+(e.message||e)); }
+  });
+}
+
 /* ================= navegação ================= */
 var VIEWS=["hoje","tarefas","inbox","feira","saude","camila","atalhos"];
 function toggleSide(){ document.body.classList.toggle('side-open'); }
@@ -436,14 +475,25 @@ async function fetchEvents(ini,fim){
   var key=ini.getTime()+"|"+fim.getTime();
   if(evCache[key]) return evCache[key];
   var all=[], token=null, guard=0;
-  do{
-    var args={startTime:ini.toISOString(), endTime:fim.toISOString(),
-      timeZone:"America/Recife", pageSize:250, orderBy:"startTime"};
-    if(token) args.pageToken=token;
-    var data=unwrap(await mcp(TOOL_CAL,args));
-    all=all.concat(data.events||[]);
-    token=data.nextPageToken; guard++;
-  }while(token && guard<4);
+  if(COWORK){
+    do{
+      var args={startTime:ini.toISOString(), endTime:fim.toISOString(),
+        timeZone:"America/Recife", pageSize:250, orderBy:"startTime"};
+      if(token) args.pageToken=token;
+      var data=unwrap(await mcp(TOOL_CAL,args));
+      all=all.concat(data.events||[]);
+      token=data.nextPageToken; guard++;
+    }while(token && guard<4);
+  } else {
+    if(!gToken) throw new Error("__NEEDCONNECT__");
+    var u="https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250"
+      +"&timeMin="+encodeURIComponent(ini.toISOString())
+      +"&timeMax="+encodeURIComponent(fim.toISOString());
+    var resp=await fetch(u,{headers:{Authorization:"Bearer "+gToken}});
+    if(resp.status===401||resp.status===403){ gToken=null; try{sessionStorage.removeItem('gtok');}catch(e){} throw new Error("__NEEDCONNECT__"); }
+    var dd=await resp.json();
+    all=(dd.items||[]);
+  }
   all=all.filter(function(e){return e.status!=='cancelled';});
   evCache[key]=all;
   return all;
@@ -516,7 +566,7 @@ async function loadAgendaView(){
     else if(aView==='mes') renderVMes(m, r);
     else renderVCols(m, r, aView==='d4'?4:7);
   }catch(e){
-    if(!COWORK){ $('agenda-out').innerHTML=liveStub('Tua agenda', '<button class="btn sm" onclick="openLink(\'https://calendar.google.com\')">📅 Abrir Google Agenda</button>'); return; }
+    if(!COWORK && (!gToken || String(e&&e.message)==="__NEEDCONNECT__")){ $('agenda-out').innerHTML=connectPanel('Conectar pra ver tua agenda ao vivo'); return; }
     $('agenda-out').innerHTML='<div class="errbox"><div class="e-t">Não consegui falar com o Google Calendar</div>'+
       '<div class="e-s">'+esc(String(e.message||e).slice(0,180))+' — recarrega o painel ou verifica o conector nas configurações.</div></div>';
   }
@@ -838,12 +888,8 @@ async function loadInbox(){
 async function loadCamila(){
   try{
     var ini=new Date(); var fim=new Date(); fim.setDate(fim.getDate()+45);
-    var r=await mcp(TOOL_CAL,{
-      startTime: ini.toISOString(), endTime: fim.toISOString(),
-      timeZone:"America/Recife", pageSize: 50, fullText:"prova"
-    });
-    var data=unwrap(r);
-    var evs=(data.events||[]).filter(function(e){return /camila|prova/i.test(e.summary||"");});
+    var evsAll=await fetchEvents(ini, fim);
+    var evs=evsAll.filter(function(e){return /camila|prova/i.test(e.summary||"");});
     if(!evs.length){ $('camila-out').innerHTML='<div class="empty">Nenhuma prova nos próximos 45 dias no Calendar.</div>'; return; }
     var html='<div class="panel"><h3>Próximas provas<span class="count">'+evs.length+'</span></h3>';
     evs.forEach(function(e){
@@ -855,7 +901,7 @@ async function loadCamila(){
     html+='</div>';
     $('camila-out').innerHTML=html;
   }catch(e){
-    if(!COWORK){ $('camila-out').innerHTML=liveStub('Provas no Calendar', '<button class="btn sm" onclick="openLink(\'https://calendar.google.com\')">📅 Abrir Calendar</button>'); return; }
+    if(!COWORK && (!gToken || String(e&&e.message)==="__NEEDCONNECT__")){ $('camila-out').innerHTML=connectPanel('Conectar pra ver as provas'); return; }
     $('camila-out').innerHTML='<div class="errbox"><div class="e-t">Não consegui consultar o Calendar</div><div class="e-s">'+esc(String(e.message||e).slice(0,160))+'</div></div>';
   }
 }
