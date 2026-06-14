@@ -404,7 +404,7 @@ function liveStub(titulo, btn){
 
 /* ===== Google ao vivo no standalone via OAuth client-side (GIS) — privado, só aparece após login ===== */
 var GCAL_CLIENT_ID = "63708753663-92us3rgem9s1j6rapi86b8uerc5440fr.apps.googleusercontent.com";
-var GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
+var GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly";
 var gToken=null, gTokenClient=null;
 try{ if(!COWORK) gToken = sessionStorage.getItem('gtok') || null; }catch(e){}
 function connectPanel(titulo){
@@ -431,7 +431,7 @@ function connectGoogle(){
               try{ sessionStorage.setItem('gtok', gToken); }catch(e){}
               evCache={};
               toast("Google conectado ✓");
-              loadAgenda(); loadCamila();
+              loadAgenda(); loadCamila(); loadInbox();
             }
           }
         });
@@ -850,24 +850,52 @@ function capturar(){
   try{ window.location.href=u; toast("Abrindo teu email…"); }
   catch(e){ copyText("juca@segurocomjuca.com","Endereço copiado — assunto: #inbox"); }
 }
+async function gmailInboxRest(){
+  var q=encodeURIComponent("subject:#inbox newer_than:60d");
+  var lr=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&q="+q,{headers:{Authorization:"Bearer "+gToken}});
+  if(lr.status===401||lr.status===403){ gToken=null; try{sessionStorage.removeItem('gtok');}catch(e){} throw new Error("__NEEDCONNECT__"); }
+  var ld=await lr.json();
+  var msgs=(ld.messages||[]).slice(0,15);
+  var caps=[];
+  for(var i=0;i<msgs.length;i++){
+    var mr=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/"+msgs[i].id+"?format=metadata&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=From",{headers:{Authorization:"Bearer "+gToken}});
+    if(!mr.ok) continue;
+    var m=await mr.json();
+    var hs={}; ((m.payload&&m.payload.headers)||[]).forEach(function(h){ hs[(h.name||"").toLowerCase()]=h.value; });
+    var from=hs.from||"", subj=String(hs.subject||"");
+    if(/mailer-daemon|postmaster/i.test(from) || /delivery status notification/i.test(subj)) continue;
+    subj=subj.replace(/#inbox/ig,"").trim();
+    var snip=String(m.snippet||"").trim();
+    var dt=hs.date?new Date(hs.date):null;
+    caps.push({titulo: subj||snip.slice(0,80)||"(captura sem texto)", corpo: subj?snip.slice(0,160):"",
+      quando: (dt&&!isNaN(dt))?fmt2(dt.getDate())+"/"+fmt2(dt.getMonth()+1)+" "+fmt2(dt.getHours())+":"+fmt2(dt.getMinutes()):""});
+  }
+  return caps;
+}
 async function loadInbox(){
   try{
-    var r=await mcp(TOOL_GMAIL,{ query:"subject:#inbox newer_than:60d", pageSize: 20 });
-    var data=unwrap(r);
-    var threads=data.threads||data.items||[];
-    var caps=[];
-    threads.forEach(function(th){
-      var msgs=(th.messages||th.relatedMessages||[]).filter(function(m){
-        return !/mailer-daemon|postmaster/i.test(m.sender||"") && !/delivery status notification/i.test(m.subject||"");
+    var caps;
+    if(COWORK){
+      var r=await mcp(TOOL_GMAIL,{ query:"subject:#inbox newer_than:60d", pageSize: 20 });
+      var data=unwrap(r);
+      var threads=data.threads||data.items||[];
+      caps=[];
+      threads.forEach(function(th){
+        var msgs=(th.messages||th.relatedMessages||[]).filter(function(m){
+          return !/mailer-daemon|postmaster/i.test(m.sender||"") && !/delivery status notification/i.test(m.subject||"");
+        });
+        var m=msgs[0]||null;
+        if(!m) return;
+        var subj=String(m.subject||th.subject||"").replace(/#inbox/ig,"").trim();
+        var snip=String(m.snippet||th.snippet||"").trim();
+        var dt=m.date?new Date(m.date):null;
+        caps.push({titulo: subj||snip.slice(0,80)||"(captura sem texto)", corpo: subj?snip.slice(0,160):"",
+          quando: dt?fmt2(dt.getDate())+"/"+fmt2(dt.getMonth()+1)+" "+fmt2(dt.getHours())+":"+fmt2(dt.getMinutes()):""});
       });
-      var m=msgs[0]||null;
-      if(!m) return;
-      var subj=String(m.subject||th.subject||"").replace(/#inbox/ig,"").trim();
-      var snip=String(m.snippet||th.snippet||"").trim();
-      var dt=m.date?new Date(m.date):null;
-      caps.push({titulo: subj||snip.slice(0,80)||"(captura sem texto)", corpo: subj?snip.slice(0,160):"",
-        quando: dt?fmt2(dt.getDate())+"/"+fmt2(dt.getMonth()+1)+" "+fmt2(dt.getHours())+":"+fmt2(dt.getMinutes()):""});
-    });
+    } else {
+      if(!gToken) throw new Error("__NEEDCONNECT__");
+      caps = await gmailInboxRest();
+    }
     if(!caps.length){ $('inbox-out').innerHTML='<div class="panel"><h3>✉️ Email #inbox<span class="count">0</span></h3><div class="mail"><div class="m-x">Nenhum #inbox pendente. Caixa de captura limpa. ✅</div></div></div>'; return; }
     var html='<div class="panel"><h3>✉️ Email #inbox<span class="count">'+caps.length+'</span></h3>';
     caps.forEach(function(c){
@@ -878,6 +906,7 @@ async function loadInbox(){
     html+='</div>';
     $('inbox-out').innerHTML=html;
   }catch(e){
+    if(!COWORK && (!gToken || String(e&&e.message)==="__NEEDCONNECT__")){ $('inbox-out').innerHTML=connectPanel('Conectar pra ver o #inbox'); return; }
     if(!COWORK){ $('inbox-out').innerHTML=liveStub('Email #inbox', '<button class="btn sm" onclick="capturar()">✉️ Capturar por email</button>'); return; }
     $('inbox-out').innerHTML='<div class="errbox"><div class="e-t">✉️ Email #inbox — Gmail desconectado</div>'+
       '<div class="e-s">Reconecta em <b>Configurações → Conectores → Gmail</b> e me avisa no chat que eu religo este módulo. Enquanto isso, o Dump da planilha abaixo segue funcionando como inbox.</div></div>';
