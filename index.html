@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<script type="application/json" id="cowork-artifact-meta">
+<!DOCTYPE html><script type="application/json" id="cowork-artifact-meta">
 {
   "name": "Painel Central",
   "schemaVersion": 1,
@@ -404,7 +403,7 @@ function liveStub(titulo, btn){
 
 /* ===== Google ao vivo no standalone via OAuth client-side (GIS) — privado, só aparece após login ===== */
 var GCAL_CLIENT_ID = "63708753663-92us3rgem9s1j6rapi86b8uerc5440fr.apps.googleusercontent.com";
-var GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly";
+var GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/spreadsheets.readonly";
 var gToken=null, gTokenClient=null;
 try{ if(!COWORK) gToken = sessionStorage.getItem('gtok') || null; }catch(e){}
 function connectPanel(titulo){
@@ -429,9 +428,9 @@ function connectGoogle(){
             if(resp && resp.access_token){
               gToken = resp.access_token;
               try{ sessionStorage.setItem('gtok', gToken); }catch(e){}
-              evCache={};
+              evCache={}; sheetData=null; sheetPromise=null;
               toast("Google conectado ✓");
-              loadAgenda(); loadCamila(); loadInbox();
+              loadAgenda(); loadCamila(); loadInbox(); loadCentral();
             }
           }
         });
@@ -718,13 +717,82 @@ function parseCentral(md){
   });
   return res;
 }
+/* ===== parser de VALUES (Sheets API) — abas cruas, não markdown =====
+   Mesmas colunas que o parseCentral entrega, pra renderTarefas/renderSaude/renderDump não mudarem:
+   Backlog/Arquivo: ID|Tarefa|Projeto|Categoria|Status|Prazo|Origem|Obs
+   Dump: 1 coluna · Bússola: Eixo|Projeto|Categoria|Prioridade(!)|Tarefa */
+function normTab(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").trim(); }
+function findHeader(rows, test){ for(var i=0;i<rows.length && i<6;i++){ if(test(rows[i]||[])) return i; } return -1; }
+function parseTaskRows(rows){
+  rows=rows||[]; var out=[];
+  var hi=findHeader(rows,function(r){ return /^id$/i.test(String(r[0]||"").trim()) && /tarefa/i.test(String(r[1]||"")); });
+  for(var i=(hi>=0?hi+1:1); i<rows.length; i++){
+    var r=rows[i]||[];
+    if(!String(r[1]||"").trim()) continue;
+    out.push({ id:String(r[0]||""), tarefa:String(r[1]||""), projeto:String(r[2]||""),
+      categoria:catName(r[3]), status:statusOf(r[4]), prazo:parseDate(r[5]),
+      prazoTxt:String(r[5]||"").trim(), origem:String(r[6]||""), obs:String(r[7]||"") });
+  }
+  return out;
+}
+function parseDumpRows(rows){
+  rows=rows||[]; var out=[];
+  var hi=findHeader(rows,function(r){ return /dump/i.test(String(r[0]||"")); });
+  for(var i=(hi>=0?hi+1:1); i<rows.length; i++){
+    var s=String((rows[i]||[])[0]||"").trim();
+    if(s) out.push(s);
+  }
+  return out;
+}
+function parseBussolaRows(rows){
+  rows=rows||[]; var out=[];
+  var hi=findHeader(rows,function(r){ return /b[uú]ss/i.test(String(r[0]||"")) || (/eixo/i.test(String(r[0]||"")) && /tarefa/i.test(String(r[4]||""))); });
+  for(var i=(hi>=0?hi+1:1); i<rows.length; i++){
+    var r=rows[i]||[];
+    if(!String(r[4]||"").trim()) continue;
+    out.push({ eixo:String(r[0]||""), projeto:String(r[1]||""), categoria:String(r[2]||""),
+      prio:(String(r[3]||"").match(/!/g)||[]).length, tarefa:String(r[4]||"") });
+  }
+  return out;
+}
+function parseCentralValues(byKey){
+  return { backlog:parseTaskRows(byKey.backlog), arquivo:parseTaskRows(byKey.arquivo),
+    dump:parseDumpRows(byKey.dump), bussola:parseBussolaRows(byKey.bussola) };
+}
+async function sheetValuesRest(){
+  if(!gToken) throw new Error("__NEEDCONNECT__");
+  var H={headers:{Authorization:"Bearer "+gToken}};
+  function chk(resp){ if(resp.status===401||resp.status===403){ gToken=null; try{sessionStorage.removeItem('gtok');}catch(e){} throw new Error("__NEEDCONNECT__"); } }
+  /* 1) resolve os títulos reais das abas (lida com acento/caixa e ignora a aba de sync) */
+  var mr=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+SHEET_ID+"?fields=sheets.properties.title",H);
+  chk(mr);
+  if(!mr.ok) throw new Error("Sheets API "+mr.status+(mr.status===404?" (planilha não encontrada)":""));
+  var meta=await mr.json();
+  var titles=((meta.sheets||[]).map(function(s){return (s.properties||{}).title||"";})).filter(Boolean);
+  function pick(want){ var w=normTab(want);
+    for(var i=0;i<titles.length;i++){ if(normTab(titles[i])===w) return titles[i]; }
+    for(var j=0;j<titles.length;j++){ if(normTab(titles[j]).indexOf(w)===0) return titles[j]; }
+    return null; }
+  var resolved=[["backlog","Backlog"],["arquivo","Arquivo"],["dump","Dump"],["bussola","Bússola"]]
+    .map(function(w){ return {key:w[0], title:pick(w[1])}; }).filter(function(x){ return x.title; });
+  if(!resolved.length) throw new Error("Não achei as abas Backlog/Arquivo/Dump/Bússola");
+  /* 2) batchGet dos valores das abas resolvidas (ordem preservada) */
+  var u="https://sheets.googleapis.com/v4/spreadsheets/"+SHEET_ID+"/values:batchGet?valueRenderOption=FORMATTED_VALUE&"
+    + resolved.map(function(r){ return "ranges="+encodeURIComponent(r.title); }).join("&");
+  var vr=await fetch(u,H);
+  chk(vr);
+  if(!vr.ok) throw new Error("Sheets API "+vr.status);
+  var dd=await vr.json(); var arr=dd.valueRanges||[]; var byKey={};
+  resolved.forEach(function(r,i){ byKey[r.key]=(arr[i]&&arr[i].values)||[]; });
+  return parseCentralValues(byKey);
+}
 function getSheet(){
   if(sheetPromise) return sheetPromise;
-  sheetPromise = mcp(TOOL_DRIVE,{fileId:SHEET_ID}).then(function(r){
-    var d=unwrap(r);
-    sheetData=parseCentral(d.fileContent||d.raw||"");
-    return sheetData;
-  });
+  var p = COWORK
+    ? mcp(TOOL_DRIVE,{fileId:SHEET_ID}).then(function(r){ var d=unwrap(r); return parseCentral(d.fileContent||d.raw||""); })
+    : sheetValuesRest();
+  sheetPromise = p.then(function(d){ sheetData=d; return d; })
+                  .catch(function(e){ sheetPromise=null; throw e; }); /* não cacheia falha: permite retry após conectar */
   return sheetPromise;
 }
 function isOpen(t){ return t.status.k!=="done" && t.status.k!=="cancel"; }
@@ -831,9 +899,16 @@ async function loadCentral(){
     if(atrasadas.length){ $('bdg-atr').textContent=atrasadas.length; $('bdg-atr').style.display='inline-block'; }
     if(pend.length){ $('bdg-inb').textContent=pend.length; $('bdg-inb').style.display='inline-block'; }
   }catch(e){
+    if(!COWORK && (!gToken || String(e&&e.message)==="__NEEDCONNECT__")){
+      var cp=connectPanel('Conectar pra ver Tarefas e Saúde ao vivo');
+      $('tarefas-out').innerHTML=cp; $('bussola-out').innerHTML=""; $('dump-out').innerHTML=""; $('saude-out').innerHTML=cp;
+      $('h-ab').textContent='–'; $('h-atr').textContent='–'; $('h-inb').textContent='–';
+      return;
+    }
     if(!COWORK){
-      var st=liveStub('Tarefas e Saúde', '<button class="btn sm" onclick="openLink(SHEET_URL)">📊 Abrir a planilha</button>');
-      $('tarefas-out').innerHTML=st; $('bussola-out').innerHTML=""; $('dump-out').innerHTML=""; $('saude-out').innerHTML=st;
+      var se='<div class="errbox"><div class="e-t">Não consegui ler a planilha (Sheets API)</div>'+
+        '<div class="e-s">'+esc(String(e.message||e).slice(0,180))+'. Se o erro for 403, ativa a <b>Google Sheets API</b> no projeto painel-central-499400 e reconecta. <button class="btn sm" style="margin-left:6px" onclick="openLink(SHEET_URL)">📊 Abrir planilha</button></div></div>';
+      $('tarefas-out').innerHTML=se; $('bussola-out').innerHTML=""; $('dump-out').innerHTML=""; $('saude-out').innerHTML=se;
       return;
     }
     var msg='<div class="errbox"><div class="e-t">Não consegui ler a Central de Tarefas no Drive</div>'+
@@ -1195,7 +1270,7 @@ loadAgenda(); loadInbox(); loadCamila(); loadCentral();
 
 /* standalone (GitHub Pages): nota discreta + service worker p/ PWA */
 if(!COWORK){
-  try{ document.querySelector('.brand small').textContent = 'modo app · Feira e Fôlego ao vivo'; }catch(e){}
+  try{ document.querySelector('.brand small').textContent = 'modo app · conecta o Google pra ver tudo ao vivo'; }catch(e){}
   if("serviceWorker" in navigator){
     window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
   }
