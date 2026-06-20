@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casa › Funcionários › Débora</title>
+<style>
+  :root{ color-scheme: light;
+    --bg:#f4f6f8; --card:#fff; --bd:#e4e8ec; --tx:#1c2128; --mut:#6b7785;
+    --pri:#2f7d72; --pri-s:#e7f2f0; --warm:#c2683a; --warm-s:#f9ece4; --blue:#3b6ea5; --blue-s:#e8f0f7;
+    --ok:#2f7d72; --bad:#c0392b; --shadow:0 1px 2px rgba(16,24,40,.06);}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:940px;margin:0 auto;padding:18px 16px 60px;}
+  .crumb{font-size:13px;color:var(--mut);margin-bottom:4px;}
+  h1{font-size:22px;margin:0 0 2px;}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:14px;}
+  .chip{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--pri-s);color:var(--pri);font-weight:600;}
+  .chip.soon{background:#eef1f4;color:var(--mut);}
+  .tabs{display:flex;gap:6px;margin:10px 0 16px;flex-wrap:wrap;}
+  .tab{border:1px solid var(--bd);background:var(--card);padding:9px 14px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--tx);}
+  .tab.active{background:var(--tx);color:#fff;border-color:var(--tx);}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);}
+  .card h2{font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  label.fld{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:3px;font-weight:600;}
+  input,select{font:inherit;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:#fff;color:var(--tx);}
+  input[type=time]{width:96px;}
+  input.num{width:80px;} input.txt{min-width:200px;}
+  .seg{display:inline-flex;border:1px solid var(--bd);border-radius:10px;overflow:hidden;}
+  .seg button{border:none;background:#fff;padding:8px 16px;cursor:pointer;font-weight:600;font-size:13px;color:var(--mut);}
+  .seg button.on{color:#fff;background:var(--blue);}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th,td{padding:7px 5px;border-bottom:1px solid var(--bd);text-align:center;}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--mut);font-weight:700;}
+  td.day{text-align:left;font-weight:600;white-space:nowrap;}
+  tr.off{opacity:.5;background:#fbfbfc;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;}
+  .stat{background:#fafbfc;border:1px solid var(--bd);border-radius:10px;padding:10px 12px;}
+  .stat .v{font-size:20px;font-weight:700;}
+  .stat .l{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.3px;}
+  .stat.good .v{color:var(--ok);} .stat.bad .v{color:var(--bad);}
+  .btn{border:1px solid var(--bd);background:#fff;padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:600;font-size:13px;color:var(--tx);}
+  .btn.pri{background:var(--pri);color:#fff;border-color:var(--pri);}
+  textarea{width:100%;min-height:160px;border:1px solid var(--bd);border-radius:10px;padding:10px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--tx);background:#fafbfc;}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px;}
+  .cal .h{font-size:10px;color:var(--mut);text-align:center;font-weight:700;text-transform:uppercase;}
+  .cal .c{min-height:42px;border:1px solid var(--bd);border-radius:7px;padding:3px 4px;font-size:11px;background:#fff;}
+  .cal .c.work{background:var(--blue-s);}
+  .cal .c .n{font-weight:700;font-size:11px;} .cal .c .hh{color:var(--mut);font-size:10px;}
+  .cal .c.empty{border:none;background:transparent;}
+  .muted{color:var(--mut);font-size:12px;}
+  .ident{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 18px;font-size:13px;}
+  .ident b{color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px;display:block;}
+  .pill{font-size:11px;padding:2px 7px;border-radius:6px;font-weight:700;}
+  .pill.ex{background:#e7f2f0;color:var(--ok);} .pill.fa{background:#fbe9e7;color:var(--bad);}
+  .note{background:var(--blue-s);border:1px solid #cfe0ef;border-radius:10px;padding:9px 12px;font-size:13px;color:#234;}
+  .printonly{display:none;}
+  @media print{
+    .tab,.seg,.btn,.no-print,.tabs{display:none!important;}
+    .card{box-shadow:none;border:none;break-inside:avoid;padding:4px 0;} body{background:#fff;} .wrap{padding:0;}
+    .printonly{display:block;} th,td{padding:4px 3px;font-size:11px;}
+    #tab-horario{display:none!important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb">🏠 Casa › 👥 Funcionários</div>
+  <h1>Débora <span class="chip">Empregada Doméstica</span></h1>
+  <div class="sub">Carga, horário e cartão de ponto · <span class="chip soon">Victoria — em breve</span></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="horario">🗓️ Carga &amp; Horário</button>
+    <button class="tab" data-tab="ponto">🕐 Cartão de Ponto</button>
+  </div>
+
+  <!-- ===================== CARGA & HORÁRIO ===================== -->
+  <section id="tab-horario">
+    <div class="card">
+      <h2>Mês a planejar</h2>
+      <div class="row" style="justify-content:space-between">
+        <div class="seg">
+          <button id="cen-jun" onclick="setCenario('jun')">Junho</button>
+          <button id="cen-jul" onclick="setCenario('jul')">Julho</button>
+          <button id="cen-ago" onclick="setCenario('ago')">Agosto</button>
+        </div>
+        <label class="fld" style="flex:1;min-width:240px">Programação familiar / observação
+          <input id="vigencia" class="txt" type="text" oninput="onVig(this.value)">
+        </label>
+      </div>
+      <div class="note" style="margin-top:12px">Carga contratual de referência: <b>8h48/dia · 44h/semana · 220h/mês</b> (seg–sex). Distribua os horários conforme a rotina da família — o painel mostra se o mês fecha a carga.</div>
+    </div>
+
+    <div class="card">
+      <h2>Quadro semanal <span class="muted" id="cen-label"></span></h2>
+      <table>
+        <thead><tr><th class="day" style="text-align:left">Dia</th><th>Trabalha</th><th>Entrada</th><th>Saída</th><th>Almoço (min)</th><th>Horas no dia</th></tr></thead>
+        <tbody id="week-body"></tbody>
+      </table>
+      <div class="row" style="margin-top:14px">
+        <label class="fld">Carga mensal alvo (h)
+          <input id="carga" class="num" type="number" min="0" step="1" oninput="onCarga(this.value)">
+        </label>
+        <span class="muted" style="align-self:flex-end">Padrão por dia: <b>8h48</b></span>
+      </div>
+      <div class="cards" style="margin-top:14px">
+        <div class="stat"><div class="v" id="s-dia">–</div><div class="l">Horas/dia médio</div></div>
+        <div class="stat"><div class="v" id="s-sem">–</div><div class="l">Horas/semana</div></div>
+        <div class="stat"><div class="v" id="s-mes">–</div><div class="l">Planejado no mês</div></div>
+        <div class="stat" id="s-saldo-box"><div class="v" id="s-saldo">–</div><div class="l">vs carga alvo</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📅 Como cai no mês <span class="muted" id="cal-mes"></span></h2>
+      <div class="cal" id="cal"></div>
+    </div>
+
+    <div class="card no-print">
+      <h2>📋 Quadro pra mandar pra Débora</h2>
+      <p class="muted">Texto pronto pra colar no WhatsApp.</p>
+      <textarea id="quadro-txt" readonly></textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="btn pri" onclick="copyEl('quadro-txt','copy-msg')">📋 Copiar quadro</button>
+        <span id="copy-msg" class="muted"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CARTÃO DE PONTO ===================== -->
+  <section id="tab-ponto" style="display:none">
+    <div class="card">
+      <div class="printonly" style="text-align:center;font-weight:700;margin-bottom:6px" id="print-title"></div>
+      <h2 class="no-print">Identificação <span class="muted">(modelo da contabilidade)</span></h2>
+      <div class="ident">
+        <div><b>Empregador</b><input class="txt" style="width:100%" id="id-emp" placeholder="Nome do empregador" oninput="setIdent('empregador',this.value)"></div>
+        <div><b>CPF/CNPJ</b><input class="txt" style="width:100%" id="id-cpf" placeholder="CPF/CNPJ" oninput="setIdent('cpf',this.value)"></div>
+        <div><b>Endereço</b><input class="txt" style="width:100%" id="id-end" placeholder="Endereço" oninput="setIdent('endereco',this.value)"></div>
+        <div><b>Funcionária</b><input class="txt" style="width:100%" id="id-func" placeholder="Nome da funcionária" oninput="setIdent('func',this.value)"></div>
+        <div><b>Função</b><input class="txt" style="width:100%" id="id-cargo" placeholder="Função" oninput="setIdent('cargo',this.value)"></div>
+        <div><b>Admissão</b><input class="txt" style="width:100%" id="id-adm" placeholder="dd/mm/aaaa" oninput="setIdent('admissao',this.value)"></div>
+      </div>
+      <div class="row no-print" style="margin-top:12px">
+        <span class="muted">Mês:</span> <b id="ponto-mes-lbl"></b>
+        <span class="muted">— acompanha o mês selecionado na aba Carga &amp; Horário.</span>
+        <button class="btn" style="margin-left:auto" onclick="preencherPrevisto()">↧ Preencher c/ horário previsto</button>
+        <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead><tr>
+          <th class="day" style="text-align:left">Dia</th>
+          <th>Entrada</th><th>Saída</th><th>Entrada</th><th>Saída</th>
+          <th>H.E. Ent.</th><th>H.E. Saí.</th><th>Trab.</th><th style="text-align:left">Obs.</th>
+        </tr></thead>
+        <tbody id="ponto-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2 class="no-print">Resumo do mês</h2>
+      <div class="cards">
+        <div class="stat"><div class="v" id="p-trab">–</div><div class="l">Trabalhadas</div></div>
+        <div class="stat"><div class="v" id="p-prev">–</div><div class="l">Previstas</div></div>
+        <div class="stat"><div class="v" id="p-extra">–</div><div class="l">Horas extras</div></div>
+        <div class="stat" id="p-saldo-box"><div class="v" id="p-saldo">–</div><div class="l">Saldo do mês</div></div>
+        <div class="stat" id="p-banco-box"><div class="v" id="p-banco">–</div><div class="l">Banco acumulado</div></div>
+      </div>
+      <div class="row no-print" style="margin-top:12px">
+        <label class="fld">Banco de horas inicial (h)
+          <input id="banco-ini" class="num" type="number" step="0.5" oninput="onBanco(this.value)">
+        </label>
+        <button class="btn pri" style="align-self:flex-end" onclick="copyResumo()">📋 Copiar resumo</button>
+        <span id="copy-msg2" class="muted" style="align-self:flex-end"></span>
+      </div>
+      <div class="printonly" style="margin-top:30px">
+        <div style="margin-bottom:18px">Reconheço a exatidão destas anotações.</div>
+        Data: ____/____/______ &nbsp;&nbsp;&nbsp;&nbsp; _______________________________________
+        <div class="muted" style="margin-top:4px">Assinatura</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+"use strict";
+var DIAS=[["dom","Domingo"],["seg","Segunda"],["ter","Terça"],["qua","Quarta"],["qui","Quinta"],["sex","Sexta"],["sab","Sábado"]];
+var KEY="casa_debora_v2";
+var MES={jun:{y:2026,m:5,nome:"Junho/2026",pm:"2026-06"},jul:{y:2026,m:6,nome:"Julho/2026",pm:"2026-07"},ago:{y:2026,m:7,nome:"Agosto/2026",pm:"2026-08"}};
+function defSch(){var o={};DIAS.forEach(function(d){var k=d[0];var work=(k!=="dom"&&k!=="sab");o[k]={on:work,e:"09:12",s:"19:00",alm:work?60:0};});return o;}
+var DEFAULT={
+  ident:{empregador:"",cpf:"",endereco:"",func:"",cargo:"Empregada Doméstica",admissao:""},
+  cenario:"jun",
+  carga:{jun:220,jul:220,ago:220},
+  vig:{jun:"Junho/2026 — período letivo (rotina nova do Gael)",jul:"Julho/2026 — férias escolares do Gael",ago:"Agosto/2026 — volta às aulas"},
+  sch:{jun:defSch(),jul:defSch(),ago:defSch()},
+  bancoIni:0,
+  ponto:{}
+};
+var state=load();
+function load(){try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.sch&&r.ident)return r;}catch(e){}return JSON.parse(JSON.stringify(DEFAULT));}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+
+function toMin(t){if(!t)return null;var p=t.split(":");return (+p[0])*60+(+p[1]);}
+function fmtH(mins){if(mins==null||isNaN(mins))return "–";var neg=mins<0;mins=Math.abs(Math.round(mins));var h=Math.floor(mins/60),m=mins%60;return (neg?"-":"")+h+"h"+(m?(m<10?"0"+m:m):"");}
+function dayMins(d){if(!d||!d.on)return 0;var a=toMin(d.e),b=toMin(d.s);if(a==null||b==null)return 0;var t=b-a-(+d.alm||0);return t>0?t:0;}
+function cm(){return MES[state.cenario];}
+
+/* ---------- TABS ---------- */
+document.querySelectorAll(".tab").forEach(function(t){t.onclick=function(){
+  document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("active");});
+  t.classList.add("active");
+  var tab=t.getAttribute("data-tab");
+  document.getElementById("tab-horario").style.display=(tab==="horario")?"":"none";
+  document.getElementById("tab-ponto").style.display=(tab==="ponto")?"":"none";
+};});
+
+/* ---------- IDENT ---------- */
+function setIdent(f,v){state.ident[f]=v;save();}
+function renderIdent(){var i=state.ident;
+  document.getElementById("id-emp").value=i.empregador||"";document.getElementById("id-cpf").value=i.cpf||"";
+  document.getElementById("id-end").value=i.endereco||"";document.getElementById("id-func").value=i.func||"";
+  document.getElementById("id-cargo").value=i.cargo||"";document.getElementById("id-adm").value=i.admissao||"";
+}
+
+/* ---------- CARGA & HORÁRIO ---------- */
+function setCenario(c){state.cenario=c;save();renderHorario();renderPonto();}
+function onVig(v){state.vig[state.cenario]=v;save();renderQuadro();}
+function onCarga(v){state.carga[state.cenario]=(+v||0);save();renderSummary();renderQuadro();}
+
+function renderHorario(){
+  var c=state.cenario;
+  ["jun","jul","ago"].forEach(function(k){document.getElementById("cen-"+k).className=(c===k)?"on":"";});
+  document.getElementById("cen-label").textContent="· "+cm().nome;
+  document.getElementById("vigencia").value=state.vig[c]||"";
+  document.getElementById("carga").value=state.carga[c]||0;
+  var sch=state.sch[c];
+  var tb=document.getElementById("week-body");tb.innerHTML="";
+  DIAS.forEach(function(d){
+    var k=d[0],o=sch[k];
+    var tr=document.createElement("tr");if(!o.on)tr.className="off";
+    tr.innerHTML=
+      '<td class="day">'+d[1]+'</td>'+
+      '<td><input type="checkbox" '+(o.on?"checked":"")+' onchange="setDay(\''+k+'\',\'on\',this.checked)"></td>'+
+      '<td><input type="time" value="'+o.e+'" onchange="setDay(\''+k+'\',\'e\',this.value)"></td>'+
+      '<td><input type="time" value="'+o.s+'" onchange="setDay(\''+k+'\',\'s\',this.value)"></td>'+
+      '<td><input class="num" type="number" min="0" step="5" value="'+o.alm+'" onchange="setDay(\''+k+'\',\'alm\',this.value)"></td>'+
+      '<td><b>'+fmtH(dayMins(o))+'</b></td>';
+    tb.appendChild(tr);
+  });
+  renderSummary();renderCal();renderQuadro();
+}
+function setDay(k,f,v){var o=state.sch[state.cenario][k];if(f==="on")o.on=v;else if(f==="alm")o.alm=(+v||0);else o[f]=v;save();renderHorario();renderPonto();}
+
+function weekdaysInMonth(y,m){var counts=[0,0,0,0,0,0,0];var dim=new Date(y,m+1,0).getDate();
+  for(var dd=1;dd<=dim;dd++){counts[new Date(y,m,dd).getDay()]++;}return counts;}
+function plannedMonth(){var sch=state.sch[state.cenario];var x=cm();var counts=weekdaysInMonth(x.y,x.m);
+  var tot=0;DIAS.forEach(function(d,i){tot+=dayMins(sch[d[0]])*counts[i];});return tot;}
+function weekMins(){var sch=state.sch[state.cenario];var t=0;DIAS.forEach(function(d){t+=dayMins(sch[d[0]]);});return t;}
+function activeDays(){var sch=state.sch[state.cenario];var n=0;DIAS.forEach(function(d){if(dayMins(sch[d[0]])>0)n++;});return n;}
+function renderSummary(){
+  var wk=weekMins(),ad=activeDays();
+  document.getElementById("s-dia").textContent=ad?fmtH(wk/ad):"–";
+  document.getElementById("s-sem").textContent=fmtH(wk);
+  var pm=plannedMonth();document.getElementById("s-mes").textContent=fmtH(pm);
+  var carga=(state.carga[state.cenario]||0)*60;var saldo=pm-carga;
+  var box=document.getElementById("s-saldo-box");
+  document.getElementById("s-saldo").textContent=carga?fmtH(saldo):"defina carga";
+  box.className="stat"+(carga?(Math.abs(saldo)<=30?" good":(saldo<0?" bad":"")):"");
+}
+function renderCal(){
+  var x=cm();document.getElementById("cal-mes").textContent="· "+x.nome;
+  var sch=state.sch[state.cenario];var dim=new Date(x.y,x.m+1,0).getDate();var first=new Date(x.y,x.m,1).getDay();
+  var el=document.getElementById("cal");el.innerHTML="";
+  ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].forEach(function(h){var d=document.createElement("div");d.className="h";d.textContent=h;el.appendChild(d);});
+  for(var i=0;i<first;i++){var e=document.createElement("div");e.className="c empty";el.appendChild(e);}
+  for(var dd=1;dd<=dim;dd++){
+    var wi=new Date(x.y,x.m,dd).getDay();var o=sch[DIAS[wi][0]];var mins=dayMins(o);
+    var c=document.createElement("div");c.className="c"+(mins>0?" work":"");
+    c.innerHTML='<div class="n">'+dd+'</div>'+(mins>0?'<div class="hh">'+fmtH(mins)+'</div>':'');
+    el.appendChild(c);
+  }
+}
+function renderQuadro(){
+  var c=state.cenario,sch=state.sch[c];
+  var lines=["*Quadro de horário — Débora*","("+(state.vig[c]||"")+")",""];
+  DIAS.forEach(function(d){var o=sch[d[0]];
+    if(dayMins(o)>0){lines.push(d[1]+": "+o.e+" às "+o.s+(o.alm?(" (almoço "+o.alm+"min)"):"")+" — "+fmtH(dayMins(o)));}
+    else{lines.push(d[1]+": folga");}
+  });
+  lines.push("");lines.push("Total semana: "+fmtH(weekMins())+" · Estimado no mês: "+fmtH(plannedMonth()));
+  document.getElementById("quadro-txt").value=lines.join("\n");
+}
+
+/* ---------- CARTÃO DE PONTO ---------- */
+function onBanco(v){state.bancoIni=(+v||0);save();renderPontoSummary();}
+function pdata(){var k=cm().pm;if(!state.ponto[k])state.ponto[k]={};return state.ponto[k];}
+function prevForWeekday(wi){return dayMins(state.sch[state.cenario][DIAS[wi][0]]);}
+function workedMins(r){if(!r)return 0;var e=toMin(r.e1),s=toMin(r.s2);if(e==null||s==null)return 0;
+  var sa=toMin(r.sa),va=toMin(r.va);var lunch=(sa!=null&&va!=null&&va>sa)?(va-sa):0;var t=s-e-lunch;return t>0?t:0;}
+function extraMins(r){if(!r)return 0;var a=toMin(r.he),b=toMin(r.hs);if(a==null||b==null||b<=a)return 0;return b-a;}
+function setP(day,f,v){var pd=pdata();if(!pd[day])pd[day]={};pd[day][f]=v;save();renderPonto();}
+function renderPonto(){
+  var x=cm();document.getElementById("ponto-mes-lbl").textContent=x.nome;
+  document.getElementById("print-title").textContent="Cartão de Ponto — "+x.nome+" — "+(state.ident.func||"");
+  document.getElementById("banco-ini").value=state.bancoIni||0;
+  var dim=new Date(x.y,x.m+1,0).getDate();var pd=pdata();
+  var tb=document.getElementById("ponto-body");tb.innerHTML="";
+  for(var dd=1;dd<=dim;dd++){
+    var wi=new Date(x.y,x.m,dd).getDay();var r=pd[dd]||{};var prev=prevForWeekday(wi);var w=workedMins(r);var hasData=r.e1||r.s2;
+    var wd=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][wi];
+    var tr=document.createElement("tr");if(wi===0||wi===6)tr.className="off";
+    tr.innerHTML=
+      '<td class="day">'+(dd<10?"0"+dd:dd)+' '+wd+'</td>'+
+      '<td><input type="time" value="'+(r.e1||"")+'" onchange="setP('+dd+',\'e1\',this.value)"></td>'+
+      '<td><input type="time" value="'+(r.sa||"")+'" onchange="setP('+dd+',\'sa\',this.value)"></td>'+
+      '<td><input type="time" value="'+(r.va||"")+'" onchange="setP('+dd+',\'va\',this.value)"></td>'+
+      '<td><input type="time" value="'+(r.s2||"")+'" onchange="setP('+dd+',\'s2\',this.value)"></td>'+
+      '<td><input type="time" value="'+(r.he||"")+'" onchange="setP('+dd+',\'he\',this.value)"></td>'+
+      '<td><input type="time" value="'+(r.hs||"")+'" onchange="setP('+dd+',\'hs\',this.value)"></td>'+
+      '<td><b>'+(hasData?fmtH(w):"–")+'</b></td>'+
+      '<td style="text-align:left"><input type="text" style="width:110px" value="'+(r.obs||"").replace(/"/g,"&quot;")+'" onchange="setP('+dd+',\'obs\',this.value)"></td>';
+    tb.appendChild(tr);
+  }
+  renderPontoSummary();
+}
+function renderPontoSummary(){
+  var x=cm();var dim=new Date(x.y,x.m+1,0).getDate();var pd=pdata();var trab=0,prev=0,extra=0;
+  for(var dd=1;dd<=dim;dd++){var wi=new Date(x.y,x.m,dd).getDay();var r=pd[dd]||{};
+    if(r.e1||r.s2){trab+=workedMins(r);prev+=prevForWeekday(wi);}extra+=extraMins(r);}
+  document.getElementById("p-trab").textContent=fmtH(trab);
+  document.getElementById("p-prev").textContent=fmtH(prev);
+  document.getElementById("p-extra").textContent=fmtH(extra);
+  var saldo=trab-prev;document.getElementById("p-saldo").textContent=fmtH(saldo);
+  document.getElementById("p-saldo-box").className="stat"+(saldo>=0?" good":" bad");
+  var banco=(state.bancoIni||0)*60+saldo+extra;document.getElementById("p-banco").textContent=fmtH(banco);
+  document.getElementById("p-banco-box").className="stat"+(banco>=0?" good":" bad");
+}
+function preencherPrevisto(){
+  var x=cm();var dim=new Date(x.y,x.m+1,0).getDate();var pd=pdata();var sch=state.sch[state.cenario];
+  for(var dd=1;dd<=dim;dd++){var wi=new Date(x.y,x.m,dd).getDay();var o=sch[DIAS[wi][0]];
+    if(dayMins(o)>0){if(!pd[dd])pd[dd]={};pd[dd].e1=o.e;pd[dd].s2=o.s;
+      if(o.alm>0){var mid=toMin(o.e)+Math.floor((toMin(o.s)-toMin(o.e)-o.alm)/2);pd[dd].sa=hhmm(mid);pd[dd].va=hhmm(mid+(+o.alm));}}}
+  save();renderPonto();
+}
+function hhmm(m){var h=Math.floor(m/60),mm=m%60;return (h<10?"0"+h:h)+":"+(mm<10?"0"+mm:mm);}
+
+/* ---------- COPY ---------- */
+function copyEl(id,msgId){var el=document.getElementById(id);el.select();el.setSelectionRange(0,99999);
+  var ok=false;try{ok=document.execCommand("copy");}catch(e){}
+  if(navigator.clipboard){navigator.clipboard.writeText(el.value).then(function(){msg(msgId,"✓ copiado");}).catch(function(){msg(msgId,ok?"✓ copiado":"selecione e copie");});}
+  else msg(msgId,ok?"✓ copiado":"selecione e copie");}
+function copyResumo(){
+  var x=cm();var t=document.getElementById("p-trab").textContent,p=document.getElementById("p-prev").textContent,
+      e=document.getElementById("p-extra").textContent,s=document.getElementById("p-saldo").textContent,b=document.getElementById("p-banco").textContent;
+  var txt="*Cartão de ponto — Débora · "+x.nome+"*\nTrabalhadas: "+t+"\nPrevistas: "+p+"\nHoras extras: "+e+"\nSaldo do mês: "+s+"\nBanco acumulado: "+b;
+  var ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();
+  var ok=false;try{ok=document.execCommand("copy");}catch(e2){}document.body.removeChild(ta);
+  if(navigator.clipboard)navigator.clipboard.writeText(txt).then(function(){msg("copy-msg2","✓ copiado");}).catch(function(){msg("copy-msg2",ok?"✓ copiado":"falhou");});
+  else msg("copy-msg2",ok?"✓ copiado":"falhou");}
+function msg(id,t){var e=document.getElementById(id);if(!e)return;e.textContent=t;setTimeout(function(){e.textContent="";},2500);}
+
+/* ---------- INIT ---------- */
+renderIdent();renderHorario();renderPonto();
+</script>
+</body>
+</html>
