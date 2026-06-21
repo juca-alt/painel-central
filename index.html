@@ -183,6 +183,46 @@
     .cal-grid{gap:5px}
     .mes-cell{min-height:64px}
   }
+  /* ===== Casa subnav + Histórico ===== */
+  .nav a.group .chev{margin-left:auto;font-size:10px;transition:transform .2s}
+  .nav a.group.collapsed .chev{transform:rotate(-90deg)}
+  .subnav{margin:1px 0 5px 14px;padding-left:8px;border-left:1px solid var(--side-line)}
+  .subnav.collapsed{display:none}
+  .nav a.sub{font-size:13px;padding:8px 11px}
+  .nav a.sub.active{background:var(--side-active);color:var(--side-txt)}
+  .ver{color:var(--side-muted);font-size:10px;text-align:center;padding:8px 4px 2px;opacity:.85;letter-spacing:.3px}
+  #view-historico td.prime small{font-weight:400}
+  #view-historico .hhead{font-weight:600;margin:14px 0 10px;font-size:14px}
+  #view-historico .hhead:first-child{margin-top:0}
+  #view-historico .hhead small{color:var(--muted);font-weight:400}
+  /* ===== MOBILE (<=768px) — bloco isolado; desktop (>768) intacto ===== */
+  @media(max-width:768px){
+    h1{font-size:19px}
+    /* Histórico (somente leitura) -> cards empilhados com rótulos */
+    #view-historico table, #view-historico thead, #view-historico tbody, #view-historico tr, #view-historico td{display:block}
+    #view-historico thead{display:none}
+    #view-historico table{border:none;background:none;border-radius:0;width:100%}
+    #view-historico tr{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+    #view-historico td{display:flex;justify-content:space-between;align-items:baseline;gap:14px;border-bottom:1px solid var(--line);padding:7px 14px;text-align:right;font-size:14px}
+    #view-historico td:last-child{border-bottom:none}
+    #view-historico td::before{content:attr(data-label);color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;text-align:left;white-space:nowrap;flex:0 0 auto}
+    #view-historico td.prime{display:block;text-align:left;font-weight:600;font-size:15px;padding:10px 14px 6px}
+    #view-historico td.prime::before{content:none}
+    /* Estoque (editável) -> rolagem horizontal controlada */
+    #view-estoque{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    #view-estoque table{min-width:700px}
+    /* Agenda em colunas -> rolagem horizontal */
+    #agenda-out{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    #view-hoje .cal-grid{min-width:600px}
+    /* abas roláveis; segmentados quebram linha */
+    .tabs{overflow-x:auto;flex-wrap:nowrap}
+    .tabs button{flex:0 0 auto;white-space:nowrap;font-size:13.5px;padding:10px 12px}
+    .seg{flex-wrap:wrap}
+    .seg button{flex:1 0 auto}
+    .row .tm{width:62px;font-size:12px}
+    .btn{min-height:40px}
+    .nav a.sub{min-height:42px}
+  }
 </style>
 </head>
 <body>
@@ -195,10 +235,15 @@
       <a id="nav-hoje" class="active" onclick="nav('hoje')">🏠 Hoje</a>
       <a id="nav-tarefas" onclick="nav('tarefas')">✅ Tarefas <span class="bdg" id="bdg-atr"></span></a>
       <a id="nav-inbox" onclick="nav('inbox')">📬 Inbox Geral <span class="bdg" id="bdg-inb"></span></a>
-      <a id="nav-feira" onclick="nav('feira')">🛒 Feira</a>
+      <a id="nav-casa" class="group" onclick="toggleCasa()">🏡 Casa <span class="chev">▾</span></a>
+      <div class="subnav" id="casa-sub">
+        <a id="nav-feira" onclick="nav('feira')">🛒 Feira</a>
+        <a id="nav-funcionario" onclick="nav('funcionario')">👥 Funcionário</a>
+      </div>
       <a id="nav-saude" onclick="nav('saude')">🍃 Saúde</a>
       <a id="nav-camila" onclick="nav('camila')">📚 Provas Camila</a>
       <a id="nav-atalhos" onclick="nav('atalhos')">🔗 Atalhos</a>
+      <a id="nav-config" onclick="nav('config')">⚙️ Configuração</a>
     </nav>
     <div class="side-foot">
       <div class="folego">
@@ -207,6 +252,7 @@
         <div class="fl-s" id="fl-s">dias somados</div>
         <button id="fl-btn" onclick="folegoHoje()">✓ marcar hoje</button>
       </div>
+      <div class="ver" id="ver-tag"></div>
     </div>
   </aside>
 
@@ -286,6 +332,7 @@
       <div class="tabs">
         <button id="tab-lista" class="active" onclick="show('lista')">Lista de compras</button>
         <button id="tab-estoque" onclick="show('estoque')">Estoque</button>
+        <button id="tab-historico" onclick="show('historico')">Histórico de compras</button>
       </div>
       <section id="view-lista">
         <div class="bar">
@@ -320,6 +367,24 @@
         </table>
         <div class="note">Formato do CSV (igual ao Sheet "Feira (Casa)"): item, marca, categoria, canal, unidade, minimo, atual, preco_ultimo. Canais: presencial, delivery, amazon, shopee, mercadolivre.</div>
       </section>
+      <section id="view-historico" style="display:none">
+        <div class="bar">
+          <div class="seg" id="hseg">
+            <button class="active" data-h="compra" onclick="hview('compra')">Por compra</button>
+            <button data-h="item" onclick="hview('item')">Por item (preço no tempo)</button>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn" onclick="openLink(HIST_URL)">📊 Abrir planilha</button>
+        </div>
+        <div id="hist-out"><div class="loading">Lendo o histórico de compras…</div></div>
+      </section>
+    </section>
+
+    <!-- ============ FUNCIONÁRIO (placeholder) ============ -->
+    <section id="view-funcionario" style="display:none">
+      <div class="head"><h1>👥 Funcionário</h1></div>
+      <div class="sub">Casa › Funcionário</div>
+      <div class="empty">Submódulo em breve — funcionalidades ainda a definir.</div>
     </section>
 
     <!-- ============ SAÚDE ============ -->
@@ -349,6 +414,13 @@
       <div class="sub">Tudo que ainda não vive integrado fica pré-conectado: 1 clique abre. Se o app bloquear a aba, eu copio o link pra ti colar.</div>
       <div id="tiles-out"></div>
       <div class="note" style="margin-top:14px">MÓDULO = abre aqui dentro · LIVE = dado aparece no painel · LINK = abre o app/site (se a aba for bloqueada, copio o link).</div>
+    </section>
+    <!-- ============ CONFIGURAÇÃO ============ -->
+    <section id="view-config" style="display:none">
+      <div class="head"><h1>⚙️ Configuração</h1></div>
+      <div class="sub">Conexões e ajustes do app. Um login Google cobre todos os serviços.</div>
+      <div id="config-out"></div>
+      <div class="panel"><h3>🔧 Mais ajustes</h3><div style="padding:13px 15px;color:var(--muted);font-size:13px">Espaço para variáveis dos motores e funcionalidades do app — em breve.</div></div>
     </section>
   </main>
 </div>
@@ -403,45 +475,104 @@ function liveStub(titulo, btn){
 
 /* ===== Google ao vivo no standalone via OAuth client-side (GIS) — privado, só aparece após login ===== */
 var GCAL_CLIENT_ID = "63708753663-92us3rgem9s1j6rapi86b8uerc5440fr.apps.googleusercontent.com";
-var GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/spreadsheets.readonly";
-var gToken=null, gTokenClient=null;
-try{ if(!COWORK) gToken = sessionStorage.getItem('gtok') || null; }catch(e){}
+var GCAL_SCOPE = [
+  "https://www.googleapis.com/auth/calendar.readonly",
+  "https://www.googleapis.com/auth/tasks.readonly",
+  "https://www.googleapis.com/auth/drive.readonly",
+  "https://www.googleapis.com/auth/gmail.readonly",
+  "https://www.googleapis.com/auth/spreadsheets.readonly"
+].join(" ");
+var GSERVICES=[{k:"calendar",n:"Calendar",i:"📅"},{k:"tasks",n:"Tasks",i:"☑️"},{k:"drive",n:"Drive",i:"📁"},{k:"gmail",n:"Gmail",i:"✉️"},{k:"sheets",n:"Sheets",i:"📊"}];
+var GTOK_KEY="gauth_v1";
+var gToken=null, gTokenClient=null, _gpending=null, _grefreshTimer=null;
+function gtokLoad(){ try{ var s=JSON.parse(localStorage.getItem(GTOK_KEY)||"null"); if(s&&s.token&&s.exp&&Date.now()<s.exp-60000) return s; }catch(e){} return null; }
+function gtokSave(tok,sec){ try{ localStorage.setItem(GTOK_KEY, JSON.stringify({token:tok, exp:Date.now()+(Number(sec)||3600)*1000})); }catch(e){} }
+function gtokClear(){ try{ localStorage.removeItem(GTOK_KEY); }catch(e){} gToken=null; if(_grefreshTimer){ clearTimeout(_grefreshTimer); _grefreshTimer=null; } }
+function gConnected(){ return !!(gtokLoad()||gToken); }
+try{ if(!COWORK){ var __gs=gtokLoad(); if(__gs) gToken=__gs.token; } }catch(e){}
 function connectPanel(titulo){
-  return '<div class="errbox"><div class="e-t">🔗 '+esc(titulo)+'</div>'+
-    '<div class="e-s">Conecta tua Conta Google pra ver ao vivo aqui no app — é privado: só aparece depois que <b>tu</b> logar.'+
-    '<div style="margin-top:8px"><button class="btn primary sm" onclick="connectGoogle()">🔗 Conectar Google</button></div></div></div>';
+  return '<div class="errbox"><div class="e-t">🔌 '+esc(titulo)+'</div>'+
+    '<div class="e-s">Conecte sua Conta Google em <b>⚙️ Configuração</b> pra ver isto ao vivo. '+
+    '<button class="btn sm" style="margin-left:6px" onclick="nav(\'config\')">Ir pra Configuração</button></div></div>';
 }
 function gisEnsure(cb){
   if(window.google && google.accounts && google.accounts.oauth2){ cb(); return; }
   var s=document.createElement('script'); s.src="https://accounts.google.com/gsi/client"; s.async=true; s.defer=true;
   s.onload=function(){ cb(); };
-  s.onerror=function(){ toast("Não consegui carregar o login do Google"); };
+  s.onerror=function(){ if(_gpending){ _gpending.reject(new Error("Falha ao carregar login Google")); _gpending=null; } };
   document.head.appendChild(s);
 }
-function connectGoogle(){
-  gisEnsure(function(){
-    try{
-      if(!gTokenClient){
-        gTokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: GCAL_CLIENT_ID, scope: GCAL_SCOPE,
-          callback: function(resp){
-            if(resp && resp.access_token){
-              gToken = resp.access_token;
-              try{ sessionStorage.setItem('gtok', gToken); }catch(e){}
-              evCache={}; sheetData=null; sheetPromise=null;
-              toast("Google conectado ✓");
-              loadAgenda(); loadCamila(); loadInbox(); loadCentral();
-            }
-          }
-        });
-      }
-      gTokenClient.requestAccessToken();
-    }catch(e){ toast("Erro ao conectar: "+(e.message||e)); }
+/* na expiração do token: limpa e atualiza a UI (sem popup); o usuário reconecta com 1 toque */
+function gScheduleRefresh(sec){
+  if(_grefreshTimer) clearTimeout(_grefreshTimer);
+  var ms=Math.max(30000, (Number(sec)||3600)*1000);
+  _grefreshTimer=setTimeout(function(){ gtokClear(); try{ reloadGoogle(); }catch(e){} }, ms);
+}
+/* interactive=true -> mostra conta/consentimento (1a vez). false -> silencioso (prompt vazio, sem UI). */
+function googleAuth(interactive){
+  return new Promise(function(resolve,reject){
+    gisEnsure(function(){
+      try{
+        if(!gTokenClient){
+          gTokenClient=google.accounts.oauth2.initTokenClient({
+            client_id:GCAL_CLIENT_ID, scope:GCAL_SCOPE,
+            callback:function(resp){
+              if(resp && resp.access_token){
+                gToken=resp.access_token; gtokSave(resp.access_token, resp.expires_in); gScheduleRefresh(resp.expires_in);
+                if(_gpending){ _gpending.resolve(resp.access_token); _gpending=null; }
+              } else if(_gpending){ _gpending.reject(new Error("sem token")); _gpending=null; }
+            },
+            error_callback:function(err){ if(_gpending){ _gpending.reject(err||new Error("oauth")); _gpending=null; } }
+          });
+        }
+        _gpending={resolve:resolve, reject:reject};
+        gTokenClient.requestAccessToken(interactive?{prompt:'consent'}:{prompt:''});
+      }catch(e){ _gpending=null; reject(e); }
+    });
   });
+}
+function reloadGoogle(){
+  evCache={}; sheetData=null; sheetPromise=null; histRows=null; histPromise=null;
+  loadAgenda(); loadCamila(); loadInbox(); loadCentral();
+  var vh=$('view-historico'); if(vh && vh.style.display!=='none') loadHistorico();
+  renderConfig();
+}
+function connectGoogle(){
+  googleAuth(true).then(function(){ toast("Google conectado ✓"); reloadGoogle(); })
+    .catch(function(e){ toast("Não consegui conectar: "+((e&&(e.message||e.type))||e)); });
+}
+function disconnectGoogle(){
+  var t=gToken; gtokClear();
+  try{ if(t && window.google && google.accounts && google.accounts.oauth2) google.accounts.oauth2.revoke(t, function(){}); }catch(e){}
+  toast("Google desconectado"); reloadGoogle();
+}
+function renderConfig(){
+  var box=$('config-out'); if(!box) return;
+  var conn=gConnected();
+  var html='<div class="panel"><h3>🔗 Conta Google<span class="count">'+(conn?'conectado':'desconectado')+'</span></h3>'+
+    '<div style="padding:13px 15px">'+
+    '<div style="color:var(--muted);font-size:13px;margin-bottom:12px">Um único login cobre todos os serviços abaixo. Conecte uma vez — o app renova o acesso sozinho enquanto sua sessão do Google no navegador estiver ativa.</div>';
+  GSERVICES.forEach(function(s){
+    html+='<div class="row" style="padding:9px 0"><div class="nm">'+s.i+' '+esc(s.n)+'</div><span class="pill '+(conn?'ok':'nt')+'">'+(conn?'conectado':'desconectado')+'</span></div>';
+  });
+  html+='<div style="margin-top:14px">'+(conn
+    ? '<button class="btn" onclick="disconnectGoogle()">Desconectar</button>'
+    : '<button class="btn primary" onclick="connectGoogle()">🔗 Conectar Google</button>')+'</div>';
+  html+='</div></div>';
+  /* painel de versão + atualização (resolve PWA preso em cache) */
+  var ver=(typeof APP_VERSION!=='undefined'?APP_VERSION:'?');
+  var ch=(typeof APP_CHANNEL!=='undefined'&&APP_CHANNEL?(' · '+APP_CHANNEL):'');
+  html+='<div class="panel"><h3>📦 Versão & atualização<span class="count">v'+ver+ch+'</span></h3>'+
+    '<div style="padding:13px 15px">'+
+    (window.__updateReady?'<div class="pill ok" style="display:inline-block;margin-bottom:10px">nova versão pronta</div>':'')+
+    '<div style="color:var(--muted);font-size:13px;margin:'+(window.__updateReady?'4px 0 12px':'0 0 12px')+'">Instalou na tela inicial e está vendo algo antigo? Toque <b>Atualizar</b> pra forçar a versão mais nova (limpa o cache do app e recarrega).</div>'+
+    '<button class="btn primary" onclick="forceUpdate()">🔄 Atualizar agora</button>'+
+    '</div></div>';
+  box.innerHTML=html;
 }
 
 /* ================= navegação ================= */
-var VIEWS=["hoje","tarefas","inbox","feira","saude","camila","atalhos"];
+var VIEWS=["hoje","tarefas","inbox","feira","funcionario","saude","camila","atalhos","config"];
 function toggleSide(){ document.body.classList.toggle('side-open'); }
 function nav(v){
   VIEWS.forEach(function(k){
@@ -449,6 +580,9 @@ function nav(v){
     $('nav-'+k).classList.toggle('active', k===v);
   });
   if(v==='feira'){ renderCards(); gerar(); }
+  if(v==='config'){ renderConfig(); }
+  var inCasa=(v==='feira'||v==='funcionario'); var nc=$('nav-casa');
+  if(nc){ nc.classList.toggle('active', inCasa); if(inCasa){ $('casa-sub').classList.remove('collapsed'); nc.classList.remove('collapsed'); } }
   document.body.classList.remove('side-open');
 }
 
@@ -489,7 +623,8 @@ async function fetchEvents(ini,fim){
       +"&timeMin="+encodeURIComponent(ini.toISOString())
       +"&timeMax="+encodeURIComponent(fim.toISOString());
     var resp=await fetch(u,{headers:{Authorization:"Bearer "+gToken}});
-    if(resp.status===401||resp.status===403){ gToken=null; try{sessionStorage.removeItem('gtok');}catch(e){} throw new Error("__NEEDCONNECT__"); }
+    if(resp.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); }
+    if(resp.status===403){ throw new Error("Calendar 403 — verifica acesso/escopo"); }
     var dd=await resp.json();
     all=(dd.items||[]);
   }
@@ -762,7 +897,7 @@ function parseCentralValues(byKey){
 async function sheetValuesRest(){
   if(!gToken) throw new Error("__NEEDCONNECT__");
   var H={headers:{Authorization:"Bearer "+gToken}};
-  function chk(resp){ if(resp.status===401||resp.status===403){ gToken=null; try{sessionStorage.removeItem('gtok');}catch(e){} throw new Error("__NEEDCONNECT__"); } }
+  function chk(resp){ if(resp.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); } if(resp.status===403){ throw new Error("Sheets 403 — verifica acesso/escopo"); } }
   /* 1) resolve os títulos reais das abas (lida com acento/caixa e ignora a aba de sync) */
   var mr=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+SHEET_ID+"?fields=sheets.properties.title",H);
   chk(mr);
@@ -928,7 +1063,8 @@ function capturar(){
 async function gmailInboxRest(){
   var q=encodeURIComponent("subject:#inbox newer_than:60d");
   var lr=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&q="+q,{headers:{Authorization:"Bearer "+gToken}});
-  if(lr.status===401||lr.status===403){ gToken=null; try{sessionStorage.removeItem('gtok');}catch(e){} throw new Error("__NEEDCONNECT__"); }
+  if(lr.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); }
+  if(lr.status===403){ throw new Error("Gmail 403 — verifica acesso/escopo"); }
   var ld=await lr.json();
   var msgs=(ld.messages||[]).slice(0,15);
   var caps=[];
@@ -1112,9 +1248,12 @@ function renderCards(){
 function show(v){
   $('view-lista').style.display = v==='lista'?'block':'none';
   $('view-estoque').style.display = v==='estoque'?'block':'none';
+  $('view-historico').style.display = v==='historico'?'block':'none';
   $('tab-lista').classList.toggle('active', v==='lista');
   $('tab-estoque').classList.toggle('active', v==='estoque');
+  $('tab-historico').classList.toggle('active', v==='historico');
   if(v==='estoque') renderEstoque();
+  if(v==='historico') loadHistorico();
 }
 function renderEstoque(){
   var b=$('estoque-body'); b.innerHTML='';
@@ -1264,15 +1403,165 @@ function download(name,content,type){
   setTimeout(function(){URL.revokeObjectURL(a.href);},500);
 }
 
+/* ===== Versão + atualização (PWA) ===== */
+var APP_VERSION="2.2.0";
+var APP_CHANNEL="";
+function forceUpdate(){
+  toast("Atualizando…");
+  var reloaded=false;
+  var done=function(){ if(reloaded) return; reloaded=true; location.replace(location.pathname+'?u='+Date.now()); };
+  var tasks=[];
+  try{ if(window.caches && caches.keys){ tasks.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); })); } }catch(e){}
+  try{ if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations){ tasks.push(navigator.serviceWorker.getRegistrations().then(function(rs){ return Promise.all(rs.map(function(r){ try{ if(r.waiting) r.waiting.postMessage({type:'SKIP_WAITING'}); }catch(e){} return r.unregister(); })); })); } }catch(e){}
+  Promise.all(tasks).then(done, done);
+  setTimeout(done, 2500);
+}
+
+/* ===== Módulo CASA: nav expansível + Histórico de compras (planilha AO VIVO) ===== */
+function toggleCasa(){
+  var s=$('casa-sub'), a=$('nav-casa');
+  if(s){ s.classList.toggle('collapsed'); a.classList.toggle('collapsed'); }
+}
+var HIST_ID="1aiVvcmdPqFIZ3zukmKzZZzffsAOqQuKMlOqtF7aTIY4";
+var HIST_URL="https://docs.google.com/spreadsheets/d/"+HIST_ID+"/edit";
+var histRows=null, histPromise=null, hCur='compra';
+function hbrl(n){ return (Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function hqy(n){ n=Number(n)||0; return Number.isInteger(n)?String(n):n.toLocaleString('pt-BR',{maximumFractionDigits:3}); }
+function hpnum(s){ s=String(s==null?'':s).trim().replace(/[^\d.,-]/g,'');
+  if(s.indexOf(',')>=0 && s.indexOf('.')>=0){ s=s.replace(/\./g,'').replace(',','.'); }
+  else if(s.indexOf(',')>=0){ s=s.replace(',','.'); }
+  return parseFloat(s)||0; }
+function histCells(line){ return line.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(function(x){return x.trim().replace(/\\(.)/g,'$1');}); }
+function histFromMarkdown(md){
+  var lines=String(md||'').split(/\r?\n/).filter(function(l){return l.trim().indexOf('|')===0;});
+  if(lines.length<2) return [];
+  var out=[histCells(lines[0])];
+  for(var i=1;i<lines.length;i++){ if(/^[\s:\-|]+$/.test(lines[i])) continue; out.push(histCells(lines[i])); }
+  return out;
+}
+function parseHistRows(rows){
+  if(!rows||rows.length<2) return [];
+  var head=rows[0].map(function(h){return String(h||'').trim().toLowerCase();});
+  function ci(n){ return head.indexOf(n); }
+  var ix={data:ci('data_compra'),estab:ci('estabelecimento'),prod:ci('produto_padronizado'),
+    marca:ci('marca'),qtd:ci('quantidade'),un:ci('unidade'),tam:ci('tamanho_embalagem'),
+    pu:ci('preco_unitario'),total:ci('preco_total'),nf:ci('nf_numero'),pag:ci('pagina_nota')};
+  function g(c,j){ return j>=0 ? c[j] : ''; }
+  var out=[];
+  for(var i=1;i<rows.length;i++){
+    var c=rows[i]; if(!c) continue; var prod=String(g(c,ix.prod)||'').trim(); if(!prod) continue;
+    out.push({ data:String(g(c,ix.data)||'').trim(), estab:String(g(c,ix.estab)||'').trim(),
+      produto:prod, marca:String(g(c,ix.marca)||'').trim(), qtd:hpnum(g(c,ix.qtd)),
+      un:String(g(c,ix.un)||'').trim(), tam:String(g(c,ix.tam)||'').trim(),
+      pu:hpnum(g(c,ix.pu)), total:hpnum(g(c,ix.total)),
+      nf:String(g(c,ix.nf)||'').trim(), pag:String(g(c,ix.pag)||'').trim() });
+  }
+  return out;
+}
+async function histValuesRest(){
+  if(!gToken) throw new Error("__NEEDCONNECT__");
+  var H={headers:{Authorization:"Bearer "+gToken}};
+  function chk(r){ if(r.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); } if(r.status===403){ throw new Error("Sheets 403 (histórico) — verifica acesso/escopo"); } }
+  var mr=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+HIST_ID+"?fields=sheets.properties.title",H);
+  chk(mr); if(!mr.ok) throw new Error("Sheets API "+mr.status+(mr.status===404?" (planilha não encontrada)":""));
+  var meta=await mr.json();
+  var titles=((meta.sheets||[]).map(function(s){return (s.properties||{}).title||"";})).filter(Boolean);
+  var tab=titles[0]||"Sheet1";
+  var vr=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+HIST_ID+"/values/"+encodeURIComponent(tab)+"?valueRenderOption=FORMATTED_VALUE",H);
+  chk(vr); if(!vr.ok) throw new Error("Sheets API "+vr.status);
+  var dd=await vr.json(); return dd.values||[];
+}
+function getHist(){
+  if(histPromise) return histPromise;
+  var p = COWORK
+    ? mcp(TOOL_DRIVE,{fileId:HIST_ID}).then(function(r){ var d=unwrap(r); return parseHistRows(histFromMarkdown(d.fileContent||d.raw||"")); })
+    : histValuesRest().then(parseHistRows);
+  histPromise = p.then(function(d){ histRows=d; return d; }).catch(function(e){ histPromise=null; throw e; });
+  return histPromise;
+}
+function loadHistorico(){
+  $('hist-out').innerHTML='<div class="loading">Lendo o histórico de compras…</div>';
+  getHist().then(function(){ hview(hCur); }).catch(function(e){
+    if(!COWORK && (!gToken || String(e&&e.message)==="__NEEDCONNECT__")){ $('hist-out').innerHTML=connectPanel('Conectar pra ver o histórico de compras'); return; }
+    $('hist-out').innerHTML='<div class="errbox"><div class="e-t">Não consegui ler o histórico de compras</div><div class="e-s">'+esc(String(e.message||e).slice(0,170))+'. <button class="btn sm" style="margin-left:6px" onclick="openLink(HIST_URL)">📊 Abrir planilha</button></div></div>';
+  });
+}
+function hview(v){
+  hCur=v;
+  document.querySelectorAll('#hseg button').forEach(function(b){ b.classList.toggle('active', b.dataset.h===v); });
+  if(!histRows){ return; }
+  if(v==='item') hItem(); else hCompra();
+}
+function hCompra(){
+  if(!histRows.length){ $('hist-out').innerHTML='<div class="empty">Nenhuma compra registrada ainda. Adicione linhas na planilha. 🧾</div>'; return; }
+  var groups={}, order=[];
+  histRows.forEach(function(x){ var k=x.data+'|'+x.estab+'|'+x.nf; if(!groups[k]){ groups[k]=[]; order.push(k); } groups[k].push(x); });
+  order.sort().reverse();
+  var html='';
+  order.forEach(function(k){
+    var arr=groups[k], f=arr[0]; var soma=arr.reduce(function(s,x){return s+x.total;},0);
+    var dt=f.data; var dtxt=/^\d{4}-\d{2}-\d{2}/.test(dt)?dt.slice(8,10)+'/'+dt.slice(5,7)+'/'+dt.slice(0,4):dt;
+    var partial = f.pag && f.pag.indexOf('/')>=0 && f.pag.replace(/\s/g,'')!=='1/1';
+    html+='<div class="hhead">📅 '+esc(dtxt)+' · '+esc(f.estab||'')+(f.nf?' · NF '+esc(f.nf):'')+' <small>· '+arr.length+' itens · '+hbrl(soma)+(partial?' · pág. '+esc(f.pag):'')+'</small></div>';
+    html+='<table><thead><tr><th>Item</th><th>Marca</th><th>Qtd</th><th>Un.</th><th>Preço unit.</th><th>Total</th></tr></thead><tbody>';
+    arr.forEach(function(it){
+      html+='<tr><td class="prime">'+esc(it.produto)+(it.tam?'<small style="color:var(--muted);display:block">'+esc(it.tam)+'</small>':'')+'</td>'+
+        '<td data-label="Marca">'+esc(it.marca||'—')+'</td>'+
+        '<td class="num" data-label="Qtd">'+hqy(it.qtd)+'</td>'+
+        '<td data-label="Un.">'+esc(it.un)+'</td>'+
+        '<td class="num" data-label="Preço unit.">'+hbrl(it.pu)+'</td>'+
+        '<td class="num" data-label="Total">'+hbrl(it.total)+'</td></tr>';
+    });
+    html+='</tbody></table>';
+    if(partial) html+='<div class="note">Nota parcial (pág. '+esc(f.pag)+'): registrado '+hbrl(soma)+' nesta página.</div>';
+  });
+  $('hist-out').innerHTML=html;
+}
+function hItem(){
+  if(!histRows.length){ $('hist-out').innerHTML='<div class="empty">Nenhuma compra registrada ainda.</div>'; return; }
+  var g={}, names=[];
+  histRows.forEach(function(x){ if(!g[x.produto]){ g[x.produto]=[]; names.push(x.produto); } g[x.produto].push(x); });
+  names.sort();
+  var html='<div class="note" style="margin-bottom:10px">Cada item guarda o preço por data de compra. Com mais de uma compra aparece a variação (↑/↓) e o menor preço.</div>';
+  names.forEach(function(n){
+    var arr=g[n].slice().sort(function(a,b){return a.data<b.data?-1:1;});
+    var ult=arr[arr.length-1]; var precos=arr.map(function(x){return x.pu;}); var menor=Math.min.apply(null,precos);
+    var vari;
+    if(arr.length<2){ vari='<span class="pill nt">1ª compra</span>'; }
+    else { var dif=ult.pu-arr[arr.length-2].pu; var cls=dif>0?'low':(dif<0?'ok':'nt'); var ar=dif>0?'↑':(dif<0?'↓':'→'); vari='<span class="pill '+cls+'">'+ar+' '+hbrl(Math.abs(dif))+'</span>'; }
+    html+='<div class="panel"><h3>'+esc(n)+'<span class="count">'+esc(ult.marca||'')+' · '+hbrl(ult.pu)+'/'+esc((ult.un||'').toLowerCase())+' &nbsp;'+vari+'</span></h3>';
+    arr.forEach(function(x){
+      var dt=x.data; var dtxt=/^\d{4}-\d{2}-\d{2}/.test(dt)?dt.slice(8,10)+'/'+dt.slice(5,7):dt;
+      var mflag = (x.pu===menor && arr.length>1)?' <span class="pill ok">menor</span>':'';
+      html+='<div class="row"><div class="tm">'+esc(dtxt)+'</div><div class="nm">'+esc(x.estab||'')+' · '+hqy(x.qtd)+' '+esc((x.un||'').toLowerCase())+' · '+hbrl(x.total)+'</div><span class="pill nt">'+hbrl(x.pu)+'</span>'+mflag+'</div>';
+    });
+    html+='</div>';
+  });
+  $('hist-out').innerHTML=html;
+}
+
 /* ================= boot ================= */
 renderCards(); gerar(); folegoRender(); renderAtalhos();
+try{ var __vt=$('ver-tag'); if(__vt) __vt.textContent='v'+APP_VERSION+(APP_CHANNEL?' · '+APP_CHANNEL:''); }catch(e){}
+try{ renderConfig(); }catch(e){}
+/* sem popup no boot: usa o token guardado (localStorage). Loaders mostram aviso curto se nao houver. */
 loadAgenda(); loadInbox(); loadCamila(); loadCentral();
 
 /* standalone (GitHub Pages): nota discreta + service worker p/ PWA */
 if(!COWORK){
   try{ document.querySelector('.brand small').textContent = 'modo app · conecta o Google pra ver tudo ao vivo'; }catch(e){}
   if("serviceWorker" in navigator){
-    window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").then(function(reg){
+        try{ reg.update(); }catch(e){}
+        reg.addEventListener('updatefound', function(){
+          var nw=reg.installing; if(!nw) return;
+          nw.addEventListener('statechange', function(){
+            if(nw.state==='installed' && navigator.serviceWorker.controller){ window.__updateReady=true; try{ renderConfig(); }catch(e){} toast('Nova versão disponível — abra Configuração e toque Atualizar'); }
+          });
+        });
+      }).catch(function(){});
+    });
   }
 }
 </script>
