@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Central — Casa › Feira (PREVIEW)</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --txt:#e7e9ee; --muted:#9aa3b2; --accent:#4f8cff; --accent2:#2f6bdc;
+    --ok:#39c07a; --warn:#f0a93b; --danger:#e5564f; --chip:#252a34;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--txt);font-size:15px}
+  .app{display:flex;min-height:100vh}
+  .side{width:222px;background:var(--panel);border-right:1px solid var(--line);padding:18px 12px;flex-shrink:0}
+  .brand{font-weight:700;font-size:17px;padding:6px 10px 16px;letter-spacing:.2px}
+  .brand small{display:block;color:var(--muted);font-weight:400;font-size:11px;margin-top:2px}
+  .nav a{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;color:var(--muted);
+    text-decoration:none;font-size:14px;margin-bottom:3px;cursor:pointer}
+  .nav a.active{background:var(--panel2);color:var(--txt)}
+  .nav a.soon{opacity:.45;cursor:default}
+  .nav .tag{margin-left:auto;font-size:9px;background:var(--chip);color:var(--muted);padding:2px 6px;border-radius:20px}
+  .main{flex:1;padding:22px 26px;max-width:1100px}
+  .head{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+  .menu-btn{display:none;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    border-radius:9px;padding:6px 11px;cursor:pointer;font-size:16px}
+  h1{font-size:21px;margin:0}
+  .crumb{color:var(--muted);font-size:13px;margin:2px 0 16px}
+  .crumb b{color:var(--txt);font-weight:600}
+  .preview-flag{background:rgba(240,169,59,.13);border:1px solid rgba(240,169,59,.45);color:#f0c87a;
+    font-size:12px;padding:6px 12px;border-radius:9px;margin-bottom:16px;display:inline-block}
+  .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:16px}
+  .seg button{background:none;border:none;color:var(--muted);padding:8px 14px;cursor:pointer;font-size:13px}
+  .seg button.active{background:var(--accent2);color:#fff}
+  .seg button.soon{opacity:.5;cursor:default}
+  .tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+  .tabs button{background:none;border:none;color:var(--muted);padding:10px 14px;cursor:pointer;font-size:14px;
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button.active{color:var(--txt);border-bottom-color:var(--accent)}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 12px;border-radius:9px;
+    cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent2);border-color:var(--accent2)}
+  .btn.primary:hover{background:var(--accent)}
+  .spacer{flex:1}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:13.5px}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px;background:var(--panel2)}
+  tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;white-space:nowrap}
+  .pill{font-size:11px;padding:2px 9px;border-radius:20px;display:inline-block;white-space:nowrap}
+  .pill.low{background:rgba(229,86,79,.16);color:#ff8a84}
+  .pill.ok{background:rgba(57,192,122,.15);color:#5fd99b}
+  .pill.flat{background:var(--chip);color:var(--muted)}
+  .pill.down{background:rgba(57,192,122,.15);color:#5fd99b}
+  .pill.up{background:rgba(229,86,79,.16);color:#ff8a84}
+  .grp{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .grp h3{margin:0;padding:11px 15px;background:var(--panel2);font-size:14px;display:flex;align-items:center;gap:8px}
+  .grp h3 .count{margin-left:auto;color:var(--muted);font-size:12px;font-weight:400}
+  .grp .row{display:flex;align-items:center;gap:10px;padding:9px 15px;border-bottom:1px solid var(--line)}
+  .grp .row:last-child{border-bottom:none}
+  .grp .row .nm{flex:1}
+  .grp .row .nm small{color:var(--muted);display:block;font-size:11.5px}
+  .grp .row .q{color:var(--muted);font-size:12.5px;white-space:nowrap}
+  .empty{color:var(--muted);padding:30px;text-align:center;border:1px dashed var(--line);border-radius:12px}
+  .note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+  .banner{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:rgba(240,169,59,.10);
+    border:1px solid rgba(240,169,59,.4);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:13px}
+  .banner b{color:#f0c87a}
+  .compra-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+  .compra-head .tot{margin-left:auto;color:var(--muted);font-size:12px}
+  .item-card{cursor:pointer}
+  .item-card .body{display:none;padding:0 15px 12px}
+  .item-card.open .body{display:block}
+  .spark{display:flex;align-items:flex-end;gap:4px;height:34px;margin:6px 0}
+  .spark .b{width:16px;background:var(--accent2);border-radius:3px 3px 0 0;min-height:4px}
+  .mini th,.mini td{padding:6px 10px;font-size:12.5px}
+  .mini{margin-top:8px}
+  .addform{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px;display:none}
+  .addform.open{display:block}
+  .addform .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .addform label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}
+  .addform input,.addform select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);
+    border-radius:7px;padding:7px 8px;font-size:13px}
+  .kpis{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;min-width:140px}
+  .kpi .v{font-size:20px;font-weight:700}
+  .kpi .l{color:var(--muted);font-size:12px;margin-top:2px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--panel2);
+    border:1px solid var(--line);padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:5}
+  @media(max-width:820px){
+    .side{position:fixed;left:0;top:0;bottom:0;z-index:10;transform:translateX(-100%);transition:.25s}
+    .side.open{transform:translateX(0)}
+    .overlay.open{display:block}
+    .menu-btn{display:inline-block}
+    .main{padding:16px}
+    .addform .grid{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="overlay" id="overlay" onclick="drawer(false)"></div>
+  <aside class="side" id="side">
+    <div class="brand">Painel Central<small>tudo é uma coisa só</small></div>
+    <nav class="nav">
+      <a class="soon">🏠 Hoje <span class="tag">app</span></a>
+      <a class="soon">✅ Tarefas <span class="tag">app</span></a>
+      <a class="soon">📥 Inbox <span class="tag">app</span></a>
+      <a class="active">🏡 Casa</a>
+      <a class="soon">🩺 Saúde <span class="tag">app</span></a>
+      <a class="soon">📚 Provas Camila <span class="tag">app</span></a>
+      <a class="soon">🔗 Atalhos <span class="tag">app</span></a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="head">
+      <button class="menu-btn" onclick="drawer(true)">☰</button>
+      <h1>🏡 Casa</h1>
+    </div>
+    <div class="crumb">Casa › <b>Feira</b></div>
+    <span class="preview-flag">⚠️ PREVIEW — só pra aprovar o desenho. Não está no app de verdade ainda.</span>
+
+    <!-- submódulos de Casa -->
+    <div class="seg">
+      <button class="active">🛒 Feira</button>
+      <button class="soon">👥 Funcionários</button>
+    </div>
+
+    <!-- abas da Feira -->
+    <div class="tabs">
+      <button id="tab-lista" onclick="show('lista')">Lista de compras</button>
+      <button id="tab-estoque" onclick="show('estoque')">Estoque</button>
+      <button id="tab-historico" class="active" onclick="show('historico')">Histórico de compras</button>
+    </div>
+
+    <!-- ===== LISTA DE COMPRAS ===== -->
+    <section id="view-lista" style="display:none">
+      <div class="note" style="margin-bottom:14px">A lista cai automaticamente do que está <b>abaixo do mínimo</b> no Estoque (mesma lógica da Feira de hoje). Prévia gerada com o estoque real.</div>
+      <div id="lista-out"></div>
+    </section>
+
+    <!-- ===== ESTOQUE ===== -->
+    <section id="view-estoque" style="display:none">
+      <div class="note" style="margin-bottom:14px">Espelha a planilha <b>“Feira (Casa) — Estoque”</b> do Drive (21 itens reais). No app de verdade, lê/escreve direto na planilha.</div>
+      <table>
+        <thead><tr>
+          <th>Item</th><th>Marca</th><th>Categoria</th><th>Canal</th>
+          <th>Un.</th><th class="num">Mín.</th><th class="num">Atual</th><th class="num">Preço últ.</th><th>Status</th>
+        </tr></thead>
+        <tbody id="estoque-body"></tbody>
+      </table>
+    </section>
+
+    <!-- ===== HISTÓRICO DE COMPRAS ===== -->
+    <section id="view-historico">
+      <div class="banner">
+        ⚠️ Nota <b>000.449.291</b> (Atacadão) está <b>parcial — pág. 1/2</b>. Total da nota: <b>R$ 440,92</b> · registrado: <b id="reg-tot">R$ 144,58</b> · falta a pág. 2.
+        <button class="btn primary" style="margin-left:auto" onclick="toggleAdd()">➕ Adicionar itens (pág. 2)</button>
+      </div>
+
+      <div class="addform" id="addform">
+        <div class="grid">
+          <div><label>Data da compra</label><input type="date" id="f-data" value="2026-06-19"></div>
+          <div><label>Estabelecimento</label><input id="f-estab" value="Atacadão"></div>
+          <div><label>Item (nome padronizado)</label><input id="f-prod" placeholder="ex.: Açúcar refinado União"></div>
+          <div><label>Marca</label><input id="f-marca" placeholder="ex.: União"></div>
+          <div><label>Quantidade</label><input type="number" id="f-qtd" step="0.001" value="1"></div>
+          <div><label>Unidade</label><input id="f-un" value="UND"></div>
+          <div><label>Preço unitário (R$)</label><input type="number" id="f-pu" step="0.01" placeholder="0,00"></div>
+          <div style="display:flex;align-items:flex-end"><button class="btn primary" style="width:100%" onclick="addItem()">Adicionar</button></div>
+        </div>
+        <div class="note">Demonstra o fluxo de <b>atualizar a mesma nota sem retrabalho</b>: quando a pág. 2 chegar, é só lançar os itens — o total registrado sobe e o histórico por item se atualiza sozinho.</div>
+      </div>
+
+      <div class="seg" style="margin-top:2px">
+        <button id="h-compra" class="active" onclick="hview('compra')">Por compra</button>
+        <button id="h-item" onclick="hview('item')">Por item (preço no tempo)</button>
+      </div>
+
+      <div id="hist-compra"></div>
+      <div id="hist-item" style="display:none"></div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- DADOS REAIS ---------- */
+var NOTA_TOTAL = 440.92;
+
+// Histórico de compras — 11 itens da pág.1 da NF 000.449.291 (Atacadão, 19/06/2026)
+var HIST = [
+  {data:"2026-06-19",estab:"Atacadão",produto:"Desinfetante Lysoform",marca:"Lysoform",cat:"Limpeza",qtd:1,un:"UND",tam:"1,2 L",pu:25.89,total:25.89,nf:"000.449.291",pag:"1/2"},
+  {data:"2026-06-19",estab:"Atacadão",produto:"Tira-manchas em pó Omo",marca:"Omo",cat:"Limpeza",qtd:1,un:"UND",tam:"380 g",pu:27.97,total:27.97,nf:"000.449.291",pag:"1/2"},
+  {data:"2026-06-19",estab:"Atacadão",produto:"Detergente líquido Atol Coco",marca:"Atol",cat:"Limpeza",qtd:1,un:"UND",tam:"2 L",pu:7.38,total:7.38,nf:"000.449.291",pag:"1/2"},
+  {data:"2026-06-19",estab:"Atacadão",produto:"Papel toalha Caprice",marca:"Caprice",cat:"Descartáveis",qtd:3,un:"PCT",tam:"2 rolos x 50 folhas",pu:3.62,total:10.86,nf:"000.449.291",pag:"1/2"},
+  {data:"2026-06-19",estab:"Atacadão",produto:"Filme PVC Globopack",marca:"Globopack",cat:"Descartáveis",qtd:1,un:"UND",tam:"0,28 x 15 m",pu:4.14,total:4.14,nf:"000.449.291",pag:"1/2"},
+  {data:"2026-06-19",estab:"Atacadão",produto:"Papel alumínio Globopack",marca:"Globopack",cat:"Descartáveis",qtd:1,un:"UND",tam:"0,45 x 4 m",pu:6.12,total:6.12,nf:"000.449.291",pag:"1/2"},
+  {data:"2026-06-19",estab:"Atacadão",produto:"Extrato de tomate Fugini",marca:"Fugini",cat:"Mercearia",qtd:6,un:"UND",tam:"190 g",pu:2.58,total:15.48,nf:"000.449.291",pag:"1/2"},
+  {data:"2026-06-19",estab:"Atacadão",produto:"Farinha de arroz Tio João",marca:"Tio João",cat:"Mercearia",qtd:1,un:"UND",tam:"1 kg",pu:10.29,total:10.29,nf:"000.449.291",pag:"1/2"},
+  {data:"2026-06-19",estab:"Atacadão",produto:"Arroz parboilizado Urbano",marca:"Urbano",cat:"Mercearia",qtd:1,un:"PCT",tam:"1 kg",pu:3.62,total:3.62,nf:"000.449.291",pag:"1/2"},
+  {data:"2026-06-19",estab:"Atacadão",produto:"Queijo muçarela de búfala Bom Destino",marca:"Bom Destino",cat:"Frios",qtd:0.286,un:"KG",tam:"a granel",pu:61.25,total:17.51,nf:"000.449.291",pag:"1/2"},
+  {data:"2026-06-19",estab:"Atacadão",produto:"Iogurte Parmalat Protein Fit",marca:"Parmalat",cat:"Laticínios",qtd:4,un:"UND",tam:"120 g (morango)",pu:3.83,total:15.32,nf:"000.449.291",pag:"1/2"}
+];
+
+// Estoque — espelho real do Sheet "Feira (Casa) — Estoque"
+var EST = [
+  {item:"Tomate",marca:"",cat:"Hortifrúti",canal:"presencial",un:"kg",min:1,atual:0,preco:13.85},
+  {item:"Cebola branca",marca:"",cat:"Hortifrúti",canal:"presencial",un:"kg",min:1,atual:0,preco:5.69},
+  {item:"Batata inglesa",marca:"",cat:"Hortifrúti",canal:"presencial",un:"kg",min:2,atual:0,preco:9.89},
+  {item:"Maçã nacional",marca:"",cat:"Hortifrúti",canal:"presencial",un:"kg",min:1,atual:0,preco:7.99},
+  {item:"Alho",marca:"",cat:"Hortifrúti",canal:"presencial",un:"kg",min:1,atual:1,preco:24.19},
+  {item:"Queijo mussarela",marca:"Esperança",cat:"Frios",canal:"presencial",un:"kg",min:1,atual:1,preco:35.55},
+  {item:"Leite longa vida zero lactose",marca:"",cat:"Laticínios",canal:"delivery",un:"un",min:4,atual:1,preco:7.90},
+  {item:"Iogurte pedaços morango",marca:"",cat:"Laticínios",canal:"delivery",un:"un",min:3,atual:1,preco:13.25},
+  {item:"Iogurte natural desnatado",marca:"Betânia",cat:"Laticínios",canal:"delivery",un:"un",min:2,atual:2,preco:11.90},
+  {item:"Ovo branco grande",marca:"Aliança",cat:"Ovos",canal:"delivery",un:"cartela",min:1,atual:0,preco:20.99},
+  {item:"Óleo de girassol 900ml",marca:"Liza",cat:"Mercearia",canal:"delivery",un:"un",min:2,atual:1,preco:21.95},
+  {item:"Pão de forma Artesano",marca:"Plus Vita",cat:"Padaria",canal:"delivery",un:"un",min:2,atual:2,preco:14.15},
+  {item:"Batata air fryer",marca:"McCain",cat:"Congelados",canal:"delivery",un:"un",min:2,atual:0,preco:9.99},
+  {item:"Massa de nhoque congelada",marca:"",cat:"Congelados",canal:"delivery",un:"un",min:1,atual:0,preco:21.99},
+  {item:"Filé de salmão em tiras",marca:"",cat:"Congelados",canal:"delivery",un:"un",min:2,atual:2,preco:19.15},
+  {item:"Camarão congelado descascado",marca:"",cat:"Congelados",canal:"delivery",un:"un",min:1,atual:1,preco:55.49},
+  {item:"Esfirra de frango (coquetel)",marca:"",cat:"Congelados",canal:"delivery",un:"un",min:1,atual:1,preco:34.69},
+  {item:"Café à vácuo",marca:"Santa Clara",cat:"Mercearia",canal:"delivery",un:"un",min:3,atual:1,preco:17.45},
+  {item:"Azeite extra virgem 0.5%",marca:"Borges",cat:"Mercearia",canal:"amazon",un:"un",min:1,atual:0,preco:37.69},
+  {item:"Barra de proteína cookies",marca:"",cat:"Mercearia",canal:"amazon",un:"un",min:5,atual:1,preco:10.89},
+  {item:"Papel higiênico compacto",marca:"",cat:"Limpeza",canal:"shopee",un:"pacote",min:1,atual:0,preco:39.90}
+];
+
+var CANAL_LABEL={presencial:"🏪 Presencial",delivery:"🛵 Delivery",amazon:"📦 Amazon",shopee:"🛍️ Shopee",mercadolivre:"🟡 Mercado Livre"};
+var CANAIS=["presencial","delivery","amazon","shopee","mercadolivre"];
+
+/* ---------- HELPERS ---------- */
+function brl(n){return (n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function qty(n){return Number.isInteger(n)?String(n):n.toLocaleString('pt-BR',{maximumFractionDigits:3});}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function fmtData(d){var p=d.split("-");return p[2]+"/"+p[1]+"/"+p[0];}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1800);}
+function drawer(open){document.getElementById('side').classList.toggle('open',open);document.getElementById('overlay').classList.toggle('open',open);}
+
+/* ---------- NAV ---------- */
+function show(v){
+  ['lista','estoque','historico'].forEach(function(x){
+    document.getElementById('view-'+x).style.display = (x===v)?'block':'none';
+    document.getElementById('tab-'+x).classList.toggle('active', x===v);
+  });
+  if(v==='estoque') renderEstoque();
+  if(v==='lista') gerarLista();
+}
+
+/* ---------- ESTOQUE ---------- */
+function renderEstoque(){
+  var b=document.getElementById('estoque-body');b.innerHTML='';
+  EST.forEach(function(it){
+    var baixo=Number(it.atual)<Number(it.min);
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+esc(it.item)+'</td><td>'+esc(it.marca||'—')+'</td><td>'+esc(it.cat)+'</td>'+
+      '<td>'+esc(CANAL_LABEL[it.canal]||it.canal)+'</td><td>'+esc(it.un)+'</td>'+
+      '<td class="num">'+it.min+'</td><td class="num">'+it.atual+'</td><td class="num">'+brl(it.preco)+'</td>'+
+      '<td>'+(baixo?'<span class="pill low">comprar</span>':'<span class="pill ok">ok</span>')+'</td>';
+    b.appendChild(tr);
+  });
+}
+
+/* ---------- LISTA ---------- */
+function gerarLista(){
+  var faltando=EST.filter(function(it){return Number(it.atual)<Number(it.min);});
+  var out=document.getElementById('lista-out');
+  if(!faltando.length){out.innerHTML='<div class="empty">Nada abaixo do mínimo. 🎉</div>';return;}
+  var grupos={};faltando.forEach(function(it){(grupos[it.canal]=grupos[it.canal]||[]).push(it);});
+  var html='';
+  CANAIS.forEach(function(canal){
+    var arr=grupos[canal];if(!arr)return;
+    html+='<div class="grp"><h3>'+CANAL_LABEL[canal]+'<span class="count">'+arr.length+' itens</span></h3>';
+    arr.forEach(function(it){
+      var qt=Math.max(1,Number(it.min)-Number(it.atual));
+      html+='<div class="row"><div class="nm">'+esc(it.item)+(it.marca?' <small>'+esc(it.marca)+'</small>':'')+'</div>'+
+        '<div class="q">'+qt+' '+esc(it.un)+'</div></div>';
+    });
+    html+='</div>';
+  });
+  out.innerHTML=html;
+}
+
+/* ---------- HISTÓRICO ---------- */
+function hview(v){
+  document.getElementById('hist-compra').style.display=(v==='compra')?'block':'none';
+  document.getElementById('hist-item').style.display=(v==='item')?'block':'none';
+  document.getElementById('h-compra').classList.toggle('active',v==='compra');
+  document.getElementById('h-item').classList.toggle('active',v==='item');
+  if(v==='compra') renderCompra(); else renderItem();
+}
+
+function renderCompra(){
+  // agrupa por (data + estab + nf)
+  var grupos={};
+  HIST.forEach(function(it){var k=it.data+'|'+it.estab+'|'+(it.nf||'');(grupos[k]=grupos[k]||[]).push(it);});
+  var html='';
+  Object.keys(grupos).sort().reverse().forEach(function(k){
+    var arr=grupos[k];var first=arr[0];
+    var soma=arr.reduce(function(s,x){return s+x.total;},0);
+    var parcial=first.pag && first.pag!=='1/1';
+    html+='<div class="grp"><h3 class="compra-head"><span>📅 '+fmtData(first.data)+' · '+esc(first.estab)+
+      (first.nf?' · NF '+esc(first.nf):'')+'</span>'+
+      '<span class="tot">'+arr.length+' itens · '+brl(soma)+(parcial?' <span class="pill flat">pág. '+esc(first.pag)+'</span>':'')+'</span></h3>';
+    html+='<table style="border:none;border-radius:0"><thead><tr>'+
+      '<th>Item</th><th>Marca</th><th class="num">Qtd</th><th>Un.</th><th class="num">Preço unit.</th><th class="num">Total</th>'+
+      '</tr></thead><tbody>';
+    arr.forEach(function(it){
+      html+='<tr><td>'+esc(it.produto)+'<br><small style="color:var(--muted)">'+esc(it.tam||'')+'</small></td>'+
+        '<td>'+esc(it.marca||'—')+'</td><td class="num">'+qty(it.qtd)+'</td><td>'+esc(it.un)+'</td>'+
+        '<td class="num">'+brl(it.pu)+'</td><td class="num">'+brl(it.total)+'</td></tr>';
+    });
+    html+='</tbody></table>';
+    if(parcial){html+='<div class="note" style="padding:10px 15px">Nota parcial: total da nota R$ 440,92 · registrado '+brl(soma)+' · falta a pág. 2.</div>';}
+    html+='</div>';
+  });
+  document.getElementById('hist-compra').innerHTML=html;
+}
+
+function renderItem(){
+  // agrupa por produto padronizado
+  var grupos={};
+  HIST.forEach(function(it){(grupos[it.produto]=grupos[it.produto]||[]).push(it);});
+  var nomes=Object.keys(grupos).sort();
+  var maxPU=Math.max.apply(null,HIST.map(function(x){return x.pu;}));
+  var html='<div class="note" style="margin-bottom:12px">Cada item guarda o <b>preço unitário por data de compra</b>. Com mais de uma compra, aparece a <b>variação (↑/↓)</b> e o <b>menor preço</b>. Hoje há 1 compra registrada por item — clique pra ver o detalhe.</div>';
+  nomes.forEach(function(nome,idx){
+    var arr=grupos[nome].slice().sort(function(a,b){return a.data<b.data?-1:1;});
+    var ult=arr[arr.length-1];
+    var precos=arr.map(function(x){return x.pu;});
+    var menor=Math.min.apply(null,precos);
+    var variacao;
+    if(arr.length<2){variacao='<span class="pill flat">1ª compra</span>';}
+    else{
+      var ant=arr[arr.length-2].pu;var dif=ult.pu-ant;
+      var cls=dif>0?'up':(dif<0?'down':'flat');var arrow=dif>0?'↑':(dif<0?'↓':'→');
+      variacao='<span class="pill '+cls+'">'+arrow+' '+brl(Math.abs(dif))+'</span>';
+    }
+    var bars=arr.map(function(x){var h=Math.max(4,Math.round(x.pu/maxPU*34));return '<div class="b" style="height:'+h+'px" title="'+fmtData(x.data)+': '+brl(x.pu)+'"></div>';}).join('');
+    html+='<div class="grp item-card" onclick="this.classList.toggle(\'open\')">'+
+      '<h3><span>'+esc(nome)+'</span>'+
+      '<span class="count">'+esc(ult.marca||'')+' · últ. '+brl(ult.pu)+'/'+esc(ult.un.toLowerCase())+' &nbsp; '+variacao+'</span></h3>'+
+      '<div class="body">'+
+        '<div class="spark">'+bars+'</div>'+
+        '<table class="mini"><thead><tr><th>Data</th><th>Loja</th><th class="num">Qtd</th><th class="num">Preço unit.</th><th class="num">Total</th><th></th></tr></thead><tbody>'+
+        arr.map(function(x){var menorTag=(x.pu===menor)?' <span class="pill ok">menor</span>':'';
+          return '<tr><td>'+fmtData(x.data)+'</td><td>'+esc(x.estab)+'</td><td class="num">'+qty(x.qtd)+' '+esc(x.un.toLowerCase())+'</td><td class="num">'+brl(x.pu)+menorTag+'</td><td class="num">'+brl(x.total)+'</td><td></td></tr>';
+        }).join('')+
+        '</tbody></table>'+
+        (arr.length<2?'<div class="note">Adicione a mesma compra em outra data/loja pra ver a variação de preço aqui.</div>':'')+
+      '</div></div>';
+  });
+  document.getElementById('hist-item').innerHTML=html;
+}
+
+/* ---------- ADD (fluxo pág.2 / novas compras) ---------- */
+function toggleAdd(){document.getElementById('addform').classList.toggle('open');}
+function addItem(){
+  var prod=document.getElementById('f-prod').value.trim();
+  var pu=Number(document.getElementById('f-pu').value);
+  var qtd=Number(document.getElementById('f-qtd').value)||1;
+  if(!prod||!pu){toast('Preencha item e preço');return;}
+  HIST.push({data:document.getElementById('f-data').value,estab:document.getElementById('f-estab').value.trim()||'Atacadão',
+    produto:prod,marca:document.getElementById('f-marca').value.trim(),cat:'',qtd:qtd,
+    un:document.getElementById('f-un').value.trim()||'UND',tam:'',pu:pu,total:Math.round(qtd*pu*100)/100,nf:'000.449.291',pag:'2/2'});
+  document.getElementById('f-prod').value='';document.getElementById('f-marca').value='';document.getElementById('f-pu').value='';
+  renderCompra();renderItem();
+  var soma=HIST.reduce(function(s,x){return s+x.total;},0);
+  document.getElementById('reg-tot').textContent=brl(soma);
+  toast('Item adicionado — registrado agora: '+brl(soma));
+}
+
+/* ---------- INIT ---------- */
+renderCompra();
+</script>
+</body>
+</html>
