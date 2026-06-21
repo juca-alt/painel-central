@@ -10,7 +10,8 @@ Implementado o submódulo **Casa › 👥 Funcionário** (que na produção era 
 
 - **Data-driven:** lista de funcionários nasce vazia; adicionar/remover/renomear pela UI (Victoria entra sem código). **Zero PII hardcoded no repo.**
 - **2 abas:** Carga & Horário (cenários Jun/Jul/Ago, quadro semanal, calendário, "quadro pra WhatsApp", 8h48/dia·44h/sem·220h/mês) e Cartão de Ponto (E/S/E/S + H.E. + assinatura, imprimível, banco de horas). Cálculos validados no preview (jun/2026 = 193h36; saldo −26h24 vs 220h).
-- **Persistência 2 camadas:** `localStorage` (`painel_casa_v1`) sempre + **Supabase** quando configurado/logado (sync entre aparelhos).
+- **Persistência 2 camadas com PII protegida:** dados **operacionais** (horários, ponto, carga) ficam no `localStorage` (`painel_casa_v1`) pra uso offline; **PII (nome, CPF, endereço, admissão) NUNCA toca o localStorage** — vive só no **Supabase** atrás de RLS, quando logado. Função `scrub()` remove a PII antes de gravar local. Deslogado, a identificação some no reload (o app avisa). Decisão do Gustavo (recado Cowork: "CPF e nome só no Supabase").
+- **Portado nos DOIS arquivos:** `index.html` (produção) **e** `index-next.html` (staging) — pra uma futura promoção staging→prod não apagar o módulo. `index-backup-2026-06-20.html` deixado intocado.
 - **Supabase (módulo `SB` no `index.html`):** auth magic-link por email + REST (PostgREST) via `fetch`, client-side. **Dormente até preencher URL/anon key** — sem isso roda 100% local (barra "Sincronização desligada"). Não há outra integração Supabase no app.
 - **Migration:** `/sql/painel_casa.sql` — `public.painel_funcionarios` (prefixo `painel_`, jsonb), RLS por `auth.uid()`, grant só `authenticated`, reversível. NÃO toca em nada do central-financeira.
 - `sw.js`: cache `v2` → `v3`.

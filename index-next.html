@@ -223,6 +223,65 @@
     .btn{min-height:40px}
     .nav a.sub{min-height:42px}
   }
+  /* ===== Casa › Funcionários ===== */
+  #view-funcionario .cz-crumb{font-size:13px;color:var(--muted);margin-bottom:8px}
+  #view-funcionario .cz-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+  #view-funcionario .cz-emp{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px;cursor:pointer;transition:.15s}
+  #view-funcionario .cz-del{position:absolute;top:6px;right:6px;border:none;background:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 7px;border-radius:6px}
+  #view-funcionario .cz-del:hover{color:var(--danger);background:var(--danger-soft)}
+  #view-funcionario .cz-emp:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(47,107,220,.08)}
+  #view-funcionario .cz-emp.soon{opacity:.55;cursor:default}
+  #view-funcionario .cz-emp.soon:hover{border-color:var(--line);box-shadow:none}
+  #view-funcionario .cz-emp .e-n{font-weight:600;font-size:15px}
+  #view-funcionario .cz-emp .e-c{color:var(--muted);font-size:12px;margin-top:3px}
+  #view-funcionario .cz-tabs{display:flex;gap:6px;margin:12px 0 16px;flex-wrap:wrap;border-bottom:none}
+  #view-funcionario .cz-tab{border:1px solid var(--line);background:var(--card);padding:9px 14px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--txt)}
+  #view-funcionario .cz-tab.active{background:var(--txt);color:#fff;border-color:var(--txt)}
+  #view-funcionario .cz-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  #view-funcionario .cz-card h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  #view-funcionario .cz-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:0;border:none}
+  #view-funcionario .cz-fld{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px;font-weight:600}
+  #view-funcionario .cz-fld input{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--txt);width:auto}
+  #view-funcionario input.cz-num{width:84px}
+  #view-funcionario input.cz-txt{min-width:200px}
+  #view-funcionario .cz-seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+  #view-funcionario .cz-seg button{border:none;background:#fff;padding:8px 16px;cursor:pointer;font-weight:600;font-size:13px;color:var(--muted)}
+  #view-funcionario .cz-seg button.on{color:#fff;background:var(--accent)}
+  #view-funcionario .cz-tbl{width:100%;border-collapse:collapse;font-size:14px;background:transparent;border:none;border-radius:0}
+  #view-funcionario .cz-tbl th,#view-funcionario .cz-tbl td{padding:7px 5px;border-bottom:1px solid var(--line);text-align:center;background:transparent}
+  #view-funcionario .cz-tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);font-weight:700}
+  #view-funcionario .cz-tbl td.day{text-align:left;font-weight:600;white-space:nowrap}
+  #view-funcionario .cz-tbl tr.off{opacity:.5}
+  #view-funcionario .cz-tbl input{padding:6px 7px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--txt);font:inherit;width:auto}
+  #view-funcionario .cz-tbl input[type=time]{width:94px}
+  #view-funcionario .cz-tbl input.cz-num{width:72px}
+  #view-funcionario .cz-note{background:var(--accent-soft);border:1px solid #cfe0ef;border-radius:10px;padding:9px 12px;font-size:13px;color:var(--txt);margin-top:12px}
+  #view-funcionario .cz-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;margin-top:14px}
+  #view-funcionario .cz-stat{background:#fafbfc;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  #view-funcionario .cz-stat .v{font-size:20px;font-weight:700}
+  #view-funcionario .cz-stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+  #view-funcionario .cz-stat.good .v{color:var(--ok)}
+  #view-funcionario .cz-stat.bad .v{color:var(--danger)}
+  #view-funcionario .cz-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+  #view-funcionario .cz-cal .h{font-size:10px;color:var(--muted);text-align:center;font-weight:700;text-transform:uppercase}
+  #view-funcionario .cz-cal .c{min-height:42px;border:1px solid var(--line);border-radius:7px;padding:3px 4px;font-size:11px;background:#fff}
+  #view-funcionario .cz-cal .c.work{background:var(--accent-soft)}
+  #view-funcionario .cz-cal .c .n{font-weight:700;font-size:11px}
+  #view-funcionario .cz-cal .c .hh{color:var(--muted);font-size:10px}
+  #view-funcionario .cz-cal .c.empty{border:none;background:transparent}
+  #view-funcionario .cz-ident{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 18px;font-size:13px}
+  #view-funcionario .cz-ident b{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:3px}
+  #view-funcionario .cz-ident input{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--txt);font:inherit}
+  #view-funcionario textarea.cz-ta{width:100%;min-height:150px;border:1px solid var(--line);border-radius:10px;padding:10px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--txt);background:#fafbfc;box-sizing:border-box}
+  #view-funcionario .cz-muted{color:var(--muted);font-size:12px}
+  #view-funcionario .cz-printonly{display:none}
+  @media print{
+    .side,.menu-toggle,.side-overlay{display:none!important}
+    .main{padding:0;max-width:none}
+    #view-funcionario .cz-noprint,#view-funcionario .cz-tabs,#view-funcionario .cz-crumb{display:none!important}
+    #view-funcionario .cz-card{border:none;padding:4px 0;margin-bottom:8px}
+    #view-funcionario .cz-printonly{display:block}
+  }
 </style>
 </head>
 <body>
@@ -380,12 +439,8 @@
       </section>
     </section>
 
-    <!-- ============ FUNCIONÁRIO (placeholder) ============ -->
-    <section id="view-funcionario" style="display:none">
-      <div class="head"><h1>👥 Funcionário</h1></div>
-      <div class="sub">Casa › Funcionário</div>
-      <div class="empty">Submódulo em breve — funcionalidades ainda a definir.</div>
-    </section>
+    <!-- ============ CASA › FUNCIONÁRIO ============ -->
+    <section id="view-funcionario" style="display:none"></section>
 
     <!-- ============ SAÚDE ============ -->
     <section id="view-saude" style="display:none">
@@ -580,6 +635,7 @@ function nav(v){
     $('nav-'+k).classList.toggle('active', k===v);
   });
   if(v==='feira'){ renderCards(); gerar(); }
+  if(v==='funcionario'){ CASA.render(); }
   if(v==='config'){ renderConfig(); }
   var inCasa=(v==='feira'||v==='funcionario'); var nc=$('nav-casa');
   if(nc){ nc.classList.toggle('active', inCasa); if(inCasa){ $('casa-sub').classList.remove('collapsed'); nc.classList.remove('collapsed'); } }
@@ -1539,6 +1595,297 @@ function hItem(){
   });
   $('hist-out').innerHTML=html;
 }
+
+/* ================= Supabase (sync + privacidade do módulo Casa) =================
+   COMO LIGAR A SINCRONIZAÇÃO (entre celular e desktop):
+   1. Cole abaixo a Project URL e a ANON/PUBLIC key do Supabase do central-financeira
+      (Supabase → Settings → API). NUNCA a service key.
+   2. Rode a migration /sql/painel_casa.sql no SQL Editor do Supabase.
+   3. Auth → Providers: deixe Email ligado. Auth → URL Configuration: adicione
+      https://juca-alt.github.io/painel-central/ em Site URL e Redirect URLs.
+   Enquanto URL/ANON ficarem vazios, o app roda 100% local (localStorage) sem quebrar. */
+var SB=(function(){
+  var URL  = "";   // <<< COLE AQUI a Project URL  (ex.: https://xxxxx.supabase.co)
+  var ANON = "";   // <<< COLE AQUI a anon/public key
+  var TABLE="painel_funcionarios";
+  var SKEY ="painel_sb_session";
+  var session=loadS(), onChangeCb=null, tmr=null;
+
+  function loadS(){try{return JSON.parse(localStorage.getItem(SKEY))||null;}catch(e){return null;}}
+  function persist(){try{session?localStorage.setItem(SKEY,JSON.stringify(session)):localStorage.removeItem(SKEY);}catch(e){}}
+  function enabled(){return !!(URL&&ANON);}
+  function loggedIn(){return !!(session&&session.access_token);}
+  function email(){return (session&&session.user&&session.user.email)||"";}
+  function onChange(cb){onChangeCb=cb;}
+  function fire(){if(onChangeCb)try{onChangeCb();}catch(e){}}
+
+  /* captura tokens do magic-link no redirect (#access_token=...) */
+  function init(){
+    if(!enabled())return;
+    try{
+      var h=location.hash||"";
+      if(h.indexOf("access_token=")>=0){
+        var p={};h.replace(/^#/,"").split("&").forEach(function(kv){var a=kv.split("=");p[a[0]]=decodeURIComponent(a[1]||"");});
+        if(p.access_token){
+          session={access_token:p.access_token,refresh_token:p.refresh_token||"",user:null};persist();
+          try{history.replaceState(null,"",location.pathname+location.search);}catch(e){}
+          fetchUser().then(fire);
+        }
+      }
+    }catch(e){}
+  }
+  function fetchUser(){
+    if(!loggedIn())return Promise.resolve();
+    return fetch(URL+"/auth/v1/user",{headers:{apikey:ANON,Authorization:"Bearer "+session.access_token}})
+      .then(function(r){return r.ok?r.json():null;}).then(function(u){if(u){session.user=u;persist();}}).catch(function(){});
+  }
+  function signIn(em){
+    if(!enabled()){toast("Supabase não configurado");return;}
+    em=(em||"").trim();if(!em){toast("Digite seu email");return;}
+    var rt=encodeURIComponent(location.origin+location.pathname);
+    fetch(URL+"/auth/v1/otp?redirect_to="+rt,{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json"},
+      body:JSON.stringify({email:em,create_user:true})})
+      .then(function(r){if(r.ok)toast("Link enviado pro seu email ✉️");else r.text().then(function(t){toast("Erro: "+t.slice(0,90));});})
+      .catch(function(){toast("Falha ao enviar o link");});
+  }
+  function signOut(){
+    if(loggedIn())fetch(URL+"/auth/v1/logout",{method:"POST",headers:{apikey:ANON,Authorization:"Bearer "+session.access_token}}).catch(function(){});
+    session=null;persist();fire();
+  }
+  function refresh(){
+    if(!session||!session.refresh_token)return Promise.resolve(false);
+    return fetch(URL+"/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:session.refresh_token})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.access_token){session.access_token=d.access_token;session.refresh_token=d.refresh_token;persist();return true;}session=null;persist();fire();return false;}).catch(function(){return false;});
+  }
+  function rest(method,path,body,extra){
+    function go(){var opt={method:method,headers:Object.assign({apikey:ANON,Authorization:"Bearer "+(session&&session.access_token),"Content-Type":"application/json"},extra||{})};if(body!=null)opt.body=JSON.stringify(body);return fetch(URL+"/rest/v1/"+path,opt);}
+    return go().then(function(r){if(r.status===401)return refresh().then(function(ok){if(!ok)throw new Error("auth");return go();});return r;});
+  }
+  function up(f){return rest("POST",TABLE+"?on_conflict=id",{id:f.id,nome:f.nome,cargo:f.cargo,ativo:f.ativo!==false,data:f},{Prefer:"resolution=merge-duplicates,return=minimal"});}
+  function del(id){if(enabled()&&loggedIn())rest("DELETE",TABLE+"?id=eq."+encodeURIComponent(id)).catch(function(){});}
+  function queueAll(funcs){
+    if(!enabled()||!loggedIn())return;
+    clearTimeout(tmr);
+    tmr=setTimeout(function(){funcs.forEach(function(f){up(f).catch(function(){});});},800);
+  }
+  function rowToFunc(r){var f=r.data||{};f.id=r.id;f.nome=r.nome;f.cargo=r.cargo;f.ativo=r.ativo!==false;return f;}
+  function pull(state){
+    if(!enabled()||!loggedIn())return Promise.resolve();
+    return rest("GET",TABLE+"?select=*").then(function(r){return r.json();}).then(function(rows){
+      if(rows&&rows.length){state.funcionarios=rows.map(rowToFunc);}
+      else{state.funcionarios.forEach(function(f){up(f).catch(function(){});});}
+    }).catch(function(){/* offline: mantém o local */});
+  }
+  function bar(){
+    if(!enabled())return '<div class="errbox" style="margin-bottom:14px"><div class="e-t">💾 Sincronização desligada</div><div class="e-s">Os dados ficam só neste aparelho. Pra sincronizar entre celular e desktop, configure o Supabase (URL + anon key no topo do bloco SB no código).</div></div>';
+    if(!loggedIn())return '<div class="errbox" style="margin-bottom:14px"><div class="e-t">🔒 Conecte pra sincronizar</div><div class="e-s">CPF e nome ficam protegidos por login (RLS) — só você vê. Receba um link no email pra entrar.<div class="cz-row" style="margin-top:8px"><input id="cz-sb-email" type="email" placeholder="seu@email.com" style="padding:7px 9px;border:1px solid var(--line);border-radius:8px"><button class="btn primary sm" onclick="SB.signIn(document.getElementById(\'cz-sb-email\').value)">Enviar link</button></div></div></div>';
+    return '<div class="errbox" style="margin-bottom:14px;border-left-color:var(--ok)"><div class="e-t">✓ Sincronizado</div><div class="e-s">Logado como <b>'+esc(email())+'</b> · dados no Supabase (privado, RLS).<div style="margin-top:6px"><button class="btn sm" onclick="SB.signOut()">Sair</button></div></div></div>';
+  }
+  return {init:init,enabled:enabled,loggedIn:loggedIn,email:email,signIn:signIn,signOut:signOut,pull:pull,queueAll:queueAll,del:del,bar:bar,onChange:onChange};
+})();
+
+/* ================= Casa › Funcionários (local + sync Supabase) ================= */
+var CASA=(function(){
+  var KEY="painel_casa_v1";
+  var DIAS=[["dom","Domingo"],["seg","Segunda"],["ter","Terça"],["qua","Quarta"],["qui","Quinta"],["sex","Sexta"],["sab","Sábado"]];
+  var MES={jun:{y:2026,m:5,nome:"Junho/2026",pm:"2026-06"},jul:{y:2026,m:6,nome:"Julho/2026",pm:"2026-07"},ago:{y:2026,m:7,nome:"Agosto/2026",pm:"2026-08"}};
+  function defSch(){var o={};DIAS.forEach(function(d){var k=d[0];var work=(k!=="dom"&&k!=="sab");o[k]={on:work,e:"09:12",s:"19:00",alm:work?60:0};});return o;}
+  function uid(){return "f"+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36);}
+  function defFunc(nome,cargo,admissao){return{
+    id:uid(),nome:nome,cargo:cargo||"",ativo:true,
+    ident:{empregador:"",cpf:"",endereco:"",func:nome,cargo:cargo||"",admissao:admissao||""},
+    cenario:"jun",carga:{jun:220,jul:220,ago:220},
+    vig:{jun:"Junho/2026 — período letivo (rotina do Gael)",jul:"Julho/2026 — férias escolares do Gael",ago:"Agosto/2026 — volta às aulas"},
+    sch:{jun:defSch(),jul:defSch(),ago:defSch()},bancoIni:0,ponto:{}
+  };}
+  function defState(){return{funcionarios:[],sel:null,tab:"horario"};}
+  var state=load(), pulled=false;
+  function load(){try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.funcionarios)return r;}catch(e){}return defState();}
+  /* localStorage NUNCA recebe PII (nome/CPF/endereço): só dados operacionais offline. PII vive só no Supabase (RLS). */
+  function scrub(f){var i=f.ident||{};return {id:f.id,nome:"",cargo:f.cargo,ativo:f.ativo,cenario:f.cenario,carga:f.carga,vig:f.vig,sch:f.sch,bancoIni:f.bancoIni,ponto:f.ponto,ident:{empregador:"",cpf:"",endereco:"",func:"",cargo:i.cargo||"",admissao:""}};}
+  function save(sync){try{localStorage.setItem(KEY,JSON.stringify({funcionarios:state.funcionarios.map(scrub),sel:state.sel,tab:state.tab}));}catch(e){}if(sync!==false)SB.queueAll(state.funcionarios);}
+  function cur(){return state.funcionarios.filter(function(f){return f.id===state.sel;})[0]||null;}
+  function cm(){return MES[cur().cenario];}
+
+  function toMin(t){if(!t)return null;var p=t.split(":");return(+p[0])*60+(+p[1]);}
+  function hhmm(m){var h=Math.floor(m/60),mm=m%60;return(h<10?"0"+h:h)+":"+(mm<10?"0"+mm:mm);}
+  function fmtH(mins){if(mins==null||isNaN(mins))return"–";var neg=mins<0;mins=Math.abs(Math.round(mins));var h=Math.floor(mins/60),m=mins%60;return(neg?"-":"")+h+"h"+(m?(m<10?"0"+m:m):"");}
+  function dayMins(d){if(!d||!d.on)return 0;var a=toMin(d.e),b=toMin(d.s);if(a==null||b==null)return 0;var t=b-a-(+d.alm||0);return t>0?t:0;}
+  function gid(id){return document.getElementById(id);}
+  function setV(id,v){var e=gid(id);if(e)e.value=(v==null?"":v);}
+  function setT(id,t){var e=gid(id);if(e)e.textContent=t;}
+
+  /* ---------- entry ---------- */
+  function render(){draw();if(SB.enabled()&&SB.loggedIn()&&!pulled){pulled=true;SB.pull(state).then(function(){save(false);draw();});}}
+  function draw(){if(!cur())state.sel=null;if(state.sel)renderDetail();else renderList();}
+  function refreshIfOpen(){pulled=false;var v=gid("view-funcionario");if(v&&v.style.display!=="none")render();}
+  function renderList(){
+    var cards=state.funcionarios.map(function(f){
+      return '<div class="cz-emp" onclick="CASA.open(\''+f.id+'\')">'+
+        '<button class="cz-del" title="remover" onclick="event.stopPropagation();CASA.removeFunc(\''+f.id+'\')">×</button>'+
+        '<div class="e-n">'+esc(f.nome||(f.cargo||"(sem nome)"))+(f.nome?"":' <span title="nome protegido — conecte pra ver" style="font-size:11px">🔒</span>')+'</div><div class="e-c">'+esc(f.cargo||"")+'</div></div>';
+    }).join("");
+    var empty=state.funcionarios.length?'':'<div class="empty" style="grid-column:1/-1">Nenhum funcionário ainda. Adiciona o primeiro abaixo.</div>';
+    gid("view-funcionario").innerHTML=
+      '<div class="head"><h1>👥 Funcionário</h1></div><div class="sub">Funcionários · carga, horário e cartão de ponto</div>'+
+      SB.bar()+
+      '<div class="cz-list">'+cards+empty+'</div>'+
+      '<div class="cz-card" style="margin-top:14px;max-width:560px"><h2>➕ Adicionar funcionário</h2>'+
+       '<div class="cz-row"><input id="cz-new-nome" placeholder="Nome" style="padding:7px 9px;border:1px solid var(--line);border-radius:8px;min-width:140px">'+
+       '<input id="cz-new-cargo" placeholder="Função (ex.: Empregada Doméstica)" style="padding:7px 9px;border:1px solid var(--line);border-radius:8px;min-width:200px">'+
+       '<button class="btn primary" onclick="CASA.addFunc()">Adicionar</button></div></div>';
+  }
+  function addFunc(){
+    var nome=(gid("cz-new-nome").value||"").trim(),cargo=(gid("cz-new-cargo").value||"").trim();
+    if(!nome){toast("Dá um nome pro funcionário");return;}
+    state.funcionarios.push(defFunc(nome,cargo,""));save();renderList();
+  }
+  function removeFunc(id){
+    if(!confirm("Remover este funcionário e todos os dados dele?"))return;
+    state.funcionarios=state.funcionarios.filter(function(f){return f.id!==id;});
+    if(state.sel===id)state.sel=null;
+    SB.del(id);save();renderList();
+  }
+  function rename(id){
+    var f=state.funcionarios.filter(function(x){return x.id===id;})[0];if(!f)return;
+    var nome=prompt("Nome:",f.nome||"");if(nome===null)return;
+    var cargo=prompt("Função:",f.cargo||"");if(cargo===null)cargo=f.cargo;
+    f.nome=(nome||"").trim();f.cargo=(cargo||"").trim();if(!f.ident.func)f.ident.func=f.nome;
+    save();renderDetail();
+    if(!(SB.enabled()&&SB.loggedIn()))toast("Nome só fica salvo conectado ao Supabase (privado)");
+  }
+  function open(id){state.sel=id;state.tab="horario";save();renderDetail();}
+  function back(){state.sel=null;save();renderList();}
+  function setTab(t){state.tab=t;save();
+    var tabs=document.querySelectorAll("#view-casa .cz-tab");
+    if(tabs[0])tabs[0].classList.toggle("active",t==="horario");
+    if(tabs[1])tabs[1].classList.toggle("active",t==="ponto");
+    gid("cz-tab-horario").style.display=(t==="horario")?"":"none";
+    gid("cz-tab-ponto").style.display=(t==="ponto")?"":"none";
+  }
+  function renderDetail(){
+    var f=cur();
+    gid("view-funcionario").innerHTML=
+     '<div class="cz-crumb">🏡 Casa › 👥 Funcionários · <span style="cursor:pointer;color:var(--accent)" onclick="CASA.back()">‹ todos</span></div>'+
+     '<div class="head"><h1>'+esc(f.nome)+' <span style="cursor:pointer;font-size:14px;color:var(--accent)" title="renomear" onclick="CASA.rename(\''+f.id+'\')">✏️</span></h1></div><div class="sub">'+esc(f.cargo||"")+'</div>'+
+     '<div class="cz-tabs"><button class="cz-tab active" onclick="CASA.setTab(\'horario\')">🗓️ Carga &amp; Horário</button><button class="cz-tab" onclick="CASA.setTab(\'ponto\')">🕐 Cartão de Ponto</button></div>'+
+     horarioShell(f)+pontoShell();
+    renderIdent();renderHorario();renderPonto();setTab(state.tab||"horario");
+  }
+  function horarioShell(f){return ''+
+   '<section id="cz-tab-horario">'+
+    '<div class="cz-card"><h2>Mês a planejar</h2><div class="cz-row" style="justify-content:space-between">'+
+     '<div class="cz-seg"><button id="cz-cen-jun" onclick="CASA.setCenario(\'jun\')">Junho</button><button id="cz-cen-jul" onclick="CASA.setCenario(\'jul\')">Julho</button><button id="cz-cen-ago" onclick="CASA.setCenario(\'ago\')">Agosto</button></div>'+
+     '<label class="cz-fld" style="flex:1;min-width:240px">Programação familiar / observação<input id="cz-vigencia" class="cz-txt" type="text" oninput="CASA.onVig(this.value)"></label></div>'+
+     '<div class="cz-note">Carga contratual de referência: <b>8h48/dia · 44h/semana · 220h/mês</b> (seg–sex). Distribua os horários conforme a rotina da família — o painel mostra se o mês fecha a carga.</div></div>'+
+    '<div class="cz-card"><h2>Quadro semanal <span class="cz-muted" id="cz-cen-label"></span></h2>'+
+     '<table class="cz-tbl"><thead><tr><th class="day">Dia</th><th>Trabalha</th><th>Entrada</th><th>Saída</th><th>Almoço (min)</th><th>Horas no dia</th></tr></thead><tbody id="cz-week-body"></tbody></table>'+
+     '<div class="cz-row" style="margin-top:14px"><label class="cz-fld">Carga mensal alvo (h)<input id="cz-carga" class="cz-num" type="number" min="0" step="1" oninput="CASA.onCarga(this.value)"></label><span class="cz-muted" style="align-self:flex-end">Padrão por dia: <b>8h48</b></span></div>'+
+     '<div class="cz-stats"><div class="cz-stat"><div class="v" id="cz-s-dia">–</div><div class="l">Horas/dia médio</div></div><div class="cz-stat"><div class="v" id="cz-s-sem">–</div><div class="l">Horas/semana</div></div><div class="cz-stat"><div class="v" id="cz-s-mes">–</div><div class="l">Planejado no mês</div></div><div class="cz-stat" id="cz-s-saldo-box"><div class="v" id="cz-s-saldo">–</div><div class="l">vs carga alvo</div></div></div></div>'+
+    '<div class="cz-card"><h2>📅 Como cai no mês <span class="cz-muted" id="cz-cal-mes"></span></h2><div class="cz-cal" id="cz-cal"></div></div>'+
+    '<div class="cz-card cz-noprint"><h2>📋 Quadro pra mandar pra '+esc(f.nome)+'</h2><p class="cz-muted">Texto pronto pra colar no WhatsApp.</p><textarea id="cz-quadro" class="cz-ta" readonly></textarea><div class="cz-row" style="margin-top:10px"><button class="btn primary" onclick="CASA.copyQuadro()">📋 Copiar quadro</button><span id="cz-copy-msg" class="cz-muted"></span></div></div>'+
+   '</section>';}
+  function pontoShell(){return ''+
+   '<section id="cz-tab-ponto" style="display:none">'+
+    '<div class="cz-card"><div class="cz-printonly" style="text-align:center;font-weight:700;margin-bottom:6px" id="cz-print-title"></div>'+
+     '<h2 class="cz-noprint">Identificação <span class="cz-muted">(modelo da contabilidade)</span></h2>'+
+     ((SB.enabled()&&SB.loggedIn())?'':'<div class="cz-note cz-noprint" style="background:var(--warn-soft);border-color:#f0dcae">🔒 CPF e nome só são salvos/sincronizados conectado ao Supabase — offline eles <b>não</b> ficam neste aparelho.</div>')+
+     '<div class="cz-ident"><div><b>Empregador</b><input id="cz-id-emp" placeholder="Nome do empregador" oninput="CASA.setIdent(\'empregador\',this.value)"></div>'+
+      '<div><b>CPF/CNPJ</b><input id="cz-id-cpf" placeholder="CPF/CNPJ" oninput="CASA.setIdent(\'cpf\',this.value)"></div>'+
+      '<div><b>Endereço</b><input id="cz-id-end" placeholder="Endereço" oninput="CASA.setIdent(\'endereco\',this.value)"></div>'+
+      '<div><b>Funcionária</b><input id="cz-id-func" placeholder="Nome" oninput="CASA.setIdent(\'func\',this.value)"></div>'+
+      '<div><b>Função</b><input id="cz-id-cargo" placeholder="Função" oninput="CASA.setIdent(\'cargo\',this.value)"></div>'+
+      '<div><b>Admissão</b><input id="cz-id-adm" placeholder="dd/mm/aaaa" oninput="CASA.setIdent(\'admissao\',this.value)"></div></div>'+
+     '<div class="cz-row cz-noprint" style="margin-top:12px"><span class="cz-muted">Mês:</span> <b id="cz-ponto-mes-lbl"></b><span class="cz-muted">— acompanha o mês da aba Carga &amp; Horário.</span><button class="btn" style="margin-left:auto" onclick="CASA.preencherPrevisto()">↧ Preencher c/ previsto</button><button class="btn" onclick="window.print()">🖨️ Imprimir</button></div></div>'+
+    '<div class="cz-card"><table class="cz-tbl"><thead><tr><th class="day">Dia</th><th>Entrada</th><th>Saída</th><th>Entrada</th><th>Saída</th><th>H.E. Ent.</th><th>H.E. Saí.</th><th>Trab.</th><th style="text-align:left">Obs.</th></tr></thead><tbody id="cz-ponto-body"></tbody></table></div>'+
+    '<div class="cz-card"><h2 class="cz-noprint">Resumo do mês</h2><div class="cz-stats"><div class="cz-stat"><div class="v" id="cz-p-trab">–</div><div class="l">Trabalhadas</div></div><div class="cz-stat"><div class="v" id="cz-p-prev">–</div><div class="l">Previstas</div></div><div class="cz-stat"><div class="v" id="cz-p-extra">–</div><div class="l">Horas extras</div></div><div class="cz-stat" id="cz-p-saldo-box"><div class="v" id="cz-p-saldo">–</div><div class="l">Saldo do mês</div></div><div class="cz-stat" id="cz-p-banco-box"><div class="v" id="cz-p-banco">–</div><div class="l">Banco acumulado</div></div></div>'+
+     '<div class="cz-row cz-noprint" style="margin-top:12px"><label class="cz-fld">Banco de horas inicial (h)<input id="cz-banco-ini" class="cz-num" type="number" step="0.5" oninput="CASA.onBanco(this.value)"></label><button class="btn primary" style="align-self:flex-end" onclick="CASA.copyResumo()">📋 Copiar resumo</button><span id="cz-copy-msg2" class="cz-muted" style="align-self:flex-end"></span></div>'+
+     '<div class="cz-printonly" style="margin-top:30px"><div style="margin-bottom:18px">Reconheço a exatidão destas anotações.</div>Data: ____/____/______ &nbsp;&nbsp;&nbsp;&nbsp; _______________________________________<div class="cz-muted" style="margin-top:4px">Assinatura</div></div></div>'+
+   '</section>';}
+
+  /* ---------- ident ---------- */
+  function setIdent(f,v){cur().ident[f]=v;save();if(f==="func")setT("cz-print-title","Cartão de Ponto — "+cm().nome+" — "+(cur().ident.func||""));}
+  function renderIdent(){var i=cur().ident;setV("cz-id-emp",i.empregador);setV("cz-id-cpf",i.cpf);setV("cz-id-end",i.endereco);setV("cz-id-func",i.func);setV("cz-id-cargo",i.cargo);setV("cz-id-adm",i.admissao);}
+
+  /* ---------- carga & horário ---------- */
+  function setCenario(c){cur().cenario=c;save();renderHorario();renderPonto();}
+  function onVig(v){cur().vig[cur().cenario]=v;save();renderQuadro();}
+  function onCarga(v){cur().carga[cur().cenario]=(+v||0);save();renderSummary();renderQuadro();}
+  function setDay(k,fl,v){var o=cur().sch[cur().cenario][k];if(fl==="on")o.on=v;else if(fl==="alm")o.alm=(+v||0);else o[fl]=v;save();renderHorario();renderPonto();}
+  function renderHorario(){var f=cur(),c=f.cenario;
+    ["jun","jul","ago"].forEach(function(k){var b=gid("cz-cen-"+k);if(b)b.className=(c===k)?"on":"";});
+    setT("cz-cen-label","· "+cm().nome);setV("cz-vigencia",f.vig[c]);setV("cz-carga",f.carga[c]||0);
+    var sch=f.sch[c],tb=gid("cz-week-body");tb.innerHTML="";
+    DIAS.forEach(function(d){var k=d[0],o=sch[k];var tr=document.createElement("tr");if(!o.on)tr.className="off";
+      tr.innerHTML='<td class="day">'+d[1]+'</td>'+
+       '<td><input type="checkbox" '+(o.on?"checked":"")+' onchange="CASA.setDay(\''+k+'\',\'on\',this.checked)"></td>'+
+       '<td><input type="time" value="'+o.e+'" onchange="CASA.setDay(\''+k+'\',\'e\',this.value)"></td>'+
+       '<td><input type="time" value="'+o.s+'" onchange="CASA.setDay(\''+k+'\',\'s\',this.value)"></td>'+
+       '<td><input class="cz-num" type="number" min="0" step="5" value="'+o.alm+'" onchange="CASA.setDay(\''+k+'\',\'alm\',this.value)"></td>'+
+       '<td><b>'+fmtH(dayMins(o))+'</b></td>';
+      tb.appendChild(tr);});
+    renderSummary();renderCal();renderQuadro();}
+  function weekdaysInMonth(y,m){var c=[0,0,0,0,0,0,0],dim=new Date(y,m+1,0).getDate();for(var dd=1;dd<=dim;dd++)c[new Date(y,m,dd).getDay()]++;return c;}
+  function plannedMonth(){var sch=cur().sch[cur().cenario],x=cm(),c=weekdaysInMonth(x.y,x.m),tot=0;DIAS.forEach(function(d,i){tot+=dayMins(sch[d[0]])*c[i];});return tot;}
+  function weekMins(){var sch=cur().sch[cur().cenario],t=0;DIAS.forEach(function(d){t+=dayMins(sch[d[0]]);});return t;}
+  function activeDays(){var sch=cur().sch[cur().cenario],n=0;DIAS.forEach(function(d){if(dayMins(sch[d[0]])>0)n++;});return n;}
+  function renderSummary(){var wk=weekMins(),ad=activeDays();
+    setT("cz-s-dia",ad?fmtH(wk/ad):"–");setT("cz-s-sem",fmtH(wk));var pm=plannedMonth();setT("cz-s-mes",fmtH(pm));
+    var carga=(cur().carga[cur().cenario]||0)*60,saldo=pm-carga,box=gid("cz-s-saldo-box");
+    setT("cz-s-saldo",carga?fmtH(saldo):"defina carga");
+    if(box)box.className="cz-stat"+(carga?(Math.abs(saldo)<=30?" good":(saldo<0?" bad":"")):"");}
+  function renderCal(){var x=cm();setT("cz-cal-mes","· "+x.nome);
+    var sch=cur().sch[cur().cenario],dim=new Date(x.y,x.m+1,0).getDate(),first=new Date(x.y,x.m,1).getDay(),el=gid("cz-cal");el.innerHTML="";
+    ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].forEach(function(h){var d=document.createElement("div");d.className="h";d.textContent=h;el.appendChild(d);});
+    for(var i=0;i<first;i++){var e=document.createElement("div");e.className="c empty";el.appendChild(e);}
+    for(var dd=1;dd<=dim;dd++){var wi=new Date(x.y,x.m,dd).getDay(),o=sch[DIAS[wi][0]],mins=dayMins(o),c=document.createElement("div");
+      c.className="c"+(mins>0?" work":"");c.innerHTML='<div class="n">'+dd+'</div>'+(mins>0?'<div class="hh">'+fmtH(mins)+'</div>':'');el.appendChild(c);}}
+  function renderQuadro(){var f=cur(),c=f.cenario,sch=f.sch[c],lines=["*Quadro de horário — "+f.nome+"*","("+(f.vig[c]||"")+")",""];
+    DIAS.forEach(function(d){var o=sch[d[0]];if(dayMins(o)>0)lines.push(d[1]+": "+o.e+" às "+o.s+(o.alm?(" (almoço "+o.alm+"min)"):"")+" — "+fmtH(dayMins(o)));else lines.push(d[1]+": folga");});
+    lines.push("");lines.push("Total semana: "+fmtH(weekMins())+" · Estimado no mês: "+fmtH(plannedMonth()));
+    setV("cz-quadro",lines.join("\n"));}
+
+  /* ---------- cartão de ponto ---------- */
+  function onBanco(v){cur().bancoIni=(+v||0);save();renderPontoSummary();}
+  function pdata(){var k=cm().pm;if(!cur().ponto[k])cur().ponto[k]={};return cur().ponto[k];}
+  function prevForWeekday(wi){return dayMins(cur().sch[cur().cenario][DIAS[wi][0]]);}
+  function workedMins(r){if(!r)return 0;var e=toMin(r.e1),s=toMin(r.s2);if(e==null||s==null)return 0;var sa=toMin(r.sa),va=toMin(r.va);var lunch=(sa!=null&&va!=null&&va>sa)?(va-sa):0;var t=s-e-lunch;return t>0?t:0;}
+  function extraMins(r){if(!r)return 0;var a=toMin(r.he),b=toMin(r.hs);if(a==null||b==null||b<=a)return 0;return b-a;}
+  function setP(day,fl,v){var pd=pdata();if(!pd[day])pd[day]={};pd[day][fl]=v;save();renderPonto();}
+  function renderPonto(){var x=cm();setT("cz-ponto-mes-lbl",x.nome);setT("cz-print-title","Cartão de Ponto — "+x.nome+" — "+(cur().ident.func||""));setV("cz-banco-ini",cur().bancoIni||0);
+    var dim=new Date(x.y,x.m+1,0).getDate(),pd=pdata(),tb=gid("cz-ponto-body");tb.innerHTML="";
+    for(var dd=1;dd<=dim;dd++){var wi=new Date(x.y,x.m,dd).getDay(),r=pd[dd]||{},w=workedMins(r),hasData=r.e1||r.s2,wd=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][wi];
+      var tr=document.createElement("tr");if(wi===0||wi===6)tr.className="off";
+      tr.innerHTML='<td class="day">'+(dd<10?"0"+dd:dd)+' '+wd+'</td>'+
+       '<td><input type="time" value="'+(r.e1||"")+'" onchange="CASA.setP('+dd+',\'e1\',this.value)"></td>'+
+       '<td><input type="time" value="'+(r.sa||"")+'" onchange="CASA.setP('+dd+',\'sa\',this.value)"></td>'+
+       '<td><input type="time" value="'+(r.va||"")+'" onchange="CASA.setP('+dd+',\'va\',this.value)"></td>'+
+       '<td><input type="time" value="'+(r.s2||"")+'" onchange="CASA.setP('+dd+',\'s2\',this.value)"></td>'+
+       '<td><input type="time" value="'+(r.he||"")+'" onchange="CASA.setP('+dd+',\'he\',this.value)"></td>'+
+       '<td><input type="time" value="'+(r.hs||"")+'" onchange="CASA.setP('+dd+',\'hs\',this.value)"></td>'+
+       '<td><b>'+(hasData?fmtH(w):"–")+'</b></td>'+
+       '<td style="text-align:left"><input type="text" style="width:110px" value="'+(r.obs||"").replace(/"/g,"&quot;")+'" onchange="CASA.setP('+dd+',\'obs\',this.value)"></td>';
+      tb.appendChild(tr);}
+    renderPontoSummary();}
+  function renderPontoSummary(){var x=cm(),dim=new Date(x.y,x.m+1,0).getDate(),pd=pdata(),trab=0,prev=0,extra=0;
+    for(var dd=1;dd<=dim;dd++){var wi=new Date(x.y,x.m,dd).getDay(),r=pd[dd]||{};if(r.e1||r.s2){trab+=workedMins(r);prev+=prevForWeekday(wi);}extra+=extraMins(r);}
+    setT("cz-p-trab",fmtH(trab));setT("cz-p-prev",fmtH(prev));setT("cz-p-extra",fmtH(extra));
+    var saldo=trab-prev;setT("cz-p-saldo",fmtH(saldo));var sb=gid("cz-p-saldo-box");if(sb)sb.className="cz-stat"+(saldo>=0?" good":" bad");
+    var banco=(cur().bancoIni||0)*60+saldo+extra;setT("cz-p-banco",fmtH(banco));var bb=gid("cz-p-banco-box");if(bb)bb.className="cz-stat"+(banco>=0?" good":" bad");}
+  function preencherPrevisto(){var x=cm(),dim=new Date(x.y,x.m+1,0).getDate(),pd=pdata(),sch=cur().sch[cur().cenario];
+    for(var dd=1;dd<=dim;dd++){var wi=new Date(x.y,x.m,dd).getDay(),o=sch[DIAS[wi][0]];
+      if(dayMins(o)>0){if(!pd[dd])pd[dd]={};pd[dd].e1=o.e;pd[dd].s2=o.s;if(o.alm>0){var mid=toMin(o.e)+Math.floor((toMin(o.s)-toMin(o.e)-o.alm)/2);pd[dd].sa=hhmm(mid);pd[dd].va=hhmm(mid+(+o.alm));}}}
+    save();renderPonto();}
+
+  /* ---------- copy ---------- */
+  function copyQuadro(){copyText(gid("cz-quadro").value,"Quadro copiado");setT("cz-copy-msg","✓ copiado");setTimeout(function(){setT("cz-copy-msg","");},2500);}
+  function copyResumo(){var x=cm();var txt="*Cartão de ponto — "+cur().nome+" · "+x.nome+"*\nTrabalhadas: "+gid("cz-p-trab").textContent+"\nPrevistas: "+gid("cz-p-prev").textContent+"\nHoras extras: "+gid("cz-p-extra").textContent+"\nSaldo do mês: "+gid("cz-p-saldo").textContent+"\nBanco acumulado: "+gid("cz-p-banco").textContent;
+    copyText(txt,"Resumo copiado");setT("cz-copy-msg2","✓ copiado");setTimeout(function(){setT("cz-copy-msg2","");},2500);}
+
+  return {render:render,refreshIfOpen:refreshIfOpen,open:open,back:back,addFunc:addFunc,removeFunc:removeFunc,rename:rename,setTab:setTab,setIdent:setIdent,setCenario:setCenario,onVig:onVig,onCarga:onCarga,setDay:setDay,onBanco:onBanco,setP:setP,preencherPrevisto:preencherPrevisto,copyQuadro:copyQuadro,copyResumo:copyResumo};
+})();
+SB.onChange(function(){CASA.refreshIfOpen();});
+SB.init();
 
 /* ================= boot ================= */
 renderCards(); gerar(); folegoRender(); renderAtalhos();

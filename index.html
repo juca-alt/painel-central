@@ -1701,7 +1701,9 @@ var CASA=(function(){
   function defState(){return{funcionarios:[],sel:null,tab:"horario"};}
   var state=load(), pulled=false;
   function load(){try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.funcionarios)return r;}catch(e){}return defState();}
-  function save(sync){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}if(sync!==false)SB.queueAll(state.funcionarios);}
+  /* localStorage NUNCA recebe PII (nome/CPF/endereço): só dados operacionais offline. PII vive só no Supabase (RLS). */
+  function scrub(f){var i=f.ident||{};return {id:f.id,nome:"",cargo:f.cargo,ativo:f.ativo,cenario:f.cenario,carga:f.carga,vig:f.vig,sch:f.sch,bancoIni:f.bancoIni,ponto:f.ponto,ident:{empregador:"",cpf:"",endereco:"",func:"",cargo:i.cargo||"",admissao:""}};}
+  function save(sync){try{localStorage.setItem(KEY,JSON.stringify({funcionarios:state.funcionarios.map(scrub),sel:state.sel,tab:state.tab}));}catch(e){}if(sync!==false)SB.queueAll(state.funcionarios);}
   function cur(){return state.funcionarios.filter(function(f){return f.id===state.sel;})[0]||null;}
   function cm(){return MES[cur().cenario];}
 
@@ -1721,7 +1723,7 @@ var CASA=(function(){
     var cards=state.funcionarios.map(function(f){
       return '<div class="cz-emp" onclick="CASA.open(\''+f.id+'\')">'+
         '<button class="cz-del" title="remover" onclick="event.stopPropagation();CASA.removeFunc(\''+f.id+'\')">×</button>'+
-        '<div class="e-n">'+esc(f.nome||"(sem nome)")+'</div><div class="e-c">'+esc(f.cargo||"")+'</div></div>';
+        '<div class="e-n">'+esc(f.nome||(f.cargo||"(sem nome)"))+(f.nome?"":' <span title="nome protegido — conecte pra ver" style="font-size:11px">🔒</span>')+'</div><div class="e-c">'+esc(f.cargo||"")+'</div></div>';
     }).join("");
     var empty=state.funcionarios.length?'':'<div class="empty" style="grid-column:1/-1">Nenhum funcionário ainda. Adiciona o primeiro abaixo.</div>';
     gid("view-funcionario").innerHTML=
@@ -1750,6 +1752,7 @@ var CASA=(function(){
     var cargo=prompt("Função:",f.cargo||"");if(cargo===null)cargo=f.cargo;
     f.nome=(nome||"").trim();f.cargo=(cargo||"").trim();if(!f.ident.func)f.ident.func=f.nome;
     save();renderDetail();
+    if(!(SB.enabled()&&SB.loggedIn()))toast("Nome só fica salvo conectado ao Supabase (privado)");
   }
   function open(id){state.sel=id;state.tab="horario";save();renderDetail();}
   function back(){state.sel=null;save();renderList();}
@@ -1786,6 +1789,7 @@ var CASA=(function(){
    '<section id="cz-tab-ponto" style="display:none">'+
     '<div class="cz-card"><div class="cz-printonly" style="text-align:center;font-weight:700;margin-bottom:6px" id="cz-print-title"></div>'+
      '<h2 class="cz-noprint">Identificação <span class="cz-muted">(modelo da contabilidade)</span></h2>'+
+     ((SB.enabled()&&SB.loggedIn())?'':'<div class="cz-note cz-noprint" style="background:var(--warn-soft);border-color:#f0dcae">🔒 CPF e nome só são salvos/sincronizados conectado ao Supabase — offline eles <b>não</b> ficam neste aparelho.</div>')+
      '<div class="cz-ident"><div><b>Empregador</b><input id="cz-id-emp" placeholder="Nome do empregador" oninput="CASA.setIdent(\'empregador\',this.value)"></div>'+
       '<div><b>CPF/CNPJ</b><input id="cz-id-cpf" placeholder="CPF/CNPJ" oninput="CASA.setIdent(\'cpf\',this.value)"></div>'+
       '<div><b>Endereço</b><input id="cz-id-end" placeholder="Endereço" oninput="CASA.setIdent(\'endereco\',this.value)"></div>'+
