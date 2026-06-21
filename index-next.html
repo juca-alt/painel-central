@@ -502,10 +502,11 @@ function gisEnsure(cb){
   s.onerror=function(){ if(_gpending){ _gpending.reject(new Error("Falha ao carregar login Google")); _gpending=null; } };
   document.head.appendChild(s);
 }
+/* na expiração do token: limpa e atualiza a UI (sem popup); o usuário reconecta com 1 toque */
 function gScheduleRefresh(sec){
   if(_grefreshTimer) clearTimeout(_grefreshTimer);
-  var ms=Math.max(30000, ((Number(sec)||3600)-300)*1000);
-  _grefreshTimer=setTimeout(function(){ googleAuth(false).then(reloadGoogle).catch(function(){}); }, ms);
+  var ms=Math.max(30000, (Number(sec)||3600)*1000);
+  _grefreshTimer=setTimeout(function(){ gtokClear(); try{ reloadGoogle(); }catch(e){} }, ms);
 }
 /* interactive=true -> mostra conta/consentimento (1a vez). false -> silencioso (prompt vazio, sem UI). */
 function googleAuth(interactive){
@@ -529,12 +530,6 @@ function googleAuth(interactive){
       }catch(e){ _gpending=null; reject(e); }
     });
   });
-}
-/* garante um token: usa o guardado; se faltar, tenta silencioso (sem incomodar o usuário) */
-function gEnsureToken(){
-  var s=gtokLoad(); if(s){ gToken=s.token; return Promise.resolve(s.token); }
-  if(gToken) return Promise.resolve(gToken);
-  return googleAuth(false);
 }
 function reloadGoogle(){
   evCache={}; sheetData=null; sheetPromise=null; histRows=null; histPromise=null;
@@ -1549,8 +1544,8 @@ function hItem(){
 renderCards(); gerar(); folegoRender(); renderAtalhos();
 try{ var __vt=$('ver-tag'); if(__vt) __vt.textContent='v'+APP_VERSION+(APP_CHANNEL?' · '+APP_CHANNEL:''); }catch(e){}
 try{ renderConfig(); }catch(e){}
-if(COWORK){ loadAgenda(); loadInbox(); loadCamila(); loadCentral(); }
-else { gEnsureToken().then(function(){ loadAgenda(); loadInbox(); loadCamila(); loadCentral(); }, function(){ loadAgenda(); loadInbox(); loadCamila(); loadCentral(); }); }
+/* sem popup no boot: usa o token guardado (localStorage). Loaders mostram aviso curto se nao houver. */
+loadAgenda(); loadInbox(); loadCamila(); loadCentral();
 
 /* standalone (GitHub Pages): nota discreta + service worker p/ PWA */
 if(!COWORK){
