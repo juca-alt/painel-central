@@ -190,6 +190,7 @@
   .subnav.collapsed{display:none}
   .nav a.sub{font-size:13px;padding:8px 11px}
   .nav a.sub.active{background:var(--side-active);color:var(--side-txt)}
+  .ver{color:var(--side-muted);font-size:10px;text-align:center;padding:8px 4px 2px;opacity:.85;letter-spacing:.3px}
   #view-historico td.prime small{font-weight:400}
   #view-historico .hhead{font-weight:600;margin:14px 0 10px;font-size:14px}
   #view-historico .hhead:first-child{margin-top:0}
@@ -242,6 +243,7 @@
       <a id="nav-saude" onclick="nav('saude')">🍃 Saúde</a>
       <a id="nav-camila" onclick="nav('camila')">📚 Provas Camila</a>
       <a id="nav-atalhos" onclick="nav('atalhos')">🔗 Atalhos</a>
+      <a id="nav-config" onclick="nav('config')">⚙️ Configuração</a>
     </nav>
     <div class="side-foot">
       <div class="folego">
@@ -250,6 +252,7 @@
         <div class="fl-s" id="fl-s">dias somados</div>
         <button id="fl-btn" onclick="folegoHoje()">✓ marcar hoje</button>
       </div>
+      <div class="ver" id="ver-tag"></div>
     </div>
   </aside>
 
@@ -412,6 +415,13 @@
       <div id="tiles-out"></div>
       <div class="note" style="margin-top:14px">MÓDULO = abre aqui dentro · LIVE = dado aparece no painel · LINK = abre o app/site (se a aba for bloqueada, copio o link).</div>
     </section>
+    <!-- ============ CONFIGURAÇÃO ============ -->
+    <section id="view-config" style="display:none">
+      <div class="head"><h1>⚙️ Configuração</h1></div>
+      <div class="sub">Conexões e ajustes do app. Um login Google cobre todos os serviços.</div>
+      <div id="config-out"></div>
+      <div class="panel"><h3>🔧 Mais ajustes</h3><div style="padding:13px 15px;color:var(--muted);font-size:13px">Espaço para variáveis dos motores e funcionalidades do app — em breve.</div></div>
+    </section>
   </main>
 </div>
 <div class="toast" id="toast"></div>
@@ -465,45 +475,109 @@ function liveStub(titulo, btn){
 
 /* ===== Google ao vivo no standalone via OAuth client-side (GIS) — privado, só aparece após login ===== */
 var GCAL_CLIENT_ID = "63708753663-92us3rgem9s1j6rapi86b8uerc5440fr.apps.googleusercontent.com";
-var GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/spreadsheets.readonly";
-var gToken=null, gTokenClient=null;
-try{ if(!COWORK) gToken = sessionStorage.getItem('gtok') || null; }catch(e){}
+var GCAL_SCOPE = [
+  "https://www.googleapis.com/auth/calendar.readonly",
+  "https://www.googleapis.com/auth/tasks.readonly",
+  "https://www.googleapis.com/auth/drive.readonly",
+  "https://www.googleapis.com/auth/gmail.readonly",
+  "https://www.googleapis.com/auth/spreadsheets.readonly"
+].join(" ");
+var GSERVICES=[{k:"calendar",n:"Calendar",i:"📅"},{k:"tasks",n:"Tasks",i:"☑️"},{k:"drive",n:"Drive",i:"📁"},{k:"gmail",n:"Gmail",i:"✉️"},{k:"sheets",n:"Sheets",i:"📊"}];
+var GTOK_KEY="gauth_v1";
+var gToken=null, gTokenClient=null, _gpending=null, _grefreshTimer=null;
+function gtokLoad(){ try{ var s=JSON.parse(localStorage.getItem(GTOK_KEY)||"null"); if(s&&s.token&&s.exp&&Date.now()<s.exp-60000) return s; }catch(e){} return null; }
+function gtokSave(tok,sec){ try{ localStorage.setItem(GTOK_KEY, JSON.stringify({token:tok, exp:Date.now()+(Number(sec)||3600)*1000})); }catch(e){} }
+function gtokClear(){ try{ localStorage.removeItem(GTOK_KEY); }catch(e){} gToken=null; if(_grefreshTimer){ clearTimeout(_grefreshTimer); _grefreshTimer=null; } }
+function gConnected(){ return !!(gtokLoad()||gToken); }
+try{ if(!COWORK){ var __gs=gtokLoad(); if(__gs) gToken=__gs.token; } }catch(e){}
 function connectPanel(titulo){
-  return '<div class="errbox"><div class="e-t">🔗 '+esc(titulo)+'</div>'+
-    '<div class="e-s">Conecta tua Conta Google pra ver ao vivo aqui no app — é privado: só aparece depois que <b>tu</b> logar.'+
-    '<div style="margin-top:8px"><button class="btn primary sm" onclick="connectGoogle()">🔗 Conectar Google</button></div></div></div>';
+  return '<div class="errbox"><div class="e-t">🔌 '+esc(titulo)+'</div>'+
+    '<div class="e-s">Conecte sua Conta Google em <b>⚙️ Configuração</b> pra ver isto ao vivo. '+
+    '<button class="btn sm" style="margin-left:6px" onclick="nav(\'config\')">Ir pra Configuração</button></div></div>';
 }
 function gisEnsure(cb){
   if(window.google && google.accounts && google.accounts.oauth2){ cb(); return; }
   var s=document.createElement('script'); s.src="https://accounts.google.com/gsi/client"; s.async=true; s.defer=true;
   s.onload=function(){ cb(); };
-  s.onerror=function(){ toast("Não consegui carregar o login do Google"); };
+  s.onerror=function(){ if(_gpending){ _gpending.reject(new Error("Falha ao carregar login Google")); _gpending=null; } };
   document.head.appendChild(s);
 }
-function connectGoogle(){
-  gisEnsure(function(){
-    try{
-      if(!gTokenClient){
-        gTokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: GCAL_CLIENT_ID, scope: GCAL_SCOPE,
-          callback: function(resp){
-            if(resp && resp.access_token){
-              gToken = resp.access_token;
-              try{ sessionStorage.setItem('gtok', gToken); }catch(e){}
-              evCache={}; sheetData=null; sheetPromise=null;
-              toast("Google conectado ✓");
-              loadAgenda(); loadCamila(); loadInbox(); loadCentral();
-            }
-          }
-        });
-      }
-      gTokenClient.requestAccessToken();
-    }catch(e){ toast("Erro ao conectar: "+(e.message||e)); }
+function gScheduleRefresh(sec){
+  if(_grefreshTimer) clearTimeout(_grefreshTimer);
+  var ms=Math.max(30000, ((Number(sec)||3600)-300)*1000);
+  _grefreshTimer=setTimeout(function(){ googleAuth(false).then(reloadGoogle).catch(function(){}); }, ms);
+}
+/* interactive=true -> mostra conta/consentimento (1a vez). false -> silencioso (prompt vazio, sem UI). */
+function googleAuth(interactive){
+  return new Promise(function(resolve,reject){
+    gisEnsure(function(){
+      try{
+        if(!gTokenClient){
+          gTokenClient=google.accounts.oauth2.initTokenClient({
+            client_id:GCAL_CLIENT_ID, scope:GCAL_SCOPE,
+            callback:function(resp){
+              if(resp && resp.access_token){
+                gToken=resp.access_token; gtokSave(resp.access_token, resp.expires_in); gScheduleRefresh(resp.expires_in);
+                if(_gpending){ _gpending.resolve(resp.access_token); _gpending=null; }
+              } else if(_gpending){ _gpending.reject(new Error("sem token")); _gpending=null; }
+            },
+            error_callback:function(err){ if(_gpending){ _gpending.reject(err||new Error("oauth")); _gpending=null; } }
+          });
+        }
+        _gpending={resolve:resolve, reject:reject};
+        gTokenClient.requestAccessToken(interactive?{prompt:'consent'}:{prompt:''});
+      }catch(e){ _gpending=null; reject(e); }
+    });
   });
+}
+/* garante um token: usa o guardado; se faltar, tenta silencioso (sem incomodar o usuário) */
+function gEnsureToken(){
+  var s=gtokLoad(); if(s){ gToken=s.token; return Promise.resolve(s.token); }
+  if(gToken) return Promise.resolve(gToken);
+  return googleAuth(false);
+}
+function reloadGoogle(){
+  evCache={}; sheetData=null; sheetPromise=null; histRows=null; histPromise=null;
+  loadAgenda(); loadCamila(); loadInbox(); loadCentral();
+  var vh=$('view-historico'); if(vh && vh.style.display!=='none') loadHistorico();
+  renderConfig();
+}
+function connectGoogle(){
+  googleAuth(true).then(function(){ toast("Google conectado ✓"); reloadGoogle(); })
+    .catch(function(e){ toast("Não consegui conectar: "+((e&&(e.message||e.type))||e)); });
+}
+function disconnectGoogle(){
+  var t=gToken; gtokClear();
+  try{ if(t && window.google && google.accounts && google.accounts.oauth2) google.accounts.oauth2.revoke(t, function(){}); }catch(e){}
+  toast("Google desconectado"); reloadGoogle();
+}
+function renderConfig(){
+  var box=$('config-out'); if(!box) return;
+  var conn=gConnected();
+  var html='<div class="panel"><h3>🔗 Conta Google<span class="count">'+(conn?'conectado':'desconectado')+'</span></h3>'+
+    '<div style="padding:13px 15px">'+
+    '<div style="color:var(--muted);font-size:13px;margin-bottom:12px">Um único login cobre todos os serviços abaixo. Conecte uma vez — o app renova o acesso sozinho enquanto sua sessão do Google no navegador estiver ativa.</div>';
+  GSERVICES.forEach(function(s){
+    html+='<div class="row" style="padding:9px 0"><div class="nm">'+s.i+' '+esc(s.n)+'</div><span class="pill '+(conn?'ok':'nt')+'">'+(conn?'conectado':'desconectado')+'</span></div>';
+  });
+  html+='<div style="margin-top:14px">'+(conn
+    ? '<button class="btn" onclick="disconnectGoogle()">Desconectar</button>'
+    : '<button class="btn primary" onclick="connectGoogle()">🔗 Conectar Google</button>')+'</div>';
+  html+='</div></div>';
+  /* painel de versão + atualização (resolve PWA preso em cache) */
+  var ver=(typeof APP_VERSION!=='undefined'?APP_VERSION:'?');
+  var ch=(typeof APP_CHANNEL!=='undefined'&&APP_CHANNEL?(' · '+APP_CHANNEL):'');
+  html+='<div class="panel"><h3>📦 Versão & atualização<span class="count">v'+ver+ch+'</span></h3>'+
+    '<div style="padding:13px 15px">'+
+    (window.__updateReady?'<div class="pill ok" style="display:inline-block;margin-bottom:10px">nova versão pronta</div>':'')+
+    '<div style="color:var(--muted);font-size:13px;margin:'+(window.__updateReady?'4px 0 12px':'0 0 12px')+'">Instalou na tela inicial e está vendo algo antigo? Toque <b>Atualizar</b> pra forçar a versão mais nova (limpa o cache do app e recarrega).</div>'+
+    '<button class="btn primary" onclick="forceUpdate()">🔄 Atualizar agora</button>'+
+    '</div></div>';
+  box.innerHTML=html;
 }
 
 /* ================= navegação ================= */
-var VIEWS=["hoje","tarefas","inbox","feira","funcionario","saude","camila","atalhos"];
+var VIEWS=["hoje","tarefas","inbox","feira","funcionario","saude","camila","atalhos","config"];
 function toggleSide(){ document.body.classList.toggle('side-open'); }
 function nav(v){
   VIEWS.forEach(function(k){
@@ -511,6 +585,7 @@ function nav(v){
     $('nav-'+k).classList.toggle('active', k===v);
   });
   if(v==='feira'){ renderCards(); gerar(); }
+  if(v==='config'){ renderConfig(); }
   var inCasa=(v==='feira'||v==='funcionario'); var nc=$('nav-casa');
   if(nc){ nc.classList.toggle('active', inCasa); if(inCasa){ $('casa-sub').classList.remove('collapsed'); nc.classList.remove('collapsed'); } }
   document.body.classList.remove('side-open');
@@ -553,7 +628,8 @@ async function fetchEvents(ini,fim){
       +"&timeMin="+encodeURIComponent(ini.toISOString())
       +"&timeMax="+encodeURIComponent(fim.toISOString());
     var resp=await fetch(u,{headers:{Authorization:"Bearer "+gToken}});
-    if(resp.status===401||resp.status===403){ gToken=null; try{sessionStorage.removeItem('gtok');}catch(e){} throw new Error("__NEEDCONNECT__"); }
+    if(resp.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); }
+    if(resp.status===403){ throw new Error("Calendar 403 — verifica acesso/escopo"); }
     var dd=await resp.json();
     all=(dd.items||[]);
   }
@@ -826,7 +902,7 @@ function parseCentralValues(byKey){
 async function sheetValuesRest(){
   if(!gToken) throw new Error("__NEEDCONNECT__");
   var H={headers:{Authorization:"Bearer "+gToken}};
-  function chk(resp){ if(resp.status===401||resp.status===403){ gToken=null; try{sessionStorage.removeItem('gtok');}catch(e){} throw new Error("__NEEDCONNECT__"); } }
+  function chk(resp){ if(resp.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); } if(resp.status===403){ throw new Error("Sheets 403 — verifica acesso/escopo"); } }
   /* 1) resolve os títulos reais das abas (lida com acento/caixa e ignora a aba de sync) */
   var mr=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+SHEET_ID+"?fields=sheets.properties.title",H);
   chk(mr);
@@ -992,7 +1068,8 @@ function capturar(){
 async function gmailInboxRest(){
   var q=encodeURIComponent("subject:#inbox newer_than:60d");
   var lr=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&q="+q,{headers:{Authorization:"Bearer "+gToken}});
-  if(lr.status===401||lr.status===403){ gToken=null; try{sessionStorage.removeItem('gtok');}catch(e){} throw new Error("__NEEDCONNECT__"); }
+  if(lr.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); }
+  if(lr.status===403){ throw new Error("Gmail 403 — verifica acesso/escopo"); }
   var ld=await lr.json();
   var msgs=(ld.messages||[]).slice(0,15);
   var caps=[];
@@ -1331,6 +1408,20 @@ function download(name,content,type){
   setTimeout(function(){URL.revokeObjectURL(a.href);},500);
 }
 
+/* ===== Versão + atualização (PWA) ===== */
+var APP_VERSION="2.2.0";
+var APP_CHANNEL="staging";
+function forceUpdate(){
+  toast("Atualizando…");
+  var reloaded=false;
+  var done=function(){ if(reloaded) return; reloaded=true; location.replace(location.pathname+'?u='+Date.now()); };
+  var tasks=[];
+  try{ if(window.caches && caches.keys){ tasks.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); })); } }catch(e){}
+  try{ if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations){ tasks.push(navigator.serviceWorker.getRegistrations().then(function(rs){ return Promise.all(rs.map(function(r){ try{ if(r.waiting) r.waiting.postMessage({type:'SKIP_WAITING'}); }catch(e){} return r.unregister(); })); })); } }catch(e){}
+  Promise.all(tasks).then(done, done);
+  setTimeout(done, 2500);
+}
+
 /* ===== Módulo CASA: nav expansível + Histórico de compras (planilha AO VIVO) ===== */
 function toggleCasa(){
   var s=$('casa-sub'), a=$('nav-casa');
@@ -1375,7 +1466,7 @@ function parseHistRows(rows){
 async function histValuesRest(){
   if(!gToken) throw new Error("__NEEDCONNECT__");
   var H={headers:{Authorization:"Bearer "+gToken}};
-  function chk(r){ if(r.status===401||r.status===403){ gToken=null; try{sessionStorage.removeItem('gtok');}catch(e){} throw new Error("__NEEDCONNECT__"); } }
+  function chk(r){ if(r.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); } if(r.status===403){ throw new Error("Sheets 403 (histórico) — verifica acesso/escopo"); } }
   var mr=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+HIST_ID+"?fields=sheets.properties.title",H);
   chk(mr); if(!mr.ok) throw new Error("Sheets API "+mr.status+(mr.status===404?" (planilha não encontrada)":""));
   var meta=await mr.json();
@@ -1456,13 +1547,26 @@ function hItem(){
 
 /* ================= boot ================= */
 renderCards(); gerar(); folegoRender(); renderAtalhos();
-loadAgenda(); loadInbox(); loadCamila(); loadCentral();
+try{ var __vt=$('ver-tag'); if(__vt) __vt.textContent='v'+APP_VERSION+(APP_CHANNEL?' · '+APP_CHANNEL:''); }catch(e){}
+try{ renderConfig(); }catch(e){}
+if(COWORK){ loadAgenda(); loadInbox(); loadCamila(); loadCentral(); }
+else { gEnsureToken().then(function(){ loadAgenda(); loadInbox(); loadCamila(); loadCentral(); }, function(){ loadAgenda(); loadInbox(); loadCamila(); loadCentral(); }); }
 
 /* standalone (GitHub Pages): nota discreta + service worker p/ PWA */
 if(!COWORK){
   try{ document.querySelector('.brand small').textContent = 'modo app · conecta o Google pra ver tudo ao vivo'; }catch(e){}
   if("serviceWorker" in navigator){
-    window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").then(function(reg){
+        try{ reg.update(); }catch(e){}
+        reg.addEventListener('updatefound', function(){
+          var nw=reg.installing; if(!nw) return;
+          nw.addEventListener('statechange', function(){
+            if(nw.state==='installed' && navigator.serviceWorker.controller){ window.__updateReady=true; try{ renderConfig(); }catch(e){} toast('Nova versão disponível — abra Configuração e toque Atualizar'); }
+          });
+        });
+      }).catch(function(){});
+    });
   }
 }
 </script>
