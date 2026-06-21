@@ -1345,7 +1345,7 @@ function hpnum(s){ s=String(s==null?'':s).trim().replace(/[^\d.,-]/g,'');
   if(s.indexOf(',')>=0 && s.indexOf('.')>=0){ s=s.replace(/\./g,'').replace(',','.'); }
   else if(s.indexOf(',')>=0){ s=s.replace(',','.'); }
   return parseFloat(s)||0; }
-function histCells(line){ return line.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(function(x){return x.trim().replace(/\\([\\|])/g,'$1');}); }
+function histCells(line){ return line.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(function(x){return x.trim().replace(/\\(.)/g,'$1');}); }
 function histFromMarkdown(md){
   var lines=String(md||'').split(/\r?\n/).filter(function(l){return l.trim().indexOf('|')===0;});
   if(lines.length<2) return [];
