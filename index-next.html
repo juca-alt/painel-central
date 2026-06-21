@@ -1605,8 +1605,8 @@ function hItem(){
       https://juca-alt.github.io/painel-central/ em Site URL e Redirect URLs.
    Enquanto URL/ANON ficarem vazios, o app roda 100% local (localStorage) sem quebrar. */
 var SB=(function(){
-  var URL  = "";   // <<< COLE AQUI a Project URL  (ex.: https://xxxxx.supabase.co)
-  var ANON = "";   // <<< COLE AQUI a anon/public key
+  var URL  = "https://mieqsiojvfiqrhectquc.supabase.co";   // central-financeira (reuso)
+  var ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pZXFzaW9qdmZpcXJoZWN0cXVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MDc1MTAsImV4cCI6MjA5NTQ4MzUxMH0.jm-hM4u5ULcsNAvWNOzpIjPTJ5pN2lbQm5KJcArYH1k";   // anon/public — pública por design; RLS protege
   var TABLE="painel_funcionarios";
   var SKEY ="painel_sb_session";
   var session=loadS(), onChangeCb=null, tmr=null;
