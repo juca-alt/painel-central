@@ -25,9 +25,9 @@ Implementado o submódulo **Casa › 👥 Funcionário** (que na produção era 
 - **anon key no repo é OK** (pública por design; RLS protege CPF/nome). Service key NUNCA.
 
 ## 4. Estado atual
-- ✅ Submódulo Funcionário completo, verificado no preview sobre a v2.2.0, sem erros. Roda offline (localStorage).
-- ✅ Código Supabase escrito e dormente (liga sozinho após os passos do item 6).
-- 🟡 Sync entre aparelhos: ainda NÃO ativa (depende do item 6).
+- ✅ Submódulo Funcionário completo, no ar (v2.2.0), sem erros. Roda offline (localStorage) p/ dados operacionais.
+- ✅ Supabase **ativo e configurado** (credenciais + tabela + RLS + redirect). Verificado: anon lê zero.
+- 🟡 Sync entre aparelhos: liga no instante em que o Gustavo fizer o login por email (único passo restante — item 6).
 
 ## 5. Mapa dos arquivos (`~/Documents/painel-central`)
 | Arquivo | O que é |
@@ -40,11 +40,14 @@ Implementado o submódulo **Casa › 👥 Funcionário** (que na produção era 
 
 Config Supabase: topo do bloco `var SB=(function(){ var URL=""; var ANON=""; ...` no `index.html`.
 
-## 6. Próximos passos (só o Gustavo, pra ligar a sync)
-1. **Supabase → Settings → API:** colar **Project URL** + **anon/public key** (NUNCA service key) em `URL`/`ANON` no bloco `SB`.
-2. **Supabase → SQL Editor:** rodar `/sql/painel_casa.sql`.
-3. **Supabase → Authentication:** Email ligado em Providers; em URL Configuration adicionar `https://juca-alt.github.io/painel-central/` em Site URL + Redirect URLs.
-4. Redeploy, abrir o app em Casa › Funcionário, "Enviar link", entrar pelo email → testar sync em 2 aparelhos.
+## 6. Ativação Supabase — FEITA (21/06)
+Sync **ligada e no ar**. Tudo já executado:
+1. ✅ **Credenciais:** URL `https://mieqsiojvfiqrhectquc.supabase.co` + anon key (reuso do central-financeira) coladas no bloco `SB` (index.html + index-next.html), deployadas (commit `e86d2c7`).
+2. ✅ **Migration rodada** no SQL Editor → tabela `public.painel_funcionarios` criada (RLS + policy `owner=auth.uid()` + grant authenticated). Verificado por REST: anon recebe `[]` (lê zero dado).
+3. ✅ **Redirect URL** `https://juca-alt.github.io/painel-central/**` adicionada (Site URL `localhost:3000` intocada — compartilhada com Pipe X). Email provider já ativo.
+4. ✅ App ao vivo confirmado em modo configurado (barra "🔒 Conecte pra sincronizar").
+
+**ÚNICO passo restante (só o Gustavo):** abrir Casa › Funcionário, digitar o email `juca@segurocomjuca.com`, clicar **Enviar link**, e clicar no link que chega no email → loga e a sync entre aparelhos passa a valer. (Eu não pude disparar o email — a trava de segurança bloqueia envio em nome do usuário.) Mesmo `auth.uid` do central-financeira, então é o mesmo login.
 
 ## 7. Pendência antiga (sem relação com Casa)
 - 🔴 Tarefas/Saúde ao vivo no standalone: ativar Google Sheets API em `painel-central-499400` + reconectar Google. Código já deployado e inerte.
