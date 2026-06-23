@@ -28,7 +28,8 @@ Implementado o submódulo **Casa › 👥 Funcionário** (que na produção era 
 - ✅ Submódulo Funcionário completo, no ar (v2.2.0), sem erros. Roda offline (localStorage) p/ dados operacionais.
 - ✅ Supabase **ativo e configurado** (credenciais + tabelas + RLS + redirect). Verificado: anon lê zero.
 - ✅ **Controle de ponto da funcionária NO AR** (commit `a7261ad`): visão dela com 2 abas (Ponto do dia / Mês imprimível), bater ponto com **validação por GPS**, admin cadastra email de acesso (RLS por email) + local de trabalho. Migration `painel_ponto.sql` já rodada.
-- 🟡 **PENDENTE — testar (Gustavo):** login admin → cadastrar um email de teste na Débora → logar com esse email noutro navegador → bater ponto → conferir em "Ponto real". Depois disso, dados reais + email da Débora.
+- ✅ **v2.3.1** (commit `7340efd`): **botão 🔄 atualizar** na sidebar (acompanha versões, igual aos outros apps) + **Local de trabalho por endereço** (add/editar/excluir, geocodifica via OSM; endereço NÃO fica no repo, só no Supabase).
+- 🟡 **PENDENTE — testar (Gustavo):** login admin → cadastrar email de teste na Débora → definir o endereço do Local de trabalho (digitar + "Localizar endereço") → logar com o email de teste noutro navegador → bater ponto (permite GPS) → conferir em "Ponto real". Depois: dados reais + email da Débora.
 
 ## 5. Mapa dos arquivos (`~/Documents/painel-central`)
 | Arquivo | O que é |
