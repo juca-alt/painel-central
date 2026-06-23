@@ -1616,6 +1616,7 @@ var SB=(function(){
   function enabled(){return !!(URL&&ANON);}
   function loggedIn(){return !!(session&&session.access_token);}
   function email(){return (session&&session.user&&session.user.email)||"";}
+  function uid(){return (session&&session.user&&session.user.id)||"";}
   function onChange(cb){onChangeCb=cb;}
   function fire(){if(onChangeCb)try{onChangeCb();}catch(e){}}
 
@@ -1661,14 +1662,14 @@ var SB=(function(){
     function go(){var opt={method:method,headers:Object.assign({apikey:ANON,Authorization:"Bearer "+(session&&session.access_token),"Content-Type":"application/json"},extra||{})};if(body!=null)opt.body=JSON.stringify(body);return fetch(URL+"/rest/v1/"+path,opt);}
     return go().then(function(r){if(r.status===401)return refresh().then(function(ok){if(!ok)throw new Error("auth");return go();});return r;});
   }
-  function up(f){return rest("POST",TABLE+"?on_conflict=id",{id:f.id,nome:f.nome,cargo:f.cargo,ativo:f.ativo!==false,data:f},{Prefer:"resolution=merge-duplicates,return=minimal"});}
+  function up(f){return rest("POST",TABLE+"?on_conflict=id",{id:f.id,nome:f.nome,cargo:f.cargo,ativo:f.ativo!==false,invite_email:(f.invite_email||null),data:f},{Prefer:"resolution=merge-duplicates,return=minimal"});}
   function del(id){if(enabled()&&loggedIn())rest("DELETE",TABLE+"?id=eq."+encodeURIComponent(id)).catch(function(){});}
   function queueAll(funcs){
     if(!enabled()||!loggedIn())return;
     clearTimeout(tmr);
     tmr=setTimeout(function(){funcs.forEach(function(f){up(f).catch(function(){});});},800);
   }
-  function rowToFunc(r){var f=r.data||{};f.id=r.id;f.nome=r.nome;f.cargo=r.cargo;f.ativo=r.ativo!==false;return f;}
+  function rowToFunc(r){var f=r.data||{};f.id=r.id;f.nome=r.nome;f.cargo=r.cargo;f.ativo=r.ativo!==false;f.invite_email=r.invite_email||"";f._owner=r.owner||"";return f;}
   function pull(state){
     if(!enabled()||!loggedIn())return Promise.resolve();
     return rest("GET",TABLE+"?select=*").then(function(r){return r.json();}).then(function(rows){
@@ -1681,7 +1682,7 @@ var SB=(function(){
     if(!loggedIn())return '<div class="errbox" style="margin-bottom:14px"><div class="e-t">🔒 Conecte pra sincronizar</div><div class="e-s">CPF e nome ficam protegidos por login (RLS) — só você vê. Receba um link no email pra entrar.<div class="cz-row" style="margin-top:8px"><input id="cz-sb-email" type="email" placeholder="seu@email.com" style="padding:7px 9px;border:1px solid var(--line);border-radius:8px"><button class="btn primary sm" onclick="SB.signIn(document.getElementById(\'cz-sb-email\').value)">Enviar link</button></div></div></div>';
     return '<div class="errbox" style="margin-bottom:14px;border-left-color:var(--ok)"><div class="e-t">✓ Sincronizado</div><div class="e-s">Logado como <b>'+esc(email())+'</b> · dados no Supabase (privado, RLS).<div style="margin-top:6px"><button class="btn sm" onclick="SB.signOut()">Sair</button></div></div></div>';
   }
-  return {init:init,enabled:enabled,loggedIn:loggedIn,email:email,signIn:signIn,signOut:signOut,pull:pull,queueAll:queueAll,del:del,bar:bar,onChange:onChange};
+  return {init:init,enabled:enabled,loggedIn:loggedIn,email:email,uid:uid,rest:rest,signIn:signIn,signOut:signOut,pull:pull,queueAll:queueAll,del:del,bar:bar,onChange:onChange};
 })();
 
 /* ================= Casa › Funcionários (local + sync Supabase) ================= */
@@ -1696,7 +1697,7 @@ var CASA=(function(){
     ident:{empregador:"",cpf:"",endereco:"",func:nome,cargo:cargo||"",admissao:admissao||""},
     cenario:"jun",carga:{jun:220,jul:220,ago:220},
     vig:{jun:"Junho/2026 — período letivo (rotina do Gael)",jul:"Julho/2026 — férias escolares do Gael",ago:"Agosto/2026 — volta às aulas"},
-    sch:{jun:defSch(),jul:defSch(),ago:defSch()},bancoIni:0,ponto:{}
+    sch:{jun:defSch(),jul:defSch(),ago:defSch()},bancoIni:0,ponto:{},invite_email:""
   };}
   function defState(){return{funcionarios:[],sel:null,tab:"horario"};}
   var state=load(), pulled=false;
@@ -1715,8 +1716,21 @@ var CASA=(function(){
   function setV(id,v){var e=gid(id);if(e)e.value=(v==null?"":v);}
   function setT(id,t){var e=gid(id);if(e)e.textContent=t;}
 
-  /* ---------- entry ---------- */
-  function render(){draw();if(SB.enabled()&&SB.loggedIn()&&!pulled){pulled=true;SB.pull(state).then(function(){save(false);draw();});}}
+  /* ---------- entry / roteirização por papel (admin × funcionária) ---------- */
+  function render(){
+    if(SB.enabled()&&SB.loggedIn()){
+      if(!pulled){pulled=true;gid("view-funcionario").innerHTML='<div class="loading">Carregando…</div>';SB.pull(state).then(function(){save(false);route();});}
+      else route();
+    } else { draw(); }
+  }
+  function route(){var emp=employeeFunc();if(emp)renderCheckin(emp);else draw();}
+  function employeeFunc(){
+    if(!(SB.enabled()&&SB.loggedIn()))return null;
+    var myUid=SB.uid(), myEmail=(SB.email()||"").toLowerCase();
+    var iAmOwner=state.funcionarios.some(function(f){return f._owner&&f._owner===myUid;});
+    if(iAmOwner)return null;
+    return myEmail?(state.funcionarios.filter(function(f){return (f.invite_email||"").toLowerCase()===myEmail;})[0]||null):null;
+  }
   function draw(){if(!cur())state.sel=null;if(state.sel)renderDetail();else renderList();}
   function refreshIfOpen(){pulled=false;var v=gid("view-funcionario");if(v&&v.style.display!=="none")render();}
   function renderList(){
@@ -1768,9 +1782,12 @@ var CASA=(function(){
     gid("view-funcionario").innerHTML=
      '<div class="cz-crumb">🏡 Casa › 👥 Funcionários · <span style="cursor:pointer;color:var(--accent)" onclick="CASA.back()">‹ todos</span></div>'+
      '<div class="head"><h1>'+esc(f.nome)+' <span style="cursor:pointer;font-size:14px;color:var(--accent)" title="renomear" onclick="CASA.rename(\''+f.id+'\')">✏️</span></h1></div><div class="sub">'+esc(f.cargo||"")+'</div>'+
-     '<div class="cz-tabs"><button class="cz-tab active" onclick="CASA.setTab(\'horario\')">🗓️ Carga &amp; Horário</button><button class="cz-tab" onclick="CASA.setTab(\'ponto\')">🕐 Cartão de Ponto</button></div>'+
+     '<div class="cz-card"><h2>🔑 Acesso da funcionária (pra ela bater ponto)</h2><div class="cz-row"><input id="cz-invite" type="email" class="cz-txt" placeholder="email-da-funcionaria@exemplo.com" value="'+esc(f.invite_email||"")+'" oninput="CASA.setInvite(this.value)"><button class="btn" onclick="CASA.verComoFunc()">👁 Ver a tela dela</button></div><div class="cz-muted" style="margin-top:6px">Quem logar com este email vê <b>só</b> a tela de bater ponto desta funcionária (RLS). '+(SB.enabled()&&SB.loggedIn()?'':'⚠️ requer estar logado pra valer.')+'</div></div>'+
+     '<div class="cz-card"><h2>📍 Local de trabalho (valida o ponto)</h2>'+((f.local&&f.local.lat)?('<div class="cz-muted">Definido: '+f.local.lat.toFixed(5)+', '+f.local.lng.toFixed(5)+' · raio '+(f.local.raio||200)+'m</div>'):'<div class="cz-muted">Ainda não definido — sem isso ela pode bater de qualquer lugar.</div>')+'<div class="cz-row" style="margin-top:8px"><button class="btn" onclick="CASA.usarLocalAtual()">📍 Usar minha localização atual</button><label class="cz-fld">Raio (m)<input class="cz-num" type="number" value="'+((f.local&&f.local.raio)||200)+'" oninput="CASA.setRaio(this.value)"></label></div></div>'+
+     '<div class="cz-card"><h2>🕓 Ponto real (check-in) <span class="cz-muted" id="cz-pt-banco"></span></h2><div id="cz-pt-list" class="cz-muted">Carregando…</div></div>'+
+     '<div class="cz-tabs"><button class="cz-tab active" onclick="CASA.setTab(\'horario\')">🗓️ Carga &amp; Horário</button><button class="cz-tab" onclick="CASA.setTab(\'ponto\')">🕐 Cartão de Ponto (manual)</button></div>'+
      horarioShell(f)+pontoShell();
-    renderIdent();renderHorario();renderPonto();setTab(state.tab||"horario");
+    renderIdent();renderHorario();renderPonto();setTab(state.tab||"horario");fillAdminPonto(f);
   }
   function horarioShell(f){return ''+
    '<section id="cz-tab-horario">'+
@@ -1882,10 +1899,130 @@ var CASA=(function(){
   function copyResumo(){var x=cm();var txt="*Cartão de ponto — "+cur().nome+" · "+x.nome+"*\nTrabalhadas: "+gid("cz-p-trab").textContent+"\nPrevistas: "+gid("cz-p-prev").textContent+"\nHoras extras: "+gid("cz-p-extra").textContent+"\nSaldo do mês: "+gid("cz-p-saldo").textContent+"\nBanco acumulado: "+gid("cz-p-banco").textContent;
     copyText(txt,"Resumo copiado");setT("cz-copy-msg2","✓ copiado");setTimeout(function(){setT("cz-copy-msg2","");},2500);}
 
-  return {render:render,refreshIfOpen:refreshIfOpen,open:open,back:back,addFunc:addFunc,removeFunc:removeFunc,rename:rename,setTab:setTab,setIdent:setIdent,setCenario:setCenario,onVig:onVig,onCarga:onCarga,setDay:setDay,onBanco:onBanco,setP:setP,preencherPrevisto:preencherPrevisto,copyQuadro:copyQuadro,copyResumo:copyResumo};
+  /* ================= PONTO / CHECK-IN (visão da funcionária) ================= */
+  function pad2(n){return n<10?"0"+n:""+n;}
+  function nowHM(){var d=new Date();return pad2(d.getHours())+":"+pad2(d.getMinutes());}
+  function nowMin(){var d=new Date();return d.getHours()*60+d.getMinutes();}
+  function diaKey(){var d=new Date();return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());}
+  function cenForDate(f,d){var map={5:"jun",6:"jul",7:"ago"};return map[d.getMonth()]||f.cenario||"jun";}
+  function planoHoje(f){var c=cenForDate(f,new Date());var k=DIAS[new Date().getDay()][0];return (f.sch&&f.sch[c]&&f.sch[c][k])||{on:false,alm:0};}
+  function planoDoDia(f,ds){var d=new Date(ds+"T12:00:00");var c=cenForDate(f,d);var k=DIAS[d.getDay()][0];return (f.sch&&f.sch[c]&&f.sch[c][k])||{on:false,alm:0};}
+  function intervMin(p){var a=toMin(p.int_sai),b=toMin(p.int_vol);return (a!=null&&b!=null&&b>a)?(b-a):0;}
+  function trabMin(p){var e=toMin(p.ent),s=toMin(p.sai);if(e==null||s==null)return null;var t=s-e-intervMin(p);return t>0?t:0;}
+  function bancoAcum(f,rows){var tot=0;(rows||[]).forEach(function(r){var w=trabMin(r);if(w==null)return;tot+=w-dayMins(planoDoDia(f,r.dia));});return tot;}
+
+  var _localPonto={};
+  function pontoToday(f){var dk=diaKey();
+    if(SB.enabled()&&SB.loggedIn())return SB.rest("GET","painel_ponto?funcionario_id=eq."+encodeURIComponent(f.id)+"&dia=eq."+dk+"&select=*").then(function(r){return r.json();}).then(function(rows){return (rows&&rows[0])||{};}).catch(function(){return {};});
+    return Promise.resolve((_localPonto[f.id]&&_localPonto[f.id][dk])||{});
+  }
+  function pontoAll(f){
+    if(SB.enabled()&&SB.loggedIn())return SB.rest("GET","painel_ponto?funcionario_id=eq."+encodeURIComponent(f.id)+"&select=*&order=dia.desc").then(function(r){return r.json();}).catch(function(){return [];});
+    var o=_localPonto[f.id]||{};return Promise.resolve(Object.keys(o).map(function(k){return o[k];}));
+  }
+  function pontoSave(f,p){var dk=diaKey();p.id=f.id+"|"+dk;p.funcionario_id=f.id;p.dia=dk;
+    if(SB.enabled()&&SB.loggedIn())return SB.rest("POST","painel_ponto?on_conflict=id",{id:p.id,funcionario_id:f.id,dia:dk,ent:p.ent||null,int_sai:p.int_sai||null,int_vol:p.int_vol||null,sai:p.sai||null,locs:p.locs||{}},{Prefer:"resolution=merge-duplicates,return=minimal"}).catch(function(){toast("Falha ao salvar o ponto");});
+    _localPonto[f.id]=_localPonto[f.id]||{};_localPonto[f.id][dk]=p;return Promise.resolve();
+  }
+
+  var _checkinF=null, _empTab="dia";
+  function getPos(){return new Promise(function(res,rej){if(!navigator.geolocation)return rej("sem GPS");navigator.geolocation.getCurrentPosition(function(p){res({lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy});},function(e){rej((e&&e.message)||"negada");},{enableHighAccuracy:true,timeout:12000,maximumAge:60000});});}
+  function distM(a,b){var R=6371000,r=function(d){return d*Math.PI/180;};var dLat=r(b.lat-a.lat),dLng=r(b.lng-a.lng);var s=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dLng/2)*Math.sin(dLng/2);return 2*R*Math.asin(Math.sqrt(s));}
+  function renderCheckin(f){_checkinF=f;if(_empTab!=="mes")_empTab="dia";drawEmp(f);}
+  function empTab(t){_empTab=t;drawEmp(_checkinF);}
+  function rotulo(t){return {ent:"Entrada",int_sai:"Saída do intervalo",int_vol:"Volta do intervalo",sai:"Saída"}[t]||t;}
+  function baterPonto(tipo){var f=_checkinF;if(!f)return;
+    getPos().then(function(pos){
+      var loc=f.local;
+      if(loc&&loc.lat){var d=distM(loc,pos);if(d>(loc.raio||200)){toast("📍 Fora do local de trabalho (a "+Math.round(d)+"m). Ponto não registrado.");return;}}
+      pontoToday(f).then(function(p){p=p||{};if(p[tipo])return;p[tipo]=nowHM();p.locs=p.locs||{};p.locs[tipo]={lat:pos.lat,lng:pos.lng};
+        pontoSave(f,p).then(function(){toast("✓ "+rotulo(tipo)+" às "+p[tipo]);drawDia(f);});});
+    }).catch(function(){toast("📍 Precisa permitir a localização pra bater ponto");});
+  }
+  function lembrarVolta(){
+    if(!("Notification" in window)){toast("Aparelho não suporta lembrete");return;}
+    var alm=(planoHoje(_checkinF).alm)||60;
+    function arm(){toast("Lembrete ativado pra daqui "+alm+"min");setTimeout(function(){try{new Notification("Hora de voltar do intervalo ⏰",{body:"Bata a volta do intervalo no painel."});}catch(e){}},alm*60000);}
+    if(Notification.permission==="granted")arm();
+    else Notification.requestPermission().then(function(pp){if(pp==="granted")arm();else toast("Permita notificações pra usar o lembrete");});
+  }
+  function pBtn(label,tipo,timeVal,st){
+    var base="display:block;width:100%;text-align:left;padding:14px 16px;border-radius:12px;border:1px solid var(--line);margin-bottom:10px;font-size:15px;font-weight:600;box-sizing:border-box;";
+    if(st==="done")return '<div style="'+base+'background:var(--ok-soft);border-color:var(--ok-soft);color:var(--ok)"><span style="float:right">'+timeVal+' ✓</span>'+label+'</div>';
+    if(st==="next")return '<button onclick="CASA.baterPonto(\''+tipo+'\')" style="'+base+'background:var(--accent);border-color:var(--accent);color:#fff;cursor:pointer">'+label+' <span style="float:right">▶ agora</span></button>';
+    return '<div style="'+base+'background:#fafbfc;color:var(--muted)">'+label+' <span style="float:right">—</span></div>';
+  }
+  function signOutLine(){return '<div class="cz-muted" style="margin-top:14px">'+(SB.loggedIn()?('Logada como '+esc(SB.email())+' · <span style="cursor:pointer;color:var(--accent)" onclick="SB.signOut()">sair</span>'):'👁 pré-visualização (sem login) · <span style="cursor:pointer;color:var(--accent)" onclick="CASA.voltarAdmin()">‹ voltar ao painel</span>')+'</div>';}
+  function verComoFunc(){var f=cur();if(f)renderCheckin(f);}
+  function voltarAdmin(){_checkinF=null;draw();}
+  /* modo demonstração (só em memória, não persiste, não sincroniza) */
+  function demo(which){
+    var f=defFunc("Débora","Empregada Doméstica","01/04/2025");
+    f.ident.empregador="Gustavo Jucá";f.ident.cpf="000.000.000-00";f.ident.endereco="Recife/PE";f.invite_email="debora.demo@exemplo.com";
+    state.funcionarios=[f];state.sel=f.id;
+    var dk=diaKey();_localPonto[f.id]={};_localPonto[f.id][dk]={ent:"09:15",int_sai:"13:05",int_vol:"14:12",id:f.id+"|"+dk,funcionario_id:f.id,dia:dk};
+    if(which==="func")renderCheckin(f);else renderDetail();
+  }
+  function drawEmp(f){
+    var html='<div class="head"><h1>👋 Olá, '+esc(f.nome||"")+'</h1></div><div class="sub">'+esc(new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"}))+' · ponto</div>'+
+      '<div class="cz-tabs cz-noprint"><button class="cz-tab'+(_empTab==="dia"?" active":"")+'" onclick="CASA.empTab(\'dia\')">🕐 Ponto do dia</button><button class="cz-tab'+(_empTab==="mes"?" active":"")+'" onclick="CASA.empTab(\'mes\')">📅 Mês</button></div>'+
+      '<div id="cz-emp-body"><div class="loading">Carregando…</div></div>'+signOutLine();
+    gid("view-funcionario").innerHTML=html;
+    if(_empTab==="mes")drawMes(f);else drawDia(f);
+  }
+  function drawDia(f){
+    pontoToday(f).then(function(p){p=p||{};var el=gid("cz-emp-body");if(!el)return;var pl=planoHoje(f);
+      if(dayMins(pl)<=0){el.innerHTML='<div class="cz-card"><h2>Folga hoje 🎉</h2><p class="cz-muted">Hoje não há expediente no seu horário. Bom descanso!</p></div>';return;}
+      var html='';
+      if(!p.ent && nowMin()>toMin(pl.e)+10)html+='<div class="errbox" style="border-left-color:var(--warn)"><div class="e-t">⏰ Já passou do horário de entrada</div><div class="e-s">Previsto '+pl.e+'. Bata sua entrada.</div></div>';
+      if(p.int_sai && !p.int_vol){var extra=(nowMin()-toMin(p.int_sai))-(pl.alm||0);
+        html+='<div class="errbox" style="border-left-color:'+(extra>0?"var(--danger)":"var(--warn)")+'"><div class="e-t">⏱ Você está no intervalo desde '+p.int_sai+'</div><div class="e-s">Não esqueça de bater a VOLTA. '+(extra>0?("Já passou "+extra+"min do previsto ("+(pl.alm||0)+"min)."):("Previsto "+(pl.alm||0)+"min."))+' <button class="btn sm" style="margin-left:6px" onclick="CASA.lembrarVolta()">🔔 me lembrar</button></div></div>';}
+      var canSai=p.ent&&!p.sai&&(!p.int_sai||p.int_vol);
+      html+='<div class="cz-card">'+
+        pBtn("Entrada","ent",p.ent,p.ent?"done":"next")+
+        pBtn("Saída pro intervalo","int_sai",p.int_sai,p.int_sai?"done":(p.ent&&!p.sai?"next":"lock"))+
+        pBtn("Volta do intervalo","int_vol",p.int_vol,p.int_vol?"done":(p.int_sai?"next":"lock"))+
+        pBtn("Saída (fim do expediente)","sai",p.sai,p.sai?"done":(canSai?"next":"lock"))+'</div>';
+      html+='<div class="cz-muted" style="margin-top:8px">📍 O registro valida sua localização.</div>';
+      el.innerHTML=html;
+    });
+  }
+  function identLine(lb,v){return '<div><b>'+lb+'</b>'+esc(v||"—")+'</div>';}
+  function drawMes(f){
+    pontoAll(f).then(function(rows){var el=gid("cz-emp-body");if(!el)return;
+      var now=new Date();var ym=now.getFullYear()+"-"+pad2(now.getMonth()+1);
+      var byDay={};(rows||[]).forEach(function(r){if((r.dia||"").indexOf(ym)===0)byDay[r.dia]=r;});
+      var dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();var tot=0,body='';
+      for(var d=1;d<=dim;d++){var ds=ym+"-"+pad2(d);var r=byDay[ds]||{};var w=trabMin(r);if(w!=null)tot+=w;var wd=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][new Date(now.getFullYear(),now.getMonth(),d).getDay()];
+        body+='<tr><td class="day">'+pad2(d)+' '+wd+'</td><td>'+(r.ent||"–")+'</td><td>'+(r.int_sai||"–")+'</td><td>'+(r.int_vol||"–")+'</td><td>'+(r.sai||"–")+'</td><td><b>'+(w==null?"–":fmtH(w))+'</b></td></tr>';}
+      var id=f.ident||{};
+      var html='<div class="cz-printonly" style="text-align:center;font-weight:700;margin-bottom:8px">Cartão de Ponto — '+esc(f.nome||"")+' — '+esc(now.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}))+'</div>'+
+        '<div class="cz-card"><div class="cz-ident">'+identLine("Empregador",id.empregador)+identLine("CPF/CNPJ",id.cpf)+identLine("Funcionária",f.nome)+identLine("Função",f.cargo)+identLine("Admissão",id.admissao)+'</div></div>'+
+        '<div class="cz-card"><table class="cz-tbl"><thead><tr><th class="day">Dia</th><th>Entrada</th><th>Saí. interv.</th><th>Volta interv.</th><th>Saída</th><th>Trab.</th></tr></thead><tbody>'+body+'</tbody></table>'+
+        '<div class="cz-row" style="margin-top:12px;justify-content:space-between"><b>Total trabalhado no mês: '+fmtH(tot)+'</b><button class="btn primary cz-noprint" onclick="window.print()">🖨️ Gerar documento p/ imprimir</button></div>'+
+        '<div class="cz-printonly" style="margin-top:34px">Reconheço a exatidão destas anotações.<br><br>Data: ____/____/______ &nbsp;&nbsp;&nbsp; ___________________________________<div class="cz-muted" style="margin-top:4px">Assinatura</div></div></div>';
+      el.innerHTML=html;
+    });
+  }
+  function usarLocalAtual(){getPos().then(function(pos){var f=cur();if(!f)return;f.local={lat:pos.lat,lng:pos.lng,raio:(f.local&&f.local.raio)||200};save();toast("📍 Local de trabalho definido");renderDetail();}).catch(function(){toast("Não consegui pegar a localização (permita o GPS)");});}
+  function setRaio(v){var f=cur();if(!f)return;f.local=f.local||{};f.local.raio=(+v||200);save();}
+  function setInvite(v){var f=cur();if(!f)return;f.invite_email=(v||"").trim();save();}
+  function fillAdminPonto(f){var el=gid("cz-pt-list");if(!el)return;
+    pontoAll(f).then(function(rows){
+      if(!rows||!rows.length){el.innerHTML='Nenhum check-in ainda.';return;}
+      var bk=gid("cz-pt-banco");if(bk)bk.textContent="· banco "+fmtH(bancoAcum(f,rows));
+      var h='<table class="cz-tbl"><thead><tr><th class="day">Dia</th><th>Ent.</th><th>Int. saí</th><th>Int. volta</th><th>Saída</th><th>Trab.</th></tr></thead><tbody>';
+      rows.slice(0,14).forEach(function(r){h+='<tr><td class="day">'+r.dia+'</td><td>'+(r.ent||"–")+'</td><td>'+(r.int_sai||"–")+'</td><td>'+(r.int_vol||"–")+'</td><td>'+(r.sai||"–")+'</td><td><b>'+(trabMin(r)==null?"–":fmtH(trabMin(r)))+'</b></td></tr>';});
+      el.innerHTML=h+'</tbody></table>';
+    });
+  }
+  function _previewCheckin(){var f=state.funcionarios[0];if(!f){f=defFunc("Débora","Empregada Doméstica","");state.funcionarios.push(f);}renderCheckin(f);}
+
+  return {render:render,refreshIfOpen:refreshIfOpen,open:open,back:back,addFunc:addFunc,removeFunc:removeFunc,rename:rename,setTab:setTab,setIdent:setIdent,setCenario:setCenario,onVig:onVig,onCarga:onCarga,setDay:setDay,onBanco:onBanco,setP:setP,preencherPrevisto:preencherPrevisto,copyQuadro:copyQuadro,copyResumo:copyResumo,baterPonto:baterPonto,lembrarVolta:lembrarVolta,empTab:empTab,setInvite:setInvite,usarLocalAtual:usarLocalAtual,setRaio:setRaio,verComoFunc:verComoFunc,voltarAdmin:voltarAdmin,demo:demo,_previewCheckin:_previewCheckin};
 })();
 SB.onChange(function(){CASA.refreshIfOpen();});
 SB.init();
+try{var _q=new URLSearchParams(location.search);if(_q.get("demo")==="1"){nav("funcionario");CASA.demo(_q.get("ver")||"admin");}}catch(e){}
 
 /* ================= boot ================= */
 renderCards(); gerar(); folegoRender(); renderAtalhos();
