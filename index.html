@@ -1460,7 +1460,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.2.0";
+var APP_VERSION="2.3.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -1471,6 +1471,9 @@ function forceUpdate(){
   try{ if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations){ tasks.push(navigator.serviceWorker.getRegistrations().then(function(rs){ return Promise.all(rs.map(function(r){ try{ if(r.waiting) r.waiting.postMessage({type:'SKIP_WAITING'}); }catch(e){} return r.unregister(); })); })); } }catch(e){}
   Promise.all(tasks).then(done, done);
   setTimeout(done, 2500);
+}
+function renderVerTag(){var e=$('ver-tag');if(!e)return;var ver=(typeof APP_VERSION!=='undefined'?APP_VERSION:'?');var ch=(typeof APP_CHANNEL!=='undefined'&&APP_CHANNEL?(' · '+APP_CHANNEL):'');
+  e.innerHTML='<span style="cursor:pointer" onclick="forceUpdate()" title="Buscar a versão mais nova do app">'+(window.__updateReady?'<span style="color:#7fd9a8">● nova versão · </span>':'')+'v'+ver+ch+' · <span style="color:var(--side-muted)">🔄 atualizar</span></span>';
 }
 
 /* ===== Módulo CASA: nav expansível + Histórico de compras (planilha AO VIVO) ===== */
@@ -2026,7 +2029,7 @@ try{var _q=new URLSearchParams(location.search);if(_q.get("demo")==="1"){nav("fu
 
 /* ================= boot ================= */
 renderCards(); gerar(); folegoRender(); renderAtalhos();
-try{ var __vt=$('ver-tag'); if(__vt) __vt.textContent='v'+APP_VERSION+(APP_CHANNEL?' · '+APP_CHANNEL:''); }catch(e){}
+try{ renderVerTag(); }catch(e){}
 try{ renderConfig(); }catch(e){}
 /* sem popup no boot: usa o token guardado (localStorage). Loaders mostram aviso curto se nao houver. */
 loadAgenda(); loadInbox(); loadCamila(); loadCentral();
@@ -2041,7 +2044,7 @@ if(!COWORK){
         reg.addEventListener('updatefound', function(){
           var nw=reg.installing; if(!nw) return;
           nw.addEventListener('statechange', function(){
-            if(nw.state==='installed' && navigator.serviceWorker.controller){ window.__updateReady=true; try{ renderConfig(); }catch(e){} toast('Nova versão disponível — abra Configuração e toque Atualizar'); }
+            if(nw.state==='installed' && navigator.serviceWorker.controller){ window.__updateReady=true; try{ renderConfig(); }catch(e){} try{ renderVerTag(); }catch(e){} toast('Nova versão disponível — toque 🔄 atualizar na barra lateral'); }
           });
         });
       }).catch(function(){});
