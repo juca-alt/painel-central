@@ -1460,7 +1460,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.3.0";
+var APP_VERSION="2.3.1";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -1786,7 +1786,13 @@ var CASA=(function(){
      '<div class="cz-crumb">🏡 Casa › 👥 Funcionários · <span style="cursor:pointer;color:var(--accent)" onclick="CASA.back()">‹ todos</span></div>'+
      '<div class="head"><h1>'+esc(f.nome)+' <span style="cursor:pointer;font-size:14px;color:var(--accent)" title="renomear" onclick="CASA.rename(\''+f.id+'\')">✏️</span></h1></div><div class="sub">'+esc(f.cargo||"")+'</div>'+
      '<div class="cz-card"><h2>🔑 Acesso da funcionária (pra ela bater ponto)</h2><div class="cz-row"><input id="cz-invite" type="email" class="cz-txt" placeholder="email-da-funcionaria@exemplo.com" value="'+esc(f.invite_email||"")+'" oninput="CASA.setInvite(this.value)"><button class="btn" onclick="CASA.verComoFunc()">👁 Ver a tela dela</button></div><div class="cz-muted" style="margin-top:6px">Quem logar com este email vê <b>só</b> a tela de bater ponto desta funcionária (RLS). '+(SB.enabled()&&SB.loggedIn()?'':'⚠️ requer estar logado pra valer.')+'</div></div>'+
-     '<div class="cz-card"><h2>📍 Local de trabalho (valida o ponto)</h2>'+((f.local&&f.local.lat)?('<div class="cz-muted">Definido: '+f.local.lat.toFixed(5)+', '+f.local.lng.toFixed(5)+' · raio '+(f.local.raio||200)+'m</div>'):'<div class="cz-muted">Ainda não definido — sem isso ela pode bater de qualquer lugar.</div>')+'<div class="cz-row" style="margin-top:8px"><button class="btn" onclick="CASA.usarLocalAtual()">📍 Usar minha localização atual</button><label class="cz-fld">Raio (m)<input class="cz-num" type="number" value="'+((f.local&&f.local.raio)||200)+'" oninput="CASA.setRaio(this.value)"></label></div></div>'+
+     '<div class="cz-card"><h2>📍 Local de trabalho (valida o ponto)</h2>'+
+       '<div class="cz-row"><label class="cz-fld" style="flex:1;min-width:240px">Endereço<input id="cz-end" class="cz-txt" placeholder="Rua, número - bairro, cidade" value="'+esc((f.local&&f.local.endereco)||"")+'" oninput="CASA.setLocalEndereco(this.value)"></label>'+
+       '<label class="cz-fld">CEP<input class="cz-num" style="width:118px" placeholder="00000-000" value="'+esc((f.local&&f.local.cep)||"")+'" oninput="CASA.setLocalCep(this.value)"></label></div>'+
+       '<div class="cz-row" style="margin-top:8px"><button class="btn" onclick="CASA.geocodeLocal()">🔎 Localizar endereço</button><button class="btn" onclick="CASA.usarLocalAtual()">📍 Usar minha localização</button>'+
+       '<label class="cz-fld">Raio (m)<input class="cz-num" type="number" value="'+((f.local&&f.local.raio)||200)+'" oninput="CASA.setRaio(this.value)"></label>'+
+       ((f.local&&f.local.lat)?'<button class="btn" onclick="CASA.removerLocal()">🗑 Remover</button>':'')+'</div>'+
+       '<div class="cz-muted" style="margin-top:6px">'+((f.local&&f.local.lat)?('✓ Coordenadas definidas ('+(+f.local.lat).toFixed(5)+', '+(+f.local.lng).toFixed(5)+') · raio '+(f.local.raio||200)+'m'):'⚠️ Sem coordenadas — sem isso ela pode bater de qualquer lugar. Digite o endereço e toque "Localizar endereço".')+'</div></div>'+
      '<div class="cz-card"><h2>🕓 Ponto real (check-in) <span class="cz-muted" id="cz-pt-banco"></span></h2><div id="cz-pt-list" class="cz-muted">Carregando…</div></div>'+
      '<div class="cz-tabs"><button class="cz-tab active" onclick="CASA.setTab(\'horario\')">🗓️ Carga &amp; Horário</button><button class="cz-tab" onclick="CASA.setTab(\'ponto\')">🕐 Cartão de Ponto (manual)</button></div>'+
      horarioShell(f)+pontoShell();
@@ -2007,8 +2013,17 @@ var CASA=(function(){
       el.innerHTML=html;
     });
   }
-  function usarLocalAtual(){getPos().then(function(pos){var f=cur();if(!f)return;f.local={lat:pos.lat,lng:pos.lng,raio:(f.local&&f.local.raio)||200};save();toast("📍 Local de trabalho definido");renderDetail();}).catch(function(){toast("Não consegui pegar a localização (permita o GPS)");});}
+  function usarLocalAtual(){getPos().then(function(pos){var f=cur();if(!f)return;f.local=f.local||{};f.local.lat=pos.lat;f.local.lng=pos.lng;if(!f.local.raio)f.local.raio=200;save();toast("📍 Local definido pela sua posição atual");renderDetail();}).catch(function(){toast("Não consegui pegar a localização (permita o GPS)");});}
   function setRaio(v){var f=cur();if(!f)return;f.local=f.local||{};f.local.raio=(+v||200);save();}
+  function setLocalEndereco(v){var f=cur();if(!f)return;f.local=f.local||{};f.local.endereco=v;save();}
+  function setLocalCep(v){var f=cur();if(!f)return;f.local=f.local||{};f.local.cep=v;save();}
+  function removerLocal(){var f=cur();if(!f)return;f.local=null;save();toast("Local removido");renderDetail();}
+  function geocodeLocal(){var f=cur();if(!f)return;var end=((f.local&&f.local.endereco)||"").trim();if(!end){toast("Digite o endereço primeiro");return;}
+    var q=encodeURIComponent(end+((f.local&&f.local.cep)?(", "+f.local.cep):"")+", Brasil");toast("Buscando endereço…");
+    fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+q,{headers:{Accept:"application/json"}})
+      .then(function(r){return r.json();}).then(function(a){if(a&&a[0]){f.local.lat=+a[0].lat;f.local.lng=+a[0].lon;if(!f.local.raio)f.local.raio=200;save();toast("📍 Endereço localizado");renderDetail();}else toast("Endereço não encontrado — confira ou use 'minha localização'");})
+      .catch(function(){toast("Falha ao buscar o endereço");});
+  }
   function setInvite(v){var f=cur();if(!f)return;f.invite_email=(v||"").trim();save();}
   function fillAdminPonto(f){var el=gid("cz-pt-list");if(!el)return;
     pontoAll(f).then(function(rows){
@@ -2021,7 +2036,7 @@ var CASA=(function(){
   }
   function _previewCheckin(){var f=state.funcionarios[0];if(!f){f=defFunc("Débora","Empregada Doméstica","");state.funcionarios.push(f);}renderCheckin(f);}
 
-  return {render:render,refreshIfOpen:refreshIfOpen,open:open,back:back,addFunc:addFunc,removeFunc:removeFunc,rename:rename,setTab:setTab,setIdent:setIdent,setCenario:setCenario,onVig:onVig,onCarga:onCarga,setDay:setDay,onBanco:onBanco,setP:setP,preencherPrevisto:preencherPrevisto,copyQuadro:copyQuadro,copyResumo:copyResumo,baterPonto:baterPonto,lembrarVolta:lembrarVolta,empTab:empTab,setInvite:setInvite,usarLocalAtual:usarLocalAtual,setRaio:setRaio,verComoFunc:verComoFunc,voltarAdmin:voltarAdmin,demo:demo,_previewCheckin:_previewCheckin};
+  return {render:render,refreshIfOpen:refreshIfOpen,open:open,back:back,addFunc:addFunc,removeFunc:removeFunc,rename:rename,setTab:setTab,setIdent:setIdent,setCenario:setCenario,onVig:onVig,onCarga:onCarga,setDay:setDay,onBanco:onBanco,setP:setP,preencherPrevisto:preencherPrevisto,copyQuadro:copyQuadro,copyResumo:copyResumo,baterPonto:baterPonto,lembrarVolta:lembrarVolta,empTab:empTab,setInvite:setInvite,usarLocalAtual:usarLocalAtual,setRaio:setRaio,setLocalEndereco:setLocalEndereco,setLocalCep:setLocalCep,geocodeLocal:geocodeLocal,removerLocal:removerLocal,verComoFunc:verComoFunc,voltarAdmin:voltarAdmin,demo:demo,_previewCheckin:_previewCheckin};
 })();
 SB.onChange(function(){CASA.refreshIfOpen();});
 SB.init();
