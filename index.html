@@ -179,9 +179,16 @@
     .side-overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;
       opacity:0;pointer-events:none;transition:opacity .25s}
     body.side-open .side-overlay{opacity:1;pointer-events:auto}
-    .main{padding:14px;padding-top:64px}
+    .main{padding:14px;padding-top:64px;min-width:0;overflow-x:hidden}
     .cal-grid{gap:5px}
     .mes-cell{min-height:64px}
+    /* Casa › Funcionário: tabelas largas rolam DENTRO do card (não esticam a página no celular) */
+    #view-funcionario .cz-card{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    #view-funcionario .cz-tbl{width:max-content;min-width:100%}
+    #view-funcionario .cz-tbl th,#view-funcionario .cz-tbl td{white-space:nowrap}
+    #view-funcionario .cz-ident{grid-template-columns:1fr}
+    #view-funcionario .cz-stats{grid-template-columns:1fr 1fr}
+    #view-funcionario input.cz-txt{min-width:0;width:100%}
   }
   /* ===== Casa subnav + Histórico ===== */
   .nav a.group .chev{margin-left:auto;font-size:10px;transition:transform .2s}
@@ -1460,7 +1467,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.3.1";
+var APP_VERSION="2.3.2";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
