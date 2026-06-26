@@ -1506,7 +1506,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.5.0";
+var APP_VERSION="2.5.1";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2133,8 +2133,9 @@ var GAEL=(function(){
   function tabsHtml(){return '<div class="g-tabs">'+ORDER.map(function(e){var s=SCHEMA[e];var n=(cache[e]||[]).length;return '<button class="g-pill'+(e===active?' on':'')+'" onclick="GAEL.sel(\''+e+'\')"><i class="ti '+s.icon+'"></i> '+esc(s.label)+' <span class="ct">'+n+'</span></button>';}).join('')+'</div>';}
   function rowHtml(ent,r){var s=SCHEMA[ent];var right='';if(s.bdg)right+=badge(s.bdg(r));if(s.chp)right+=chip(s.chp(r));var acts='<div class="g-acts"><button title="Editar" onclick="GAEL.openForm(\''+ent+'\',\''+r.id+'\')"><i class="ti ti-edit"></i></button><button title="Excluir" onclick="GAEL.del(\''+ent+'\',\''+r.id+'\')"><i class="ti ti-trash"></i></button></div>';var sec=s.sec?s.sec(r):'';return '<div class="g-row"><div style="flex:1;min-width:0"><div class="g-pri">'+s.prim(r)+'</div>'+(sec?'<div class="g-sec">'+esc(sec)+'</div>':'')+'</div><div class="g-right">'+(right?'<div>'+right+'</div>':'')+acts+'</div></div>';}
   function listHtml(ent){var s=SCHEMA[ent];var rows=cache[ent]||[];var top='<div class="bar"><div class="t-sec" style="margin:0">'+esc(s.label)+'</div><div class="spacer"></div><button class="btn primary sm" onclick="GAEL.openForm(\''+ent+'\')"><i class="ti ti-plus"></i> Adicionar</button></div>';if(!rows.length)return top+'<div class="empty">Nenhum registro ainda — use “Adicionar”.</div>';return top+'<div class="panel">'+rows.map(function(r){return rowHtml(ent,r);}).join('')+'</div>';}
-  function paint(){var h=$('view-gael');if(!h)return;h.innerHTML=headHtml()+SB.bar()+tabsHtml()+'<div id="g-list">'+listHtml(active)+'</div>';}
-  function render(){var h=$('view-gael');if(!h)return;if(!SB.enabled()||!SB.loggedIn()){h.innerHTML=headHtml()+SB.bar();return;}h.innerHTML=headHtml()+SB.bar()+'<div class="loading">Carregando histórico…</div>';loadAll().then(function(){if(isOpen())paint();});}
+  function paint(){var h=$('view-gael');if(!h)return;h.innerHTML=headHtml()+tabsHtml()+'<div id="g-list">'+listHtml(active)+'</div>';}
+  function connectPrompt(){return '<div class="errbox" style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-weight:600"><i class="ti ti-lock" style="vertical-align:-2px"></i> Conectar uma vez</span><span class="g-sec" style="margin:0">mesmo login do resto do painel — depois abre direto.</span><input id="gael-email" type="email" placeholder="seu@email.com" style="padding:7px 9px;border:1px solid var(--line);border-radius:8px"><button class="btn primary sm" onclick="SB.signIn((document.getElementById(\'gael-email\')||{}).value)">Enviar link</button></div>';}
+  function render(){var h=$('view-gael');if(!h)return;if(!SB.enabled()){h.innerHTML=headHtml()+SB.bar();return;}if(!SB.loggedIn()){h.innerHTML=headHtml()+connectPrompt();return;}h.innerHTML=headHtml()+'<div class="loading">Carregando histórico…</div>';loadAll().then(function(){if(isOpen())paint();});}
   function refreshIfOpen(){if(isOpen())render();}
   function sel(ent){active=ent;paint();}
   function fieldInput(f,row){var v=row[f.k];var id='g-f-'+f.k;if(f.t==='chk')return '<div class="g-fld g-chk"><input type="checkbox" id="'+id+'"'+(v?' checked':'')+'><label for="'+id+'">'+esc(f.l)+'</label></div>';var inner;if(f.t==='sel'){inner='<select id="'+id+'">'+f.opts.map(function(o){return '<option'+(String(v)===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';}else if(f.t==='ta'){inner='<textarea id="'+id+'">'+esc(v==null?'':v)+'</textarea>';}else{var typ=f.t==='date'?'date':(f.t==='dt'?'datetime-local':(f.t==='num'?'number':'text'));var val=v==null?'':v;if(f.t==='dt'&&val)val=String(val).slice(0,16);inner='<input type="'+typ+'" id="'+id+'"'+(f.t==='num'?' step="any"':'')+' value="'+esc(val)+'">';}return '<div class="g-fld"><label>'+esc(f.l)+(f.req?' *':'')+'</label>'+inner+'</div>';}
