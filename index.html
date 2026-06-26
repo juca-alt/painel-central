@@ -295,6 +295,34 @@
     #view-funcionario .cz-card{border:none;padding:4px 0;margin-bottom:8px}
     #view-funcionario .cz-printonly{display:block}
   }
+  /* ===== Saúde · Gael ===== */
+  #view-gael .g-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 12px}
+  #view-gael .g-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;font-size:13px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}
+  #view-gael .g-pill:hover{border-color:var(--accent)}
+  #view-gael .g-pill .ct{font-size:11px;background:var(--chip);color:var(--muted);padding:0 6px;border-radius:20px}
+  #view-gael .g-pill.on{background:var(--accent-soft);color:#173404;border-color:transparent}
+  #view-gael .g-pill.on .ct{background:#c0dd97;color:#173404}
+  #view-gael .g-pill i.ti{font-size:15px}
+  #view-gael .g-row{display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-bottom:1px solid var(--line)}
+  #view-gael .g-row:last-child{border-bottom:none}
+  #view-gael .g-pri{font-size:14px;color:var(--txt)}
+  #view-gael .g-sec{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+  #view-gael .g-right{margin-left:auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;text-align:right}
+  #view-gael .g-acts{display:flex;gap:4px}
+  #view-gael .g-acts button{border:none;background:none;color:var(--muted);cursor:pointer;font-size:15px;padding:3px 4px;border-radius:6px}
+  #view-gael .g-acts button:hover{color:var(--accent);background:var(--accent-soft)}
+  #view-gael .g-bdg{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;white-space:nowrap;margin-left:4px}
+  .gael-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto}
+  .gael-modal{background:var(--card);border-radius:14px;width:100%;max-width:520px;padding:18px 20px}
+  .gael-modal h3{margin:0 0 14px;font-size:16px}
+  .gael-modal .g-fld{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
+  .gael-modal .g-fld label{font-size:12px;color:var(--muted);font-weight:600}
+  .gael-modal .g-fld input,.gael-modal .g-fld select,.gael-modal .g-fld textarea{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;color:var(--txt);background:#fff;width:100%}
+  .gael-modal .g-fld textarea{min-height:62px;resize:vertical}
+  .gael-modal .g-fld.g-chk{flex-direction:row;align-items:center;gap:8px}
+  .gael-modal .g-fld.g-chk input{width:auto}
+  .gael-modal .g-fld.g-chk label{font-weight:600;color:var(--txt)}
+  .gael-modal .g-foot{display:flex;gap:8px;align-items:center;margin-top:6px}
 </style>
 </head>
 <body>
@@ -313,6 +341,7 @@
         <a id="nav-funcionario" onclick="nav('funcionario')"><i class="ti ti-users"></i> Funcionário</a>
       </div>
       <a id="nav-saude" onclick="nav('saude')"><i class="ti ti-leaf"></i> Saúde</a>
+      <a id="nav-gael" onclick="nav('gael')"><i class="ti ti-heart"></i> Saúde · Gael</a>
       <a id="nav-camila" onclick="nav('camila')"><i class="ti ti-book"></i> Provas Camila</a>
       <a id="nav-atalhos" onclick="nav('atalhos')"><i class="ti ti-link"></i> Atalhos</a>
       <a id="nav-config" onclick="nav('config')"><i class="ti ti-settings"></i> Configuração</a>
@@ -461,6 +490,9 @@
       <div class="sub">O que a Bússola e a Central de Tarefas dizem sobre saúde — tua e do Gael. Ao vivo da planilha.</div>
       <div id="saude-out"><div class="loading">Lendo a planilha…</div></div>
     </section>
+
+    <!-- ============ SAÚDE · GAEL ============ -->
+    <section id="view-gael" style="display:none"></section>
 
     <!-- ============ CAMILA ============ -->
     <section id="view-camila" style="display:none">
@@ -640,7 +672,7 @@ function renderConfig(){
 }
 
 /* ================= navegação ================= */
-var VIEWS=["hoje","tarefas","inbox","feira","funcionario","saude","camila","atalhos","config"];
+var VIEWS=["hoje","tarefas","inbox","feira","funcionario","saude","gael","camila","atalhos","config"];
 function toggleSide(){ document.body.classList.toggle('side-open'); }
 function nav(v){
   VIEWS.forEach(function(k){
@@ -649,6 +681,7 @@ function nav(v){
   });
   if(v==='feira'){ renderCards(); gerar(); }
   if(v==='funcionario'){ CASA.render(); }
+  if(v==='gael'){ GAEL.render(); }
   if(v==='config'){ renderConfig(); }
   var inCasa=(v==='feira'||v==='funcionario'); var nc=$('nav-casa');
   if(nc){ nc.classList.toggle('active', inCasa); if(inCasa){ $('casa-sub').classList.remove('collapsed'); nc.classList.remove('collapsed'); } }
@@ -1473,7 +1506,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.4.0";
+var APP_VERSION="2.5.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2051,7 +2084,67 @@ var CASA=(function(){
 
   return {render:render,refreshIfOpen:refreshIfOpen,open:open,back:back,addFunc:addFunc,removeFunc:removeFunc,rename:rename,setTab:setTab,setIdent:setIdent,setCenario:setCenario,onVig:onVig,onCarga:onCarga,setDay:setDay,onBanco:onBanco,setP:setP,preencherPrevisto:preencherPrevisto,copyQuadro:copyQuadro,copyResumo:copyResumo,baterPonto:baterPonto,lembrarVolta:lembrarVolta,empTab:empTab,setInvite:setInvite,usarLocalAtual:usarLocalAtual,setRaio:setRaio,setLocalEndereco:setLocalEndereco,setLocalCep:setLocalCep,geocodeLocal:geocodeLocal,removerLocal:removerLocal,verComoFunc:verComoFunc,voltarAdmin:voltarAdmin,demo:demo,_previewCheckin:_previewCheckin};
 })();
-SB.onChange(function(){CASA.refreshIfOpen();});
+/* ================= Saúde · Gael (histórico vivo — Supabase gael_*) ================= */
+var GAEL=(function(){
+  var T={consultas:'gael_consultas',diagnosticos:'gael_diagnosticos',medicamentos:'gael_medicamentos',exames:'gael_exames',profissionais:'gael_profissionais',investigacoes:'gael_investigacoes'};
+  var active='medicamentos', cache={};
+  var CMAP={em_uso:['#eaf3de','#173404'],sos:['#faeeda','#412402'],suspenso:['#f1efe8','#2c2c2a'],ativo:['#e6f1fb','#042c53'],controlado:['#eaf3de','#173404'],descontrolado:['#fcebeb','#501313'],em_investigacao:['#faeeda','#412402'],resolvido:['#f1efe8','#2c2c2a'],sugerido:['#f1efe8','#2c2c2a'],solicitado:['#e6f1fb','#042c53'],agendado:['#faeeda','#412402'],feito:['#eaf3de','#173404'],atual:['#eaf3de','#173404'],a_procurar:['#faeeda','#412402'],aberto:['#faeeda','#412402'],em_discussao:['#e6f1fb','#042c53']};
+  var TMAP={rotina:['#e1f5ee','#04342c'],crise:['#faece7','#4a1b0c'],condicional:['#eeedfe','#26215c']};
+  function fdate(s){if(!s)return'';var m=String(s).slice(0,10).split('-');return m.length===3?m[2]+'/'+m[1]+'/'+m[0]:String(s);}
+  function badge(s){if(!s)return'';var c=CMAP[s]||['#f1efe8','#5f5e5a'];return '<span class="g-bdg" style="background:'+c[0]+';color:'+c[1]+'">'+esc(String(s).replace(/_/g,' '))+'</span>';}
+  function chip(t){if(!t)return'';var c=TMAP[t]||['#f1efe8','#5f5e5a'];return '<span class="g-bdg" style="background:'+c[0]+';color:'+c[1]+'">'+esc(t)+'</span>';}
+  var SCHEMA={
+    consultas:{label:'Consultas',icon:'ti-stethoscope',order:'data.desc',
+      fields:[{k:'data',l:'Data',t:'date',req:true},{k:'local',l:'Local'},{k:'profissional',l:'Profissional'},{k:'especialidade',l:'Especialidade'},{k:'motivo',l:'Motivo',t:'ta'},{k:'resumo_hipoteses',l:'Hipóteses',t:'ta'},{k:'resumo_condutas',l:'Condutas',t:'ta'},{k:'proximo_retorno',l:'Próximo retorno',t:'dt'},{k:'obs',l:'Obs',t:'ta'}],
+      prim:function(r){return esc(fdate(r.data))+(r.profissional?' · '+esc(r.profissional):'');},
+      sec:function(r){return [r.local,r.especialidade,(r.proximo_retorno?'retorno '+fdate(r.proximo_retorno):'')].filter(Boolean).join(' · ');}},
+    diagnosticos:{label:'Diagnósticos',icon:'ti-clipboard-text',order:'created_at.asc',
+      fields:[{k:'condicao',l:'Condição',req:true},{k:'status',l:'Status',t:'sel',opts:['ativo','controlado','descontrolado','em_investigacao','resolvido']},{k:'identificado_em',l:'Identificado em',t:'date'},{k:'profissional',l:'Profissional'},{k:'peso_kg',l:'Peso (kg)',t:'num'},{k:'altura_cm',l:'Altura (cm)',t:'num'},{k:'notas',l:'Notas',t:'ta'}],
+      prim:function(r){return esc(r.condicao);},
+      sec:function(r){return [r.notas,(r.peso_kg?r.peso_kg+' kg':''),(r.altura_cm?r.altura_cm+' cm':'')].filter(Boolean).join(' · ');},
+      bdg:function(r){return r.status;}},
+    medicamentos:{label:'Medicamentos',icon:'ti-pill',order:'created_at.asc',
+      fields:[{k:'nome',l:'Nome',req:true},{k:'principio_ativo',l:'Princípio ativo'},{k:'concentracao',l:'Concentração'},{k:'trata',l:'Trata (condição)'},{k:'tipo',l:'Tipo',t:'sel',opts:['rotina','crise','condicional']},{k:'posologia',l:'Posologia',t:'ta'},{k:'via',l:'Via'},{k:'status',l:'Status',t:'sel',opts:['em_uso','sos','suspenso']},{k:'controlado',l:'Controlado (receita azul)',t:'chk'},{k:'obs',l:'Obs',t:'ta'}],
+      prim:function(r){return esc(r.nome)+(r.controlado?' <i class="ti ti-lock" title="Controlado (receita azul)" style="color:var(--danger);font-size:13px"></i>':'');},
+      sec:function(r){return [r.principio_ativo,(r.trata?'trata '+r.trata:''),r.posologia,(r.via||'')].filter(Boolean).join(' · ');},
+      bdg:function(r){return r.status;},chp:function(r){return r.tipo;}},
+    exames:{label:'Exames',icon:'ti-flask',order:'created_at.asc',
+      fields:[{k:'nome',l:'Nome',req:true},{k:'status',l:'Status',t:'sel',opts:['sugerido','solicitado','agendado','feito']},{k:'solicitado_em',l:'Solicitado em',t:'date'},{k:'realizado_em',l:'Realizado em',t:'date'},{k:'solicitante',l:'Solicitante'},{k:'resultado_resumo',l:'Resultado (resumo)',t:'ta'},{k:'preparo',l:'Preparo',t:'ta'},{k:'obs',l:'Obs',t:'ta'}],
+      prim:function(r){return esc(r.nome);},
+      sec:function(r){return [r.preparo,r.resultado_resumo,r.obs].filter(Boolean).join(' · ');},
+      bdg:function(r){return r.status;}},
+    profissionais:{label:'Equipe',icon:'ti-users',order:'created_at.asc',
+      fields:[{k:'nome',l:'Nome'},{k:'especialidade',l:'Especialidade'},{k:'status',l:'Status',t:'sel',opts:['atual','sugerido','a_procurar']},{k:'registro_conselho',l:'Registro (CRM/RQE)'},{k:'contato',l:'Contato'},{k:'ultima_consulta',l:'Última consulta',t:'date'},{k:'proxima',l:'Próxima',t:'dt'},{k:'notas',l:'Notas',t:'ta'}],
+      prim:function(r){return esc(r.nome||r.especialidade||'(sem nome)');},
+      sec:function(r){return [(r.nome?r.especialidade:''),r.registro_conselho,r.notas].filter(Boolean).join(' · ');},
+      bdg:function(r){return r.status;}},
+    investigacoes:{label:'Investigações',icon:'ti-search',order:'created_at.asc',
+      fields:[{k:'tema',l:'Tema',req:true},{k:'origem',l:'Origem',t:'sel',opts:['consulta','percepcao_pai']},{k:'status',l:'Status',t:'sel',opts:['aberto','em_discussao','em_investigacao','resolvido']},{k:'profissional_alvo',l:'Profissional alvo'},{k:'notas',l:'Notas',t:'ta'}],
+      prim:function(r){return esc(r.tema);},
+      sec:function(r){return [r.profissional_alvo,r.notas].filter(Boolean).join(' · ');},
+      bdg:function(r){return r.status;}}
+  };
+  var ORDER=['consultas','diagnosticos','medicamentos','exames','profissionais','investigacoes'];
+  function isOpen(){var h=$('view-gael');return !!(h&&h.style.display!=='none');}
+  function byId(ent,id){var a=cache[ent]||[];for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i];return {};}
+  function loadOne(ent){return SB.rest('GET',T[ent]+'?select=*&order='+SCHEMA[ent].order).then(function(r){return r.ok?r.json():[];}).then(function(rows){cache[ent]=rows||[];return cache[ent];}).catch(function(){cache[ent]=cache[ent]||[];});}
+  function loadAll(){return Promise.all(ORDER.map(loadOne));}
+  function headHtml(){return '<div class="head"><h1><i class="ti ti-heart" style="color:var(--accent)"></i> Saúde · Gael</h1></div><div class="sub">Histórico vivo de saúde do Gael — fonte única (consultas, diagnósticos, medicamentos, exames, equipe, investigações).</div>';}
+  function tabsHtml(){return '<div class="g-tabs">'+ORDER.map(function(e){var s=SCHEMA[e];var n=(cache[e]||[]).length;return '<button class="g-pill'+(e===active?' on':'')+'" onclick="GAEL.sel(\''+e+'\')"><i class="ti '+s.icon+'"></i> '+esc(s.label)+' <span class="ct">'+n+'</span></button>';}).join('')+'</div>';}
+  function rowHtml(ent,r){var s=SCHEMA[ent];var right='';if(s.bdg)right+=badge(s.bdg(r));if(s.chp)right+=chip(s.chp(r));var acts='<div class="g-acts"><button title="Editar" onclick="GAEL.openForm(\''+ent+'\',\''+r.id+'\')"><i class="ti ti-edit"></i></button><button title="Excluir" onclick="GAEL.del(\''+ent+'\',\''+r.id+'\')"><i class="ti ti-trash"></i></button></div>';var sec=s.sec?s.sec(r):'';return '<div class="g-row"><div style="flex:1;min-width:0"><div class="g-pri">'+s.prim(r)+'</div>'+(sec?'<div class="g-sec">'+esc(sec)+'</div>':'')+'</div><div class="g-right">'+(right?'<div>'+right+'</div>':'')+acts+'</div></div>';}
+  function listHtml(ent){var s=SCHEMA[ent];var rows=cache[ent]||[];var top='<div class="bar"><div class="t-sec" style="margin:0">'+esc(s.label)+'</div><div class="spacer"></div><button class="btn primary sm" onclick="GAEL.openForm(\''+ent+'\')"><i class="ti ti-plus"></i> Adicionar</button></div>';if(!rows.length)return top+'<div class="empty">Nenhum registro ainda — use “Adicionar”.</div>';return top+'<div class="panel">'+rows.map(function(r){return rowHtml(ent,r);}).join('')+'</div>';}
+  function paint(){var h=$('view-gael');if(!h)return;h.innerHTML=headHtml()+SB.bar()+tabsHtml()+'<div id="g-list">'+listHtml(active)+'</div>';}
+  function render(){var h=$('view-gael');if(!h)return;if(!SB.enabled()||!SB.loggedIn()){h.innerHTML=headHtml()+SB.bar();return;}h.innerHTML=headHtml()+SB.bar()+'<div class="loading">Carregando histórico…</div>';loadAll().then(function(){if(isOpen())paint();});}
+  function refreshIfOpen(){if(isOpen())render();}
+  function sel(ent){active=ent;paint();}
+  function fieldInput(f,row){var v=row[f.k];var id='g-f-'+f.k;if(f.t==='chk')return '<div class="g-fld g-chk"><input type="checkbox" id="'+id+'"'+(v?' checked':'')+'><label for="'+id+'">'+esc(f.l)+'</label></div>';var inner;if(f.t==='sel'){inner='<select id="'+id+'">'+f.opts.map(function(o){return '<option'+(String(v)===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';}else if(f.t==='ta'){inner='<textarea id="'+id+'">'+esc(v==null?'':v)+'</textarea>';}else{var typ=f.t==='date'?'date':(f.t==='dt'?'datetime-local':(f.t==='num'?'number':'text'));var val=v==null?'':v;if(f.t==='dt'&&val)val=String(val).slice(0,16);inner='<input type="'+typ+'" id="'+id+'"'+(f.t==='num'?' step="any"':'')+' value="'+esc(val)+'">';}return '<div class="g-fld"><label>'+esc(f.l)+(f.req?' *':'')+'</label>'+inner+'</div>';}
+  function openForm(ent,id){var s=SCHEMA[ent];var row=id?byId(ent,id):{};var body=s.fields.map(function(f){return fieldInput(f,row);}).join('');closeModal();var bg=document.createElement('div');bg.className='gael-modal-bg';bg.id='gael-modal-bg';bg.onclick=function(e){if(e.target===bg)closeModal();};var ttl=(id?'Editar':'Novo')+' · '+esc(s.label.toLowerCase());var dl=id?'<button class="btn sm" style="color:var(--danger);border-color:var(--danger)" onclick="GAEL.del(\''+ent+'\',\''+id+'\')"><i class="ti ti-trash"></i> Excluir</button>':'';bg.innerHTML='<div class="gael-modal"><h3>'+ttl+'</h3>'+body+'<div class="g-foot">'+dl+'<div class="spacer"></div><button class="btn sm" onclick="GAEL.closeModal()">Cancelar</button><button class="btn primary sm" onclick="GAEL.save(\''+ent+'\','+(id?('\''+id+'\''):'null')+')">Salvar</button></div></div>';document.body.appendChild(bg);}
+  function closeModal(){var m=$('gael-modal-bg');if(m&&m.parentNode)m.parentNode.removeChild(m);}
+  function save(ent,id){if(!SB.loggedIn()){toast('Conecte pra salvar');return;}var s=SCHEMA[ent];var body={};for(var i=0;i<s.fields.length;i++){var f=s.fields[i];var el=$('g-f-'+f.k);if(!el)continue;var val;if(f.t==='chk'){val=el.checked;}else{val=el.value;if(val==='')val=null;if(f.t==='num'&&val!=null){val=parseFloat(String(val).replace(',','.'));if(isNaN(val))val=null;}}body[f.k]=val;}var fk=s.fields[0];if(fk.req&&!body[fk.k]){toast('Preencha: '+fk.l);return;}var p=id?SB.rest('PATCH',T[ent]+'?id=eq.'+encodeURIComponent(id),body,{Prefer:'return=minimal'}):SB.rest('POST',T[ent],body,{Prefer:'return=minimal'});p.then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t||('HTTP '+r.status));});closeModal();toast(id?'Atualizado':'Adicionado');return loadOne(ent).then(function(){if(isOpen())paint();});}).catch(function(e){toast('Erro: '+String(e&&e.message||e).slice(0,90));});}
+  function del(ent,id){if(!SB.loggedIn()){toast('Conecte pra excluir');return;}if(!confirm('Excluir este registro?'))return;SB.rest('DELETE',T[ent]+'?id=eq.'+encodeURIComponent(id)).then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t||('HTTP '+r.status));});closeModal();toast('Excluído');return loadOne(ent).then(function(){if(isOpen())paint();});}).catch(function(e){toast('Erro: '+String(e&&e.message||e).slice(0,90));});}
+  return {render:render,refreshIfOpen:refreshIfOpen,sel:sel,openForm:openForm,save:save,del:del,closeModal:closeModal};
+})();
+SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();});
 SB.init();
 try{var _q=new URLSearchParams(location.search);if(_q.get("demo")==="1"){nav("funcionario");CASA.demo(_q.get("ver")||"admin");}}catch(e){}
 
