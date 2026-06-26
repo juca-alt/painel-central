@@ -39,7 +39,7 @@ Implementado o submódulo **Casa › 👥 Funcionário** (que na produção era 
 - ✅ **v2.3.2** (commit `30738b0`): **fix mobile** — tabelas largas do Funcionário rolam dentro do card (não estouram mais a página no celular). Mobile = mesmo index.html responsivo.
 - 🟡 **PENDENTE — testar Casa/ponto (Gustavo):** login admin → cadastrar email de teste na Débora → definir endereço do Local de trabalho → logar com esse email noutro navegador → bater ponto → conferir em "Ponto real".
 - ✅ **v2.4.0 reskin Basil** + **v2.5.0/2.5.1 módulo Saúde·Gael** no ar (Table-CRUD das 6 entidades; UI verificada no preview com dados fake — porta nova 8799 p/ fugir do cache de SW; sintaxe validada via `osascript -l JavaScript`, não há `node` no ambiente).
-- 🔴 **PENDENTE PRINCIPAL (Gustavo, passo manual — desbloqueia o módulo Gael):** rodar **`sql/gael_saude.sql`** e depois **`sql/gael_saude_seed.sql`** no SQL Editor do Supabase (projeto `mieqsiojvfiqrhectquc`). Pré: `juca@segurocomjuca.com` existir em `auth.users`. Até rodar, a tela Gael abre porém vazia. Eu NÃO consigo rodar DDL (sem service-role/connstring; anon key não cria tabela). Depois: logar 1x no app → dados aparecem (1/10/21/2/9/7) → me chamar pra validar o round-trip real campo a campo (era o objetivo da Rodada 1: schema aguenta a vida real).
+- ✅ **SQL RODADO (2026-06-25, via Chrome MCP no SQL Editor):** migração + seed executados; contagens **1/10/21/2/9/7** (Rodada 1 PROVADA — schema aguentou a consulta real). Verificado: anon lê `[]` (RLS owner protege). **Resta só:** Gustavo logar 1x no app (magic-link) → a tela Saúde·Gael mostra os dados.
 
 ## 5. Mapa dos arquivos (`~/Documents/painel-central`)
 | Arquivo | O que é |
@@ -67,4 +67,4 @@ Sync **ligada e no ar**. Tudo já executado:
 - 🔴 Tarefas/Saúde ao vivo no standalone: ativar Google Sheets API em `painel-central-499400` + reconectar Google. Código já deployado e inerte.
 
 ---
-**Como retomar:** "li o ESTADO_DO_PROJETO, bora no passo X". **Próximo natural:** rodar os 2 SQL `gael_*` no Supabase (§4) e logar 1x → validar o módulo Saúde·Gael com dado real. Versões: v2.2.0→v2.3.2 (Casa/ponto) → v2.4.0 (reskin Basil) → v2.5.1 (módulo Gael).
+**Como retomar:** "li o ESTADO_DO_PROJETO, bora no passo X". **Próximo natural:** logar 1x no app (magic-link) → conferir a tela Saúde·Gael com os dados reais (SQL **já rodado** — 1/10/21/2/9/7). Versões: v2.2.0→v2.3.2 (Casa/ponto) → v2.4.0 (reskin Basil) → v2.5.1 (módulo Gael).
