@@ -1,10 +1,17 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-06-21 · Leia isto primeiro ao retomar.
+**Última atualização:** 2026-06-25 · Leia isto primeiro ao retomar.
 
 ## 1. O que é
-PWA single-file do Gustavo (Jucá2.0) — painel único (Agenda, Tarefas, Inbox, **Casa › Feira + Funcionário**, Saúde, Provas Camila, Atalhos, Configuração, Fôlego). Tudo em `index.html` (sem build/deps). Dual-mode (Cowork via MCP / standalone via OAuth GIS). No ar em https://juca-alt.github.io/painel-central/ · repo `juca-alt/painel-central` (`main`). Produção atual: **v2.2.0** (mobile, login Google persistente, Configuração, Histórico).
+PWA single-file do Gustavo (Jucá2.0) — painel único (Agenda, Tarefas, Inbox, **Casa › Feira + Funcionário**, Saúde, Provas Camila, Atalhos, Configuração, Fôlego). Tudo em `index.html` (sem build/deps). Dual-mode (Cowork via MCP / standalone via OAuth GIS). No ar em https://juca-alt.github.io/painel-central/ · repo `juca-alt/painel-central` (`main`). Produção atual: **v2.5.1** — reskin "Basil" do shell + módulo **Saúde · Gael** (ver §2).
 
-## 2. O que mudou nesta sessão (21/06)
+## 2. O que mudou na sessão (25/06) — reskin + módulo Gael
+**Reskin "Basil" do shell (v2.4.0, commit `124e289`):** sidebar antes ESCURA virou CLARA; accent azul→**Basil verde `#639922`**; fonte **Inter** + ícones **Tabler webfont** (cdnjs **v3.34.0** — a `2.47.0/iconfont` dá 404; classes `ti ti-*`); brand com dot verde; nav ativo em tint Basil. Mexe SÓ em tokens `:root` + bloco da sidebar/nav + troca dos emojis do nav por `<i class="ti">`; **layout interno dos módulos intacto** (só recolore via `var(--accent)`). Gustavo preferiu essa cara à antiga.
+
+**Módulo Saúde · Gael (v2.5.0/2.5.1, commits `2c24d42`/`dec7a1b`):** histórico vivo de saúde do Gael. Nova view `view-gael` / nav `nav-gael` (ti-heart) — SEPARADA da "Saúde" existente (esta é pendência de tarefa via planilha). Engine **Table-CRUD config-driven** (IIFE `GAEL`, objeto `SCHEMA` no fim do `<script>`) p/ 6 entidades (consultas, diagnósticos, medicamentos, exames, equipe, investigações); listas com badges de status + chips de tipo + flag `controlado` (cadeado); add/editar/excluir via modal próprio (`.gael-modal-*`); plugado no `SB.rest`. **Login não-redundante:** logado abre tela direto (sem banner); deslogado mostra aviso slim "Conectar uma vez" (mesmo login do painel; sessão persiste). Mantém RLS owner-isolado — repo + anon key são PÚBLICOS, sem auth os dados de saúde do Gael ficariam world-readable.
+
+**Fundação de dados (commit `358f0ee`):** `/sql/gael_saude.sql` (6 tabelas `gael_*`, RLS `owner=auth.uid()`, grant authenticated, `text+CHECK`) + `/sql/gael_saude_seed.sql` (consulta 05/06/2026 Dr. Gustavo Almeida/Conecta; idempotente, owner via subquery em `auth.users`; contagens 1/10/21/2/9/7). Schema travado com 6 ajustes vs. briefing (local; registro_conselho+nome nullable; TEA+TDAH+Depressão+AH em 4 linhas + peso/altura; flag controlado; status 'sugerido'+preparo em exames; 'em_investigacao' em investigacoes).
+
+## (histórico 21/06) Casa › Funcionário
 Implementado o submódulo **Casa › 👥 Funcionário** (que na produção era só placeholder), portando o protótipo `casa-debora.html` pra dentro do `index.html`, dentro de `view-funcionario`.
 > ⚠️ **Cuidado registrado:** meu clone local estava velho. A produção remota já tinha avançado pra v2.2.0 (Casa como subnav). Em vez de atropelar, **resetei pro remoto e re-portei** o módulo em cima da v2.2.0 — nada da v2.2.0 foi perdido.
 
@@ -30,13 +37,17 @@ Implementado o submódulo **Casa › 👥 Funcionário** (que na produção era 
 - ✅ **Controle de ponto da funcionária NO AR** (commit `a7261ad`): visão dela com 2 abas (Ponto do dia / Mês imprimível), bater ponto com **validação por GPS**, admin cadastra email de acesso (RLS por email) + local de trabalho. Migration `painel_ponto.sql` já rodada.
 - ✅ **v2.3.1**: **botão 🔄 atualizar** na sidebar (acompanha versões) + **Local de trabalho por endereço** (add/editar/excluir, geocodifica via OSM; endereço NÃO fica no repo, só no Supabase).
 - ✅ **v2.3.2** (commit `30738b0`): **fix mobile** — tabelas largas do Funcionário rolam dentro do card (não estouram mais a página no celular). Mobile = mesmo index.html responsivo.
-- 🟡 **PENDENTE — testar (Gustavo):** login admin → cadastrar email de teste na Débora → definir o endereço do Local de trabalho (digitar + "Localizar endereço") → logar com o email de teste noutro navegador → bater ponto (permite GPS) → conferir em "Ponto real". Depois: dados reais + email da Débora.
+- 🟡 **PENDENTE — testar Casa/ponto (Gustavo):** login admin → cadastrar email de teste na Débora → definir endereço do Local de trabalho → logar com esse email noutro navegador → bater ponto → conferir em "Ponto real".
+- ✅ **v2.4.0 reskin Basil** + **v2.5.0/2.5.1 módulo Saúde·Gael** no ar (Table-CRUD das 6 entidades; UI verificada no preview com dados fake — porta nova 8799 p/ fugir do cache de SW; sintaxe validada via `osascript -l JavaScript`, não há `node` no ambiente).
+- 🔴 **PENDENTE PRINCIPAL (Gustavo, passo manual — desbloqueia o módulo Gael):** rodar **`sql/gael_saude.sql`** e depois **`sql/gael_saude_seed.sql`** no SQL Editor do Supabase (projeto `mieqsiojvfiqrhectquc`). Pré: `juca@segurocomjuca.com` existir em `auth.users`. Até rodar, a tela Gael abre porém vazia. Eu NÃO consigo rodar DDL (sem service-role/connstring; anon key não cria tabela). Depois: logar 1x no app → dados aparecem (1/10/21/2/9/7) → me chamar pra validar o round-trip real campo a campo (era o objetivo da Rodada 1: schema aguenta a vida real).
 
 ## 5. Mapa dos arquivos (`~/Documents/painel-central`)
 | Arquivo | O que é |
 |---|---|
 | `index.html` | App inteiro (v2.2.0 + módulos `SB` e `CASA` no fim do `<script>`; view `view-funcionario`). |
-| `sql/painel_casa.sql` | Migration RLS (rodar no Supabase). |
+| `sql/painel_casa.sql` | Migration RLS Casa (rodar no Supabase). |
+| `sql/gael_saude.sql` | Migration das 6 tabelas `gael_*` (RLS owner). **Rodar no Supabase.** |
+| `sql/gael_saude_seed.sql` | Seed da consulta 05/06/2026. **Rodar após a migration.** |
 | `sw.js` | Service worker (cache `v3`). |
 | `casa-debora.html` | Protótipo original (referência; já no repo). |
 | `HANDOFF_CASA_DEBORA.md` | Spec do módulo. |
@@ -56,4 +67,4 @@ Sync **ligada e no ar**. Tudo já executado:
 - 🔴 Tarefas/Saúde ao vivo no standalone: ativar Google Sheets API em `painel-central-499400` + reconectar Google. Código já deployado e inerte.
 
 ---
-**Como retomar:** "li o ESTADO_DO_PROJETO, bora no passo X". Próximo natural: **ligar a sync do Supabase** (item 6) quando tiver as credenciais.
+**Como retomar:** "li o ESTADO_DO_PROJETO, bora no passo X". **Próximo natural:** rodar os 2 SQL `gael_*` no Supabase (§4) e logar 1x → validar o módulo Saúde·Gael com dado real. Versões: v2.2.0→v2.3.2 (Casa/ponto) → v2.4.0 (reskin Basil) → v2.5.1 (módulo Gael).
