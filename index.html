@@ -395,13 +395,17 @@
           <button data-v="mes" onclick="setAView('mes')">Mês</button>
         </div>
       </div>
+      <div class="bar" id="qadd-bar" style="display:none">
+        <input id="qadd-in" class="btn sm" style="flex:1;min-width:180px;text-align:left;cursor:text" placeholder="➕ Novo evento no Google (ex: Reunião amanhã 15h)" onkeydown="if(event.key==='Enter')calQuickAdd()">
+        <button class="btn sm primary" onclick="calQuickAdd()">Criar</button>
+      </div>
       <div id="agenda-out"><div class="loading">Carregando tua agenda do Google Calendar…</div></div>
     </section>
 
     <!-- ============ TAREFAS ============ -->
     <section id="view-tarefas" style="display:none">
       <div class="head"><h1>✅ Tarefas</h1></div>
-      <div class="sub">Ao vivo da planilha Central de Tarefas (Backlog + Bússola). Edição é lá — aqui é visão e foco.</div>
+      <div class="sub">Google Tasks por projeto — marcar/adicionar aqui já escreve no Google (bidirecional). A planilha antiga fica recolhida como legado.</div>
       <div class="bar">
         <div class="seg" id="tfiltro">
           <button class="active" data-f="abertas" onclick="setTFiltro('abertas')">Abertas</button>
@@ -594,8 +598,8 @@ function liveStub(titulo, btn){
 /* ===== Google ao vivo no standalone via OAuth client-side (GIS) — privado, só aparece após login ===== */
 var GCAL_CLIENT_ID = "63708753663-92us3rgem9s1j6rapi86b8uerc5440fr.apps.googleusercontent.com";
 var GCAL_SCOPE = [
-  "https://www.googleapis.com/auth/calendar.readonly",
-  "https://www.googleapis.com/auth/tasks.readonly",
+  "https://www.googleapis.com/auth/calendar",
+  "https://www.googleapis.com/auth/tasks",
   "https://www.googleapis.com/auth/drive.readonly",
   "https://www.googleapis.com/auth/gmail.modify",
   "https://www.googleapis.com/auth/spreadsheets.readonly"
@@ -843,6 +847,7 @@ function evHtml(o,mini){
 async function loadAgendaView(){
   var r=aRange();
   $('a-titulo').textContent=aTitulo(r);
+  try{ var qb=$('qadd-bar'); if(qb) qb.style.display=(!COWORK&&gHasToken())?'flex':'none'; }catch(e){}
   $('agenda-out').innerHTML='<div class="loading">Carregando agenda…</div>';
   try{
     var evs=await fetchEvents(r.ini, r.fim);
@@ -909,6 +914,18 @@ function loadAgenda(){
   $('data-hoje').textContent = DIAS[hoje.getDay()]+", "+fmt2(hoje.getDate())+"/"+fmt2(hoje.getMonth()+1)+"/"+hoje.getFullYear()+" · Recife";
   renderCutucadas(hoje);
   loadAgendaView();
+}
+/* Calendar bidirecional: cria evento em linguagem natural (quickAdd) escrevendo no Google. */
+function calQuickAdd(){
+  var inp=$('qadd-in'); if(!inp) return;
+  var text=(inp.value||"").trim(); if(!text) return;
+  if(!gHasToken()){ toast("Conecte o Google primeiro"); return; }
+  inp.value=""; toast("Criando evento…");
+  fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events/quickAdd?text="+encodeURIComponent(text),
+    {method:"POST", headers:{Authorization:"Bearer "+gToken}})
+    .then(function(r){ if(r.status===401){ gtokClear(); throw new Error("sessão expirou — toque 🔄"); } if(!r.ok) throw new Error("Calendar "+r.status); return r.json(); })
+    .then(function(){ toast("Evento criado ✓ (Google)"); loadAgendaView(); })
+    .catch(function(e){ toast("Não criei: "+((e&&e.message)||e)); });
 }
 
 /* ================= cutucadas (gatilhos no momento certo) ================= */
@@ -1099,9 +1116,9 @@ function renderTarefas(d){
   var abertas=d.backlog.filter(isOpen);
   var atrasadas=abertas.filter(isLate);
   var done=d.backlog.concat(d.arquivo).filter(function(t){return t.status.k==="done";});
-  $('t-ab').textContent=abertas.length;
-  $('t-atr').textContent=atrasadas.length;
-  $('t-done').textContent=done.length;
+  /* cards: fallback da planilha; o Google Tasks (renderGTasks) sobrescreve — é a fonte primária agora */
+  var gb=$('gtasks-out'); if(!(gb&&gb.__groups)){ $('t-ab').textContent=abertas.length; $('t-atr').textContent=atrasadas.length; $('t-done').textContent=done.length; }
+  $('bussola-out').innerHTML="";   /* bússola entra dentro do bloco legado abaixo */
   /* bússola */
   var bs=(d.bussola||[]).slice().sort(function(a,b){return b.prio-a.prio;});
   var bh="";
@@ -1114,30 +1131,32 @@ function renderTarefas(d){
     });
     bh+='</div>';
   }
-  $('bussola-out').innerHTML=bh;
-  /* lista */
+  /* lista da planilha */
   var lista = tFiltro==="todas"?d.backlog : tFiltro==="atrasadas"?atrasadas : abertas;
-  if(!lista.length){ $('tarefas-out').innerHTML='<div class="empty">Nada aqui nesse filtro. 🎉</div>'; return; }
-  var grupos={};
-  lista.forEach(function(t){ (grupos[t.categoria]=grupos[t.categoria]||[]).push(t); });
-  var html="";
-  Object.keys(grupos).sort().forEach(function(cat){
-    var arr=grupos[cat];
-    arr.sort(function(a,b){ return (a.prazo?a.prazo.getTime():9e15) - (b.prazo?b.prazo.getTime():9e15); });
-    html+='<div class="panel"><h3><span class="chip" style="background:'+(CAT_COL[cat]||'var(--c-rotina)')+'">'+esc(cat)+'</span><span class="count">'+arr.length+'</span></h3>';
-    arr.forEach(function(t){
-      var late=isLate(t);
-      html+='<div class="row"><div class="tm'+(late?' late':'')+'">'+esc(t.prazoTxt||"sem prazo")+'</div>'+
-        '<div class="nm">'+esc(t.tarefa)+((t.projeto||t.obs)?'<small>'+esc(t.projeto)+(t.obs?' · '+esc(t.obs):'')+'</small>':'')+'</div>'+
-        '<span class="pill '+(late?'low':t.status.cls)+'">'+(late?'atrasada':t.status.lbl)+'</span></div>';
+  var listaHtml="";
+  if(!lista.length){ listaHtml='<div class="empty">Nada aqui nesse filtro. 🎉</div>'; }
+  else{
+    var grupos={};
+    lista.forEach(function(t){ (grupos[t.categoria]=grupos[t.categoria]||[]).push(t); });
+    Object.keys(grupos).sort().forEach(function(cat){
+      var arr=grupos[cat];
+      arr.sort(function(a,b){ return (a.prazo?a.prazo.getTime():9e15) - (b.prazo?b.prazo.getTime():9e15); });
+      listaHtml+='<div class="panel"><h3><span class="chip" style="background:'+(CAT_COL[cat]||'var(--c-rotina)')+'">'+esc(cat)+'</span><span class="count">'+arr.length+'</span></h3>';
+      arr.forEach(function(t){
+        var late=isLate(t);
+        listaHtml+='<div class="row"><div class="tm'+(late?' late':'')+'">'+esc(t.prazoTxt||"sem prazo")+'</div>'+
+          '<div class="nm">'+esc(t.tarefa)+((t.projeto||t.obs)?'<small>'+esc(t.projeto)+(t.obs?' · '+esc(t.obs):'')+'</small>':'')+'</div>'+
+          '<span class="pill '+(late?'low':t.status.cls)+'">'+(late?'atrasada':t.status.lbl)+'</span></div>';
+      });
+      listaHtml+='</div>';
     });
-    html+='</div>';
-  });
-  $('tarefas-out').innerHTML=html;
+  }
+  /* Google Tasks (gtasks-out, acima) é o primário; a planilha vira seção recolhida (legado) */
+  $('tarefas-out').innerHTML='<details style="margin-top:6px"><summary style="cursor:pointer;padding:11px 4px;color:var(--muted);font-size:13px;font-weight:600;user-select:none">🗂️ Backlog da planilha (legado) — abrir</summary><div style="margin-top:6px">'+bh+listaHtml+'</div></details>';
   try{ INBOX.repaint(); }catch(e){}   /* espelha as tarefas roteadas no topo da tela */
 }
 /* ===== Google Tasks no módulo Tarefas: listas = PROJETOS, abertas + concluídas (histórico), ordenável.
-   Passo 1 = LEITURA (tasks.readonly, sem reconectar). Bidirecional (marcar/criar) vem com escopo de escrita. ===== */
+   Leitura via tasks; escrita (marcar/criar) em gtToggle/gtCreate — bidirecional com o escopo `tasks`. ===== */
 var GTASKS_SORT="due";
 async function gtGet(url){
   var r=await fetch(url,{headers:{Authorization:"Bearer "+gToken}});
@@ -1155,7 +1174,7 @@ async function loadGTasks(){
     var lists=(ld.items||[]), groups=[];
     for(var i=0;i<lists.length;i++){
       var td=await gtGet("https://tasks.googleapis.com/tasks/v1/lists/"+encodeURIComponent(lists[i].id)+"/tasks?showCompleted=true&showHidden=true&maxResults=100");
-      groups.push({ nome:lists[i].title, tarefas:(td.items||[]) });
+      groups.push({ id:lists[i].id, nome:lists[i].title, tarefas:(td.items||[]) });
     }
     renderGTasks(groups);
   }catch(e){
@@ -1169,29 +1188,69 @@ function gtSorter(){ return GTASKS_SORT==="alpha"
   ? function(a,b){ return String(a.title||"").localeCompare(String(b.title||"")); }
   : function(a,b){ var da=gtDue(a),db=gtDue(b); return (da?da.getTime():9e15)-(db?db.getTime():9e15); }; }
 function setGTSort(s){ GTASKS_SORT=s; var box=$('gtasks-out'); if(box&&box.__groups) renderGTasks(box.__groups); }
+/* ===== Google Tasks BIDIRECIONAL (write, escopo tasks): marcar/reabrir e criar escrevem no Google. ===== */
+async function gtWrite(method, path, body){
+  var r=await fetch("https://tasks.googleapis.com/tasks/v1/"+path,{method:method,
+    headers:{Authorization:"Bearer "+gToken,"Content-Type":"application/json"}, body: body?JSON.stringify(body):undefined});
+  if(r.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); }
+  if(!r.ok) throw new Error("Tasks "+r.status);
+  return r.status===204?null:r.json();
+}
+function gtFindGroup(listId){ var box=$('gtasks-out'); return box&&box.__groups?box.__groups.filter(function(x){return x.id===listId;})[0]:null; }
+function gtToggle(listId, taskId, done){
+  var g=gtFindGroup(listId); var t=g&&g.tarefas.filter(function(x){return x.id===taskId;})[0];
+  if(t){ t.status=done?"completed":"needsAction"; if(!done){ delete t.completed; } renderGTasks($('gtasks-out').__groups); }  /* otimista */
+  gtWrite("PATCH","lists/"+encodeURIComponent(listId)+"/tasks/"+encodeURIComponent(taskId), {status: done?"completed":"needsAction"})
+    .then(function(){ toast(done?"Concluída ✓ (Google)":"Reaberta"); })
+    .catch(function(){ toast("Não salvou no Google — recarregando"); loadGTasks(); });
+}
+function gtCreate(listId, idx){
+  var inp=document.getElementById('gtadd-'+idx); if(!inp) return;
+  var title=(inp.value||"").trim(); if(!title) return;
+  inp.value=""; inp.focus();
+  gtWrite("POST","lists/"+encodeURIComponent(listId)+"/tasks", {title:title})
+    .then(function(nt){ var g=gtFindGroup(listId); if(g&&nt){ g.tarefas.unshift(nt); renderGTasks($('gtasks-out').__groups); } toast("Tarefa criada ✓ (Google)"); })
+    .catch(function(){ toast("Não criei no Google"); loadGTasks(); });
+}
+function gtCreateKey(ev, listId, idx){ if(ev&&ev.key==="Enter"){ ev.preventDefault(); gtCreate(listId, idx); } }
 function renderGTasks(groups){
   var box=$('gtasks-out'); if(!box) return; box.__groups=groups;
-  var totOpen=groups.reduce(function(a,g){ return a+g.tarefas.filter(function(t){return t.status!=="completed";}).length; },0);
+  /* cards do topo passam a refletir o Google Tasks (fonte primária das Tarefas) */
+  var today=new Date(); today.setHours(0,0,0,0);
+  var totOpen=0, overdue=0, totDone=0;
+  groups.forEach(function(g){ g.tarefas.forEach(function(t){
+    if(t.status==="completed"){ totDone++; }
+    else { totOpen++; var d=gtDue(t); if(d&&!isNaN(d)&&d.getTime()<today.getTime()) overdue++; }
+  }); });
+  try{ $('t-ab').textContent=totOpen; $('t-atr').textContent=overdue; $('t-done').textContent=totDone; }catch(e){}
   var h='<div class="panel"><h3>📋 Google Tasks — por projeto<span class="count">'+totOpen+'</span>'
       +'<span style="float:right;font-weight:400;font-size:12px">ordenar: '
       +'<span class="lk" style="cursor:pointer;color:'+(GTASKS_SORT==="due"?"var(--accent)":"var(--muted)")+'" onclick="setGTSort(\'due\')">prazo</span> · '
       +'<span class="lk" style="cursor:pointer;color:'+(GTASKS_SORT==="alpha"?"var(--accent)":"var(--muted)")+'" onclick="setGTSort(\'alpha\')">A-Z</span></span></h3>';
   if(!groups.length) h+='<div class="row"><div class="nm" style="color:var(--muted)">Nenhuma lista no Google Tasks ainda.</div></div>';
-  groups.forEach(function(g){
+  groups.forEach(function(g, gi){
     var open=g.tarefas.filter(function(t){return t.status!=="completed";}).sort(gtSorter());
     var done=g.tarefas.filter(function(t){return t.status==="completed";});
+    var lid=g.id.replace(/'/g,"\\'");
     h+='<div style="border-top:1px solid var(--line);padding:4px 0"><div style="font-weight:600;font-size:13px;padding:9px 15px 5px">🗂️ '+esc(g.nome)+' <span class="count">'+open.length+'</span></div>';
-    if(!open.length) h+='<div class="rt-item"><span class="rt-t" style="color:var(--muted)">Sem tarefas abertas.</span></div>';
     open.forEach(function(t){
-      var d=gtDue(t);
-      h+='<div class="rt-item"><span class="rt-t" title="'+esc(t.title||"")+'">'+esc(t.title||"(sem título)")+'</span>'
+      var d=gtDue(t), tid=t.id.replace(/'/g,"\\'");
+      h+='<div class="rt-item">'
+        +'<span class="rt-ck" title="Concluir" onclick="gtToggle(\''+lid+'\',\''+tid+'\',true)">☐</span>'
+        +'<span class="rt-t" title="'+esc(t.title||"")+'">'+esc(t.title||"(sem título)")+'</span>'
         +(d?'<span class="rt-x"><span class="lk">'+gtFmt(d)+'</span></span>':'')+'</div>';
     });
+    /* criar tarefa nesse projeto → escreve no Google */
+    h+='<div class="rt-item" style="gap:6px"><span class="rt-ck" style="color:var(--muted)">＋</span>'
+      +'<input id="gtadd-'+gi+'" class="rt-t" style="border:none;background:transparent;outline:none;font-size:13px;width:100%;color:var(--txt)" placeholder="Adicionar em '+esc(g.nome)+'…" onkeydown="gtCreateKey(event,\''+lid+'\','+gi+')">'
+      +'<span class="rt-x"><span class="lk" onclick="gtCreate(\''+lid+'\','+gi+')">adicionar</span></span></div>';
     if(done.length){
       h+='<div class="note" style="cursor:pointer;user-select:none" onclick="var n=this.nextElementSibling;n.style.display=n.style.display===\'none\'?\'block\':\'none\'">🗄️ '+done.length+' concluída'+(done.length>1?'s':'')+' (histórico) — mostrar/ocultar</div>'
         +'<div style="display:none">';
       done.slice(0,80).forEach(function(t){
-        h+='<div class="rt-item done"><span class="rt-t" style="text-decoration:line-through;color:var(--muted)" title="'+esc(t.title||"")+'">'+esc(t.title||"")+'</span></div>';
+        var tid=t.id.replace(/'/g,"\\'");
+        h+='<div class="rt-item done"><span class="rt-ck on" title="Reabrir" onclick="gtToggle(\''+lid+'\',\''+tid+'\',false)">☑</span>'
+          +'<span class="rt-t" style="text-decoration:line-through;color:var(--muted)" title="'+esc(t.title||"")+'">'+esc(t.title||"")+'</span></div>';
       });
       h+='</div>';
     }
@@ -1646,7 +1705,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.9.0";
+var APP_VERSION="2.10.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
