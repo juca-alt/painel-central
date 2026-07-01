@@ -1,5 +1,51 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-06-25 · Leia isto primeiro ao retomar.
+**Última atualização:** 2026-07-01 · Leia isto primeiro ao retomar. **Produção: v2.10.0.**
+
+> ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
+
+---
+
+## 🟢 RETOMAR AQUI — sessão 01/07 (INBOX #inbox + INTEGRAÇÃO GOOGLE completas)
+
+**Tudo desta sessão está NO AR e VERIFICADO ao vivo (v2.5.1 → v2.10.0):**
+- **Inbox = captura→triagem→roteamento:** email `#inbox` do Gmail é lido → você tria (Tarefa/Insight/Referência/Arquivar) → email é **marcado "📥 Processado no Painel" + arquivado** no Gmail. Tabela Supabase `painel_inbox` (RLS owner). Tarefa roteada espelha no topo do módulo Tarefas.
+- **Gmail/Tasks APIs habilitadas** no Cloud Console (projeto `painel-central-499400`). LIÇÃO: scope concedido ≠ API habilitada (403 accessNotConfigured = ligar no Console).
+- **Conexão Google persistente:** dentro de ~1h automático; depois, **1 toque no 🔄 Sincronizar** (sem novo login). GIS não renova 100% em background (limite do Google).
+- **Google Tasks = fonte primária das Tarefas:** listas = projetos, abertas ordenáveis (prazo/A-Z) + concluídas (histórico). Backlog da planilha recolhido como "legado".
+- **BIDIRECIONAL (escopos `calendar`+`tasks` write):** marcar/reabrir/adicionar tarefa e criar evento ("novo evento" em linguagem natural) **escrevem no Google**. Testado E2E reversível.
+
+**Pendências REAIS (nada bloqueante):**
+1. Cosmético: sublabels dos cards do módulo Tarefas ainda dizem "backlog ativo/prazo vencido/backlog+arquivo" (números já são do Google Tasks).
+2. Sync Supabase da triagem entre aparelhos: falta Gustavo logar 1x no app (magic-link) — local já roda.
+3. Evoluir bidirecional se quiser: editar/excluir evento pela UI, aposentar de vez o backlog da planilha.
+
+Detalhes finos: memória `painel-central-inbox-triagem` e `painel-central-google-integracao`.
+
+---
+
+## 🗄️ (histórico) sessão 29/06 — INBOX increment 1
+
+**Frente ativa:** evoluir o módulo **Inbox** de "duas leituras read-only" pra **central de captura → triagem → roteamento** (eu mando tudo por email/dump, qualifico e direciono cada item pro lugar certo).
+
+**O que foi ENTREGUE nesta sessão (increment 1) — PRONTO no preview, ❌ NÃO DEPLOYADO:**
+- **Triagem de 1 clique** em cada captura (email `#inbox` **e** linha do Dump): botões `✅ Tarefa · 💡 Insight · 📚 Referência · 🗄️ Arquivar`. Clicou → some do Inbox e cai na lista do destino (**Tarefas roteadas / Insights / Referências**); arquivadas só contam no rodapé.
+- **Tarefas roteadas** com checkbox concluir (☐/☑ riscado) + **↩ desfazer** em todo item (volta pro Inbox).
+- **Persistência:** nova tabela Supabase **`painel_inbox`** (RLS owner, só `authenticated`). **Offline-first** (igual CASA): triagem instantânea via cache local `painel_inbox_v1`, sincroniza quando logado; banco é a fonte da verdade no `pull()`. Dedupe por `unique(owner, ext_id)`.
+- Badge "capturas sem triagem" passou a descontar o já triado.
+
+**Arquitetura (decidida COM o Gustavo nesta sessão):** destinos = Tarefa/Insight/Referência/Arquivar · backend = **Supabase** (não planilha — escopos Google são todos `.readonly`, só o `SB.rest` escreve hoje).
+
+**Como ficou no código (`index.html`):** módulo **`INBOX` (IIFE)** logo após o `SB` — `pull/setEmail/setDump/route/undo/toggleDone/repaint`. `loadInbox` agora faz `await INBOX.pull()` + `INBOX.setEmail(caps)`; `renderDump` faz `INBOX.setDump(...)`. CSS `.m-act/.tb/.rt-item/.rt-ck` add depois do `.mail`. View ganhou `<div id="inbox-routed">`. Migration: **`sql/painel_inbox.sql`** (só ADICIONA `painel_inbox`; não toca Pipe X).
+
+**Verificado:** sintaxe OK (JSC), 5 capturas triadas sem erro, listas/contadores certos (screenshot), console limpo. Preview testado em `/tmp/painel-inbox` (config `painelinbox`, porta 8801) — dados de teste injetados via `INBOX.setEmail/setDump` (sem login, Gmail/planilha não populam).
+
+**⏸️ PENDENTE PRA SUBIR (precisa do Gustavo — ele vai reler e dar OK):**
+1. **Rodar `sql/painel_inbox.sql`** numa query NOVA do SQL Editor (conferir antes; sem isso a triagem roda local mas não sincroniza). ⚠️ Ignorar qualquer "Untitled query" antiga aberta no Supabase — uma cita `bkp_movimentos_pruwallet` (é do central-financeira, NÃO desta sessão; era pra **cancelar**, não rodar).
+2. **"Pode subir"** explícito → eu faço push na `main` + **bump `sw.js` v3→v4** (forçar atualização do cache).
+
+**Próximos increments possíveis (decidir na retomada):** (a) destino Tarefa aparecer no **módulo Tarefas** / virar linha na planilha, não só na lista do Inbox; (b) trocar captura de `subject:#inbox` por **label real do Gmail** (mais robusto; exige escopo de escrita/label). ⚠️ Correção de fato: hoje a captura é por **assunto** `#inbox`, NÃO por label como dizia o doc antigo.
+
+---
 
 ## 1. O que é
 PWA single-file do Gustavo (Jucá2.0) — painel único (Agenda, Tarefas, Inbox, **Casa › Feira + Funcionário**, Saúde, Provas Camila, Atalhos, Configuração, Fôlego). Tudo em `index.html` (sem build/deps). Dual-mode (Cowork via MCP / standalone via OAuth GIS). No ar em https://juca-alt.github.io/painel-central/ · repo `juca-alt/painel-central` (`main`). Produção atual: **v2.5.1** — reskin "Basil" do shell + módulo **Saúde · Gael** (ver §2).
@@ -48,7 +94,8 @@ Implementado o submódulo **Casa › 👥 Funcionário** (que na produção era 
 | `sql/painel_casa.sql` | Migration RLS Casa (rodar no Supabase). |
 | `sql/gael_saude.sql` | Migration das 6 tabelas `gael_*` (RLS owner). **Rodar no Supabase.** |
 | `sql/gael_saude_seed.sql` | Seed da consulta 05/06/2026. **Rodar após a migration.** |
-| `sw.js` | Service worker (cache `v3`). |
+| `sql/painel_inbox.sql` | **(29/06) Migration da tabela `painel_inbox`** (triagem do Inbox; RLS owner). **Rodar no Supabase quando aprovar.** |
+| `sw.js` | Service worker (cache `v3` → bumpar p/ `v4` no deploy do Inbox). |
 | `casa-debora.html` | Protótipo original (referência; já no repo). |
 | `HANDOFF_CASA_DEBORA.md` | Spec do módulo. |
 
@@ -67,4 +114,4 @@ Sync **ligada e no ar**. Tudo já executado:
 - 🔴 Tarefas/Saúde ao vivo no standalone: ativar Google Sheets API em `painel-central-499400` + reconectar Google. Código já deployado e inerte.
 
 ---
-**Como retomar:** "li o ESTADO_DO_PROJETO, bora no passo X". **Próximo natural:** logar 1x no app (magic-link) → conferir a tela Saúde·Gael com os dados reais (SQL **já rodado** — 1/10/21/2/9/7). Versões: v2.2.0→v2.3.2 (Casa/ponto) → v2.4.0 (reskin Basil) → v2.5.1 (módulo Gael).
+**Como retomar:** "li o ESTADO_DO_PROJETO, bora seguir no Inbox". **Próximo natural (29/06):** ver o bloco 🔴 no topo — reler o increment 1 da triagem do Inbox, rodar `sql/painel_inbox.sql` e dar o "pode subir" pra eu deployar (push main + bump sw.js v4). Versões: v2.2.0→v2.3.2 (Casa/ponto) → v2.4.0 (reskin Basil) → v2.5.1 (módulo Gael) → **Inbox-triagem v2.6 PENDENTE de deploy**.
