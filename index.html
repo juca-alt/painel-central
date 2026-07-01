@@ -417,6 +417,7 @@
         <div class="card"><div class="k">Atrasadas</div><div class="v red" id="t-atr">–</div><div class="s">prazo vencido</div></div>
         <div class="card"><div class="k">Concluídas</div><div class="v" id="t-done">–</div><div class="s">backlog + arquivo</div></div>
       </div>
+      <div id="tar-inbox"></div>
       <div id="bussola-out"></div>
       <div id="tarefas-out"><div class="loading">Lendo a Central de Tarefas no Drive…</div></div>
     </section>
@@ -1100,6 +1101,7 @@ function renderTarefas(d){
     html+='</div>';
   });
   $('tarefas-out').innerHTML=html;
+  try{ INBOX.repaint(); }catch(e){}   /* espelha as tarefas roteadas no topo da tela */
 }
 function renderDump(d){
   var pend=dumpPend(d);
@@ -1513,7 +1515,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.6.0";
+var APP_VERSION="2.6.1";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -1868,7 +1870,24 @@ var INBOX=(function(){
     if(arq) h+='<div class="note">🗄️ '+arq+' arquivada'+(arq>1?'s':'')+' (fora de vista, mas registradas).</div>';
     $('inbox-routed').innerHTML=h;
   }
-  function repaint(){ try{ paintEmail(); paintDump(); paintRouted(); }catch(e){} }
+  /* Espelho das tarefas roteadas DENTRO do módulo Tarefas (topo da tela), pra elas
+     não viverem só no Inbox. Mesmo concluir/desfazer; sincroniza via repaint(). */
+  function paintTarefas(){
+    var el=$('tar-inbox'); if(!el) return;
+    var items=listBy("tarefa");
+    if(!items.length){ el.innerHTML=""; return; }
+    var abertas=items.filter(function(r){ return r.status!=="feito"; }).length;
+    var h='<div class="panel rt-grp"><h3><span class="ic">📥</span>Da Inbox<span class="count">'+abertas+'</span></h3>';
+    items.forEach(function(r){
+      var done=(r.status==="feito");
+      h+='<div class="rt-item'+(done?' done':'')+'">'+
+         '<span class="rt-ck '+(done?'on':'')+'" title="Concluir" onclick="INBOX.toggleDone(\''+r.ext_id+'\')">'+(done?'☑':'☐')+'</span>'+
+         '<span class="rt-t" title="'+esc(r.titulo)+'">'+esc(r.titulo)+'</span>'+
+         '<span class="rt-x"><span class="lk" onclick="INBOX.undo(\''+r.ext_id+'\')">↩ desfazer</span></span></div>';
+    });
+    el.innerHTML=h+'</div>';
+  }
+  function repaint(){ try{ paintEmail(); paintDump(); paintRouted(); paintTarefas(); }catch(e){} }
 
   return {pull:pull, setEmail:setEmail, setDump:setDump, route:route, undo:undo, toggleDone:toggleDone,
           isTriaged:isTriaged, hash:hash, repaint:repaint, listBy:listBy};
