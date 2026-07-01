@@ -599,7 +599,10 @@ var GCAL_SCOPE = [
   "https://www.googleapis.com/auth/gmail.modify",
   "https://www.googleapis.com/auth/spreadsheets.readonly"
 ].join(" ");
-var GSERVICES=[{k:"calendar",n:"Calendar",i:"📅"},{k:"tasks",n:"Tasks",i:"☑️"},{k:"drive",n:"Drive",i:"📁"},{k:"gmail",n:"Gmail",i:"✉️"},{k:"sheets",n:"Sheets",i:"📊"}];
+/* Sheets fica fora da lista (não vamos usar como conector visível); o app ainda LÊ o Sheet
+   pra Tarefas/Feira/Histórico via escopo spreadsheets.readonly. */
+var GSERVICES=[{k:"calendar",n:"Calendar",i:"📅"},{k:"tasks",n:"Tasks",i:"☑️"},{k:"drive",n:"Drive",i:"📁"},{k:"gmail",n:"Gmail",i:"✉️"}];
+var GCONN_KEY="painel_g_conn";  /* marcador durável de "já conectou" — sobrevive à expiração do token de 1h */
 var GTOK_KEY="gauth_v1";
 var gToken=null, gTokenClient=null, _gpending=null, _grefreshTimer=null;
 function gtokLoad(){ try{ var s=JSON.parse(localStorage.getItem(GTOK_KEY)||"null"); if(s&&s.token&&s.exp&&Date.now()<s.exp-60000) return s; }catch(e){} return null; }
@@ -619,11 +622,27 @@ function gisEnsure(cb){
   s.onerror=function(){ if(_gpending){ _gpending.reject(new Error("Falha ao carregar login Google")); _gpending=null; } };
   document.head.appendChild(s);
 }
-/* na expiração do token: limpa e atualiza a UI (sem popup); o usuário reconecta com 1 toque */
+/* ~2min antes de expirar: renova o token EM SILÊNCIO (prompt vazio) enquanto a sessão Google
+   do navegador estiver ativa — sem popup, sem reconectar. Só cai pra desconectado se o silencioso falhar. */
 function gScheduleRefresh(sec){
   if(_grefreshTimer) clearTimeout(_grefreshTimer);
-  var ms=Math.max(30000, (Number(sec)||3600)*1000);
-  _grefreshTimer=setTimeout(function(){ gtokClear(); try{ reloadGoogle(); }catch(e){} }, ms);
+  var ms=Math.max(30000, ((Number(sec)||3600)*1000)-120000);
+  _grefreshTimer=setTimeout(function(){
+    if(!COWORK && localStorage.getItem(GCONN_KEY)){
+      googleAuth(false).then(function(){ try{ reloadGoogle(); }catch(e){} })
+        .catch(function(){ gtokClear(); try{ reloadGoogle(); }catch(e){} });
+    } else { gtokClear(); try{ reloadGoogle(); }catch(e){} }
+  }, ms);
+}
+/* sincronização manual (botão 🔄): garante token (silencioso se preciso) e repuxa tudo do Google */
+function syncGoogle(){
+  if(COWORK){ reloadGoogle(); return; }
+  toast("Sincronizando…");
+  if(gToken){ reloadGoogle(); return; }
+  if(localStorage.getItem(GCONN_KEY)){
+    googleAuth(false).then(function(){ reloadGoogle(); toast("Sincronizado ✓"); })
+      .catch(function(){ connectGoogle(); });   // sessão Google caiu → 1 toque reconecta
+  } else { connectGoogle(); }
 }
 /* interactive=true -> mostra conta/consentimento (1a vez). false -> silencioso (prompt vazio, sem UI). */
 function googleAuth(interactive){
@@ -636,6 +655,7 @@ function googleAuth(interactive){
             callback:function(resp){
               if(resp && resp.access_token){
                 gToken=resp.access_token; gtokSave(resp.access_token, resp.expires_in); gScheduleRefresh(resp.expires_in);
+                try{ localStorage.setItem(GCONN_KEY,"1"); }catch(e){}
                 if(_gpending){ _gpending.resolve(resp.access_token); _gpending=null; }
               } else if(_gpending){ _gpending.reject(new Error("sem token")); _gpending=null; }
             },
@@ -660,6 +680,7 @@ function connectGoogle(){
 }
 function disconnectGoogle(){
   var t=gToken; gtokClear();
+  try{ localStorage.removeItem(GCONN_KEY); }catch(e){}
   try{ if(t && window.google && google.accounts && google.accounts.oauth2) google.accounts.oauth2.revoke(t, function(){}); }catch(e){}
   toast("Google desconectado"); reloadGoogle();
 }
@@ -672,9 +693,10 @@ function renderConfig(){
   GSERVICES.forEach(function(s){
     html+='<div class="row" style="padding:9px 0"><div class="nm">'+s.i+' '+esc(s.n)+'</div><span class="pill '+(conn?'ok':'nt')+'">'+(conn?'conectado':'desconectado')+'</span></div>';
   });
-  html+='<div style="margin-top:14px">'+(conn
-    ? '<button class="btn" onclick="disconnectGoogle()">Desconectar</button>'
-    : '<button class="btn primary" onclick="connectGoogle()">🔗 Conectar Google</button>')+'</div>';
+  html+='<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'+(conn
+    ? '<button class="btn primary" onclick="syncGoogle()">🔄 Sincronizar agora</button><button class="btn" onclick="disconnectGoogle()">Desconectar</button>'
+    : '<button class="btn primary" onclick="connectGoogle()">🔗 Conectar Google</button>')+'</div>'+
+    (conn?'<div style="color:var(--muted);font-size:12px;margin-top:8px">Conexão fica ativa entre sessões — o app renova sozinho. Use 🔄 se quiser forçar a atualização.</div>':'');
   html+='</div></div>';
   /* painel de versão + atualização (resolve PWA preso em cache) */
   var ver=(typeof APP_VERSION!=='undefined'?APP_VERSION:'?');
@@ -1551,7 +1573,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.7.0";
+var APP_VERSION="2.8.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2352,8 +2374,14 @@ try{var _q=new URLSearchParams(location.search);if(_q.get("demo")==="1"){nav("fu
 renderCards(); gerar(); folegoRender(); renderAtalhos();
 try{ renderVerTag(); }catch(e){}
 try{ renderConfig(); }catch(e){}
-/* sem popup no boot: usa o token guardado (localStorage). Loaders mostram aviso curto se nao houver. */
-loadAgenda(); loadInbox(); loadCamila(); loadCentral();
+/* conexão persistente: se já conectou antes e o token de 1h expirou, RELIGA EM SILÊNCIO no boot
+   (prompt vazio, sem popup) e repuxa tudo; senão roda os loaders com o token guardado. */
+if(!COWORK && !gToken && localStorage.getItem(GCONN_KEY)){
+  googleAuth(false).then(function(){ reloadGoogle(); })
+    .catch(function(){ loadAgenda(); loadInbox(); loadCamila(); loadCentral(); });
+} else {
+  loadAgenda(); loadInbox(); loadCamila(); loadCentral();
+}
 
 /* standalone (GitHub Pages): nota discreta + service worker p/ PWA */
 if(!COWORK){
