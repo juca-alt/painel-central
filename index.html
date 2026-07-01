@@ -143,6 +143,20 @@
   .mail .m-s{font-weight:600;font-size:13.5px}
   .mail .m-x{color:var(--muted);font-size:12.5px;margin-top:2px}
   .mail .m-f{color:var(--muted);font-size:11px;margin-top:3px}
+  .m-act{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+  .m-act .tb{font-size:11.5px;padding:4px 9px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px;line-height:1.4}
+  .m-act .tb:hover{border-color:var(--accent);color:var(--txt)}
+  .m-act .tb.tb-arc:hover{border-color:var(--muted);color:var(--muted)}
+  .rt-grp h3 .ic{margin-right:5px}
+  .rt-item{display:flex;align-items:center;gap:9px;padding:9px 15px;border-bottom:1px solid var(--line);font-size:13px}
+  .rt-item:last-child{border-bottom:none}
+  .rt-item .rt-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rt-item .rt-x{display:flex;gap:8px;flex:0 0 auto}
+  .rt-item .lk{color:var(--muted);cursor:pointer;font-size:12px;white-space:nowrap}
+  .rt-item .lk:hover{color:var(--accent)}
+  .rt-item.done .rt-t{text-decoration:line-through;color:var(--muted)}
+  .rt-item .rt-ck{cursor:pointer;color:var(--muted);flex:0 0 auto}
+  .rt-item .rt-ck.on{color:var(--ok)}
   .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
   .tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px;cursor:pointer;transition:.15s}
   .tile:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(47,107,220,.08)}
@@ -410,7 +424,7 @@
     <!-- ============ INBOX GERAL ============ -->
     <section id="view-inbox" style="display:none">
       <div class="head"><h1>📬 Inbox Geral</h1></div>
-      <div class="sub">Um funil só de captura: email <b>#inbox</b> + Dump da planilha. Joga aqui primeiro, qualifica depois.</div>
+      <div class="sub">Captura → triagem → roteamento. Manda tudo (email <b>#inbox</b> + Dump da planilha) pra cá; em cada item, 1 clique manda pro lugar certo.</div>
       <div class="bar">
         <button class="btn primary" onclick="capturar()">✉️ Capturar por email</button>
         <button class="btn" onclick="copyText('juca@segurocomjuca.com','Endereço copiado — assunto: #inbox')">📋 Copiar endereço</button>
@@ -419,6 +433,7 @@
       </div>
       <div id="inbox-out"><div class="loading">Buscando emails #inbox…</div></div>
       <div id="dump-out"><div class="loading">Lendo o Dump da planilha…</div></div>
+      <div id="inbox-routed"></div>
     </section>
 
     <!-- ============ FEIRA ============ -->
@@ -1088,14 +1103,9 @@ function renderTarefas(d){
 }
 function renderDump(d){
   var pend=dumpPend(d);
-  var html='<div class="panel"><h3>🗑️ Dump da planilha — sem triagem<span class="count">'+pend.length+'</span></h3>';
-  if(!pend.length) html+='<div class="row"><div class="nm" style="color:var(--muted)">Dump limpo. ✅</div></div>';
-  pend.forEach(function(s){
-    var url=/^https?:\/\//i.test(s);
-    html+='<div class="row"><div class="nm">'+(url?'<a href="#" onclick="openLink(\''+esc(s)+'\');return false">'+esc(s.slice(0,80))+'…</a>':esc(s))+'</div></div>';
-  });
-  html+='</div><div class="note">Triagem: abre a planilha e roda o Processar Dump, ou me pede no chat: "tria o dump".</div>';
-  $('dump-out').innerHTML=html;
+  INBOX.setDump(pend.map(function(s){
+    return {ext_id:"dump:"+INBOX.hash(s), fonte:"dump", titulo:s, corpo:"", capturado_iso:null};
+  }));
 }
 function renderSaude(d){
   var bs=(d.bussola||[]).filter(function(b){ return /SA[UÚ]DE|SONHO GRANDE/i.test(b.categoria+" "+b.projeto); });
@@ -1130,11 +1140,13 @@ async function loadCentral(){
     renderSaude(d);
     /* cards do Hoje + badges */
     var abertas=d.backlog.filter(isOpen), atrasadas=abertas.filter(isLate), pend=dumpPend(d);
+    var pendU=pend.filter(function(s){ return !INBOX.isTriaged("dump:"+INBOX.hash(s)); });
     $('h-ab').textContent=abertas.length;
     $('h-atr').textContent=atrasadas.length;
-    $('h-inb').textContent=pend.length;
+    $('h-inb').textContent=pendU.length;
     if(atrasadas.length){ $('bdg-atr').textContent=atrasadas.length; $('bdg-atr').style.display='inline-block'; }
-    if(pend.length){ $('bdg-inb').textContent=pend.length; $('bdg-inb').style.display='inline-block'; }
+    if(pendU.length){ $('bdg-inb').textContent=pendU.length; $('bdg-inb').style.display='inline-block'; }
+    else { $('bdg-inb').style.display='none'; }
   }catch(e){
     if(!COWORK && (!gToken || String(e&&e.message)==="__NEEDCONNECT__")){
       var cp=connectPanel('Conectar pra ver Tarefas e Saúde ao vivo');
@@ -1180,8 +1192,9 @@ async function gmailInboxRest(){
     subj=subj.replace(/#inbox/ig,"").trim();
     var snip=String(m.snippet||"").trim();
     var dt=hs.date?new Date(hs.date):null;
-    caps.push({titulo: subj||snip.slice(0,80)||"(captura sem texto)", corpo: subj?snip.slice(0,160):"",
-      quando: (dt&&!isNaN(dt))?fmt2(dt.getDate())+"/"+fmt2(dt.getMonth()+1)+" "+fmt2(dt.getHours())+":"+fmt2(dt.getMinutes()):""});
+    caps.push({id: msgs[i].id, titulo: subj||snip.slice(0,80)||"(captura sem texto)", corpo: subj?snip.slice(0,160):"",
+      quando: (dt&&!isNaN(dt))?fmt2(dt.getDate())+"/"+fmt2(dt.getMonth()+1)+" "+fmt2(dt.getHours())+":"+fmt2(dt.getMinutes()):"",
+      capturado_iso: (dt&&!isNaN(dt))?dt.toISOString():null});
   }
   return caps;
 }
@@ -1202,22 +1215,16 @@ async function loadInbox(){
         var subj=String(m.subject||th.subject||"").replace(/#inbox/ig,"").trim();
         var snip=String(m.snippet||th.snippet||"").trim();
         var dt=m.date?new Date(m.date):null;
-        caps.push({titulo: subj||snip.slice(0,80)||"(captura sem texto)", corpo: subj?snip.slice(0,160):"",
-          quando: dt?fmt2(dt.getDate())+"/"+fmt2(dt.getMonth()+1)+" "+fmt2(dt.getHours())+":"+fmt2(dt.getMinutes()):""});
+        caps.push({id: m.id||th.id||null, titulo: subj||snip.slice(0,80)||"(captura sem texto)", corpo: subj?snip.slice(0,160):"",
+          quando: (dt&&!isNaN(dt))?fmt2(dt.getDate())+"/"+fmt2(dt.getMonth()+1)+" "+fmt2(dt.getHours())+":"+fmt2(dt.getMinutes()):"",
+          capturado_iso: (dt&&!isNaN(dt))?dt.toISOString():null});
       });
     } else {
       if(!gToken) throw new Error("__NEEDCONNECT__");
       caps = await gmailInboxRest();
     }
-    if(!caps.length){ $('inbox-out').innerHTML='<div class="panel"><h3>✉️ Email #inbox<span class="count">0</span></h3><div class="mail"><div class="m-x">Nenhum #inbox pendente. Caixa de captura limpa. ✅</div></div></div>'; return; }
-    var html='<div class="panel"><h3>✉️ Email #inbox<span class="count">'+caps.length+'</span></h3>';
-    caps.forEach(function(c){
-      html+='<div class="mail"><div class="m-s">'+esc(c.titulo)+'</div>'+
-        (c.corpo?'<div class="m-x">'+esc(c.corpo)+'</div>':'')+
-        (c.quando?'<div class="m-f">'+esc(c.quando)+'</div>':'')+'</div>';
-    });
-    html+='</div>';
-    $('inbox-out').innerHTML=html;
+    await INBOX.pull();
+    INBOX.setEmail(caps);
   }catch(e){
     if(!COWORK && (!gToken || String(e&&e.message)==="__NEEDCONNECT__")){ $('inbox-out').innerHTML=connectPanel('Conectar pra ver o #inbox'); return; }
     if(!COWORK){ $('inbox-out').innerHTML=liveStub('Email #inbox', '<button class="btn sm" onclick="capturar()">✉️ Capturar por email</button>'); return; }
@@ -1506,7 +1513,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.5.1";
+var APP_VERSION="2.6.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -1732,6 +1739,139 @@ var SB=(function(){
     return '<div class="errbox" style="margin-bottom:14px;border-left-color:var(--ok)"><div class="e-t">✓ Sincronizado</div><div class="e-s">Logado como <b>'+esc(email())+'</b> · dados no Supabase (privado, RLS).<div style="margin-top:6px"><button class="btn sm" onclick="SB.signOut()">Sair</button></div></div></div>';
   }
   return {init:init,enabled:enabled,loggedIn:loggedIn,email:email,uid:uid,rest:rest,signIn:signIn,signOut:signOut,pull:pull,queueAll:queueAll,del:del,bar:bar,onChange:onChange};
+})();
+
+/* ================= INBOX: triagem & roteamento (offline-first + sync Supabase) =================
+   Ledger único de capturas triadas (painel_inbox). Captura sem linha = "sem triagem".
+   1 clique grava a linha (destino) → some do Inbox, aparece na lista do destino.
+   Offline-first: cache local p/ UX instantânea; Supabase é a fonte da verdade quando logado. */
+var INBOX=(function(){
+  var LKEY="painel_inbox_v1";
+  var rows=load();          // capturas já triadas
+  var emailCaps=[], dumpCaps=[];   // capturas cruas atuais (email / dump)
+  var reg={};               // ext_id -> cap (registry p/ os botões)
+  var DEST=[
+    {k:"tarefa",     i:"✅", l:"Tarefa"},
+    {k:"insight",    i:"💡", l:"Insight"},
+    {k:"referencia", i:"📚", l:"Referência"},
+    {k:"arquivo",    i:"🗄️", l:"Arquivar", cls:"tb-arc"}
+  ];
+  var GRP=[
+    {k:"tarefa",     i:"✅", t:"Tarefas roteadas"},
+    {k:"insight",    i:"💡", t:"Insights"},
+    {k:"referencia", i:"📚", t:"Referências"}
+  ];
+  function load(){ try{ return JSON.parse(localStorage.getItem(LKEY))||[]; }catch(e){ return []; } }
+  function save(){ try{ localStorage.setItem(LKEY, JSON.stringify(rows)); }catch(e){} }
+  function hash(s){ var h=0,i; s=String(s); for(i=0;i<s.length;i++){ h=((h<<5)-h+s.charCodeAt(i))|0; } return (h>>>0).toString(36); }
+  function genId(){ return "ib"+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36); }
+  function byExt(ext){ for(var i=0;i<rows.length;i++) if(rows[i].ext_id===ext) return rows[i]; return null; }
+  function isTriaged(ext){ return !!byExt(ext); }
+  function norm(r){ return {id:r.id, ext_id:r.ext_id, fonte:r.fonte, titulo:r.titulo, corpo:r.corpo, destino:r.destino, status:r.status||"aberto", capturado_em:r.capturado_em||null, triado_em:r.triado_em||null}; }
+
+  /* Supabase = fonte da verdade quando logado. */
+  function pull(){
+    if(!SB.enabled()||!SB.loggedIn()) return Promise.resolve();
+    return SB.rest("GET","painel_inbox?select=*&order=triado_em.desc")
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(d){ if(d&&d.length!==undefined){ rows=d.map(norm); save(); } })
+      .catch(function(){});
+  }
+
+  function setEmail(caps){
+    emailCaps=(caps||[]).map(function(c){
+      var ext="gm:"+(c.id||hash((c.titulo||"")+"|"+(c.quando||"")));
+      var cap={ext_id:ext, fonte:"email", titulo:c.titulo||"", corpo:c.corpo||"", quando:c.quando||"", capturado_iso:c.capturado_iso||null};
+      reg[ext]=cap; return cap;
+    });
+    repaint();
+  }
+  function setDump(items){
+    dumpCaps=(items||[]).map(function(c){
+      var cap={ext_id:c.ext_id, fonte:"dump", titulo:c.titulo||"", corpo:"", quando:"", capturado_iso:null};
+      reg[c.ext_id]=cap; return cap;
+    });
+    repaint();
+  }
+
+  function route(ext, destino){
+    var c=reg[ext]; if(!c){ toast("Captura não encontrada"); return; }
+    if(isTriaged(ext)) return;
+    var row={ id:genId(), ext_id:ext, fonte:c.fonte||"email", titulo:c.titulo||"", corpo:c.corpo||"",
+              destino:destino, status:"aberto", capturado_em:c.capturado_iso||null, triado_em:new Date().toISOString() };
+    rows.unshift(row); save(); repaint();
+    var lbl=({tarefa:"Tarefa",insight:"Insight",referencia:"Referência",arquivo:"Arquivado"})[destino]||destino;
+    toast(lbl+" ✓");
+    if(SB.enabled()&&SB.loggedIn()){
+      SB.rest("POST","painel_inbox",
+        {ext_id:row.ext_id, fonte:row.fonte, titulo:row.titulo, corpo:row.corpo, destino:row.destino, status:row.status, capturado_em:row.capturado_em},
+        {Prefer:"return=representation"})
+        .then(function(r){ return r.ok?r.json():null; })
+        .then(function(d){ if(d&&d[0]&&d[0].id){ row.id=d[0].id; save(); } })
+        .catch(function(){ toast("Salvo local; sincroniza ao reconectar"); });
+    } else if(SB.enabled()){ toast("Triado local — conecte p/ sincronizar"); }
+  }
+  function undo(ext){
+    rows=rows.filter(function(r){ return r.ext_id!==ext; }); save(); repaint();
+    if(SB.enabled()&&SB.loggedIn()) SB.rest("DELETE","painel_inbox?ext_id=eq."+encodeURIComponent(ext)).catch(function(){});
+  }
+  function toggleDone(ext){
+    var r=byExt(ext); if(!r) return;
+    r.status=(r.status==="feito")?"aberto":"feito"; save(); repaint();
+    if(SB.enabled()&&SB.loggedIn()) SB.rest("PATCH","painel_inbox?ext_id=eq."+encodeURIComponent(ext),{status:r.status},{Prefer:"return=minimal"}).catch(function(){});
+  }
+  function listBy(dest){ return rows.filter(function(r){ return r.destino===dest; }); }
+
+  function actBar(ext){
+    var h='<div class="m-act">';
+    DEST.forEach(function(d){ h+='<span class="tb '+(d.cls||"")+'" onclick="INBOX.route(\''+ext+'\',\''+d.k+'\')">'+d.i+' '+d.l+'</span>'; });
+    return h+'</div>';
+  }
+  function paintEmail(){
+    var pend=emailCaps.filter(function(c){ return !isTriaged(c.ext_id); });
+    var h='<div class="panel"><h3>✉️ Email #inbox<span class="count">'+pend.length+'</span></h3>';
+    if(!pend.length) h+='<div class="mail"><div class="m-x">Nenhum #inbox pendente. Caixa de captura limpa. ✅</div></div>';
+    pend.forEach(function(c){
+      h+='<div class="mail"><div class="m-s">'+esc(c.titulo)+'</div>'+
+        (c.corpo?'<div class="m-x">'+esc(c.corpo)+'</div>':'')+
+        (c.quando?'<div class="m-f">'+esc(c.quando)+'</div>':'')+ actBar(c.ext_id) +'</div>';
+    });
+    $('inbox-out').innerHTML=h+'</div>';
+  }
+  function paintDump(){
+    var pend=dumpCaps.filter(function(c){ return !isTriaged(c.ext_id); });
+    var h='<div class="panel"><h3>🗑️ Dump da planilha — sem triagem<span class="count">'+pend.length+'</span></h3>';
+    if(!pend.length) h+='<div class="mail"><div class="m-x">Dump limpo. ✅</div></div>';
+    pend.forEach(function(c){
+      var s=c.titulo, url=/^https?:\/\//i.test(s);
+      var t=url?('<a href="#" onclick="openLink(\''+esc(s)+'\');return false">'+esc(s.slice(0,90))+(s.length>90?'…':'')+'</a>'):esc(s);
+      h+='<div class="mail"><div class="m-s">'+t+'</div>'+ actBar(c.ext_id) +'</div>';
+    });
+    var dq=dumpCaps.length;
+    $('dump-out').innerHTML=h+'</div>'+(dq?'':'<div class="note">Itens vêm da aba DUMP da planilha. Triagem aqui não apaga a linha lá — só some daqui.</div>');
+  }
+  function paintRouted(){
+    var h="";
+    GRP.forEach(function(g){
+      var items=listBy(g.k); if(!items.length) return;
+      h+='<div class="panel rt-grp"><h3><span class="ic">'+g.i+'</span>'+g.t+'<span class="count">'+items.length+'</span></h3>';
+      items.forEach(function(r){
+        var done=(g.k==="tarefa"&&r.status==="feito");
+        h+='<div class="rt-item'+(done?' done':'')+'">';
+        if(g.k==="tarefa") h+='<span class="rt-ck '+(done?'on':'')+'" title="Concluir" onclick="INBOX.toggleDone(\''+r.ext_id+'\')">'+(done?'☑':'☐')+'</span>';
+        h+='<span class="rt-t" title="'+esc(r.titulo)+'">'+esc(r.titulo)+'</span>'+
+           '<span class="rt-x"><span class="lk" onclick="INBOX.undo(\''+r.ext_id+'\')">↩ desfazer</span></span></div>';
+      });
+      h+='</div>';
+    });
+    var arq=listBy("arquivo").length;
+    if(arq) h+='<div class="note">🗄️ '+arq+' arquivada'+(arq>1?'s':'')+' (fora de vista, mas registradas).</div>';
+    $('inbox-routed').innerHTML=h;
+  }
+  function repaint(){ try{ paintEmail(); paintDump(); paintRouted(); }catch(e){} }
+
+  return {pull:pull, setEmail:setEmail, setDump:setDump, route:route, undo:undo, toggleDone:toggleDone,
+          isTriaged:isTriaged, hash:hash, repaint:repaint, listBy:listBy};
 })();
 
 /* ================= Casa › Funcionários (local + sync Supabase) ================= */
