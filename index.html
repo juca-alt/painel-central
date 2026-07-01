@@ -418,6 +418,7 @@
         <div class="card"><div class="k">Concluídas</div><div class="v" id="t-done">–</div><div class="s">backlog + arquivo</div></div>
       </div>
       <div id="tar-inbox"></div>
+      <div id="gtasks-out"></div>
       <div id="bussola-out"></div>
       <div id="tarefas-out"><div class="loading">Lendo a Central de Tarefas no Drive…</div></div>
     </section>
@@ -679,7 +680,7 @@ function googleAuth(interactive){
 }
 function reloadGoogle(){
   evCache={}; sheetData=null; sheetPromise=null; histRows=null; histPromise=null;
-  loadAgenda(); loadCamila(); loadInbox(); loadCentral();
+  loadAgenda(); loadCamila(); loadInbox(); loadCentral(); loadGTasks();
   var vh=$('view-historico'); if(vh && vh.style.display!=='none') loadHistorico();
   renderConfig();
 }
@@ -1135,6 +1136,69 @@ function renderTarefas(d){
   $('tarefas-out').innerHTML=html;
   try{ INBOX.repaint(); }catch(e){}   /* espelha as tarefas roteadas no topo da tela */
 }
+/* ===== Google Tasks no módulo Tarefas: listas = PROJETOS, abertas + concluídas (histórico), ordenável.
+   Passo 1 = LEITURA (tasks.readonly, sem reconectar). Bidirecional (marcar/criar) vem com escopo de escrita. ===== */
+var GTASKS_SORT="due";
+async function gtGet(url){
+  var r=await fetch(url,{headers:{Authorization:"Bearer "+gToken}});
+  if(r.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); }
+  if(r.status===403) throw new Error("Tasks 403 — verifica acesso/escopo");
+  return r.json();
+}
+async function loadGTasks(){
+  var box=$('gtasks-out'); if(!box) return;
+  if(COWORK){ box.innerHTML=''; return; }
+  if(!gHasToken()){ box.innerHTML=connectPanel('Google Tasks'); return; }
+  box.innerHTML='<div class="panel"><div class="loading">Lendo tuas listas do Google Tasks…</div></div>';
+  try{
+    var ld=await gtGet("https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=100");
+    var lists=(ld.items||[]), groups=[];
+    for(var i=0;i<lists.length;i++){
+      var td=await gtGet("https://tasks.googleapis.com/tasks/v1/lists/"+encodeURIComponent(lists[i].id)+"/tasks?showCompleted=true&showHidden=true&maxResults=100");
+      groups.push({ nome:lists[i].title, tarefas:(td.items||[]) });
+    }
+    renderGTasks(groups);
+  }catch(e){
+    if(!gHasToken()||String(e&&e.message)==="__NEEDCONNECT__"){ box.innerHTML=connectPanel('Google Tasks'); return; }
+    box.innerHTML='<div class="errbox"><div class="e-t">📋 Google Tasks</div><div class="e-s">'+esc(String((e&&e.message)||e))+'</div></div>';
+  }
+}
+function gtDue(t){ return t.due? new Date(t.due) : null; }
+function gtFmt(d){ return (d&&!isNaN(d))? fmt2(d.getDate())+"/"+fmt2(d.getMonth()+1) : ""; }
+function gtSorter(){ return GTASKS_SORT==="alpha"
+  ? function(a,b){ return String(a.title||"").localeCompare(String(b.title||"")); }
+  : function(a,b){ var da=gtDue(a),db=gtDue(b); return (da?da.getTime():9e15)-(db?db.getTime():9e15); }; }
+function setGTSort(s){ GTASKS_SORT=s; var box=$('gtasks-out'); if(box&&box.__groups) renderGTasks(box.__groups); }
+function renderGTasks(groups){
+  var box=$('gtasks-out'); if(!box) return; box.__groups=groups;
+  var totOpen=groups.reduce(function(a,g){ return a+g.tarefas.filter(function(t){return t.status!=="completed";}).length; },0);
+  var h='<div class="panel"><h3>📋 Google Tasks — por projeto<span class="count">'+totOpen+'</span>'
+      +'<span style="float:right;font-weight:400;font-size:12px">ordenar: '
+      +'<span class="lk" style="cursor:pointer;color:'+(GTASKS_SORT==="due"?"var(--accent)":"var(--muted)")+'" onclick="setGTSort(\'due\')">prazo</span> · '
+      +'<span class="lk" style="cursor:pointer;color:'+(GTASKS_SORT==="alpha"?"var(--accent)":"var(--muted)")+'" onclick="setGTSort(\'alpha\')">A-Z</span></span></h3>';
+  if(!groups.length) h+='<div class="row"><div class="nm" style="color:var(--muted)">Nenhuma lista no Google Tasks ainda.</div></div>';
+  groups.forEach(function(g){
+    var open=g.tarefas.filter(function(t){return t.status!=="completed";}).sort(gtSorter());
+    var done=g.tarefas.filter(function(t){return t.status==="completed";});
+    h+='<div style="border-top:1px solid var(--line);padding:4px 0"><div style="font-weight:600;font-size:13px;padding:9px 15px 5px">🗂️ '+esc(g.nome)+' <span class="count">'+open.length+'</span></div>';
+    if(!open.length) h+='<div class="rt-item"><span class="rt-t" style="color:var(--muted)">Sem tarefas abertas.</span></div>';
+    open.forEach(function(t){
+      var d=gtDue(t);
+      h+='<div class="rt-item"><span class="rt-t" title="'+esc(t.title||"")+'">'+esc(t.title||"(sem título)")+'</span>'
+        +(d?'<span class="rt-x"><span class="lk">'+gtFmt(d)+'</span></span>':'')+'</div>';
+    });
+    if(done.length){
+      h+='<div class="note" style="cursor:pointer;user-select:none" onclick="var n=this.nextElementSibling;n.style.display=n.style.display===\'none\'?\'block\':\'none\'">🗄️ '+done.length+' concluída'+(done.length>1?'s':'')+' (histórico) — mostrar/ocultar</div>'
+        +'<div style="display:none">';
+      done.slice(0,80).forEach(function(t){
+        h+='<div class="rt-item done"><span class="rt-t" style="text-decoration:line-through;color:var(--muted)" title="'+esc(t.title||"")+'">'+esc(t.title||"")+'</span></div>';
+      });
+      h+='</div>';
+    }
+    h+='</div>';
+  });
+  box.innerHTML=h+'</div>';
+}
 function renderDump(d){
   var pend=dumpPend(d);
   INBOX.setDump(pend.map(function(s){
@@ -1582,7 +1646,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.8.1";
+var APP_VERSION="2.9.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2387,9 +2451,9 @@ try{ renderConfig(); }catch(e){}
    (prompt vazio, sem popup) e repuxa tudo; senão roda os loaders com o token guardado. */
 if(!COWORK && !gToken && localStorage.getItem(GCONN_KEY)){
   googleAuth(false).then(function(){ reloadGoogle(); })
-    .catch(function(){ loadAgenda(); loadInbox(); loadCamila(); loadCentral(); });
+    .catch(function(){ loadAgenda(); loadInbox(); loadCamila(); loadCentral(); loadGTasks(); });
 } else {
-  loadAgenda(); loadInbox(); loadCamila(); loadCentral();
+  loadAgenda(); loadInbox(); loadCamila(); loadCentral(); loadGTasks();
 }
 
 /* standalone (GitHub Pages): nota discreta + service worker p/ PWA */
