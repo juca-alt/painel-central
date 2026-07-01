@@ -425,9 +425,10 @@
     <!-- ============ INBOX GERAL ============ -->
     <section id="view-inbox" style="display:none">
       <div class="head"><h1>📬 Inbox Geral</h1></div>
-      <div class="sub">Captura → triagem → roteamento. Manda tudo (email <b>#inbox</b> + Dump da planilha) pra cá; em cada item, 1 clique manda pro lugar certo.</div>
+      <div class="sub">Você manda emails com <b>#inbox</b> no assunto pra juca@segurocomjuca.com; o app <b>lê tua caixa</b>, traz cada um pra cá, você tria (Tarefa/Insight/Referência) e o email é <b>marcado + arquivado</b> no Gmail automaticamente. + o Dump da planilha.</div>
       <div class="bar">
-        <button class="btn primary" onclick="capturar()">✉️ Capturar por email</button>
+        <button class="btn primary" onclick="loadInbox()">🔄 Buscar #inbox agora</button>
+        <button class="btn" onclick="capturar()">✍️ Escrever captura</button>
         <button class="btn" onclick="copyText('juca@segurocomjuca.com','Endereço copiado — assunto: #inbox')">📋 Copiar endereço</button>
         <div class="spacer"></div>
         <button class="btn" onclick="openLink(SHEET_URL)">📊 Abrir Dump na planilha</button>
@@ -595,7 +596,7 @@ var GCAL_SCOPE = [
   "https://www.googleapis.com/auth/calendar.readonly",
   "https://www.googleapis.com/auth/tasks.readonly",
   "https://www.googleapis.com/auth/drive.readonly",
-  "https://www.googleapis.com/auth/gmail.readonly",
+  "https://www.googleapis.com/auth/gmail.modify",
   "https://www.googleapis.com/auth/spreadsheets.readonly"
 ].join(" ");
 var GSERVICES=[{k:"calendar",n:"Calendar",i:"📅"},{k:"tasks",n:"Tasks",i:"☑️"},{k:"drive",n:"Drive",i:"📁"},{k:"gmail",n:"Gmail",i:"✉️"},{k:"sheets",n:"Sheets",i:"📊"}];
@@ -1177,12 +1178,12 @@ function capturar(){
   catch(e){ copyText("juca@segurocomjuca.com","Endereço copiado — assunto: #inbox"); }
 }
 async function gmailInboxRest(){
-  var q=encodeURIComponent("subject:#inbox newer_than:60d");
-  var lr=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&q="+q,{headers:{Authorization:"Bearer "+gToken}});
+  var q=encodeURIComponent("in:inbox subject:#inbox");   // só o que ainda está na caixa
+  var lr=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=100&q="+q,{headers:{Authorization:"Bearer "+gToken}});
   if(lr.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); }
   if(lr.status===403){ throw new Error("Gmail 403 — verifica acesso/escopo"); }
   var ld=await lr.json();
-  var msgs=(ld.messages||[]).slice(0,15);
+  var msgs=(ld.messages||[]).slice(0,60);
   var caps=[];
   for(var i=0;i<msgs.length;i++){
     var mr=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/"+msgs[i].id+"?format=metadata&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=From",{headers:{Authorization:"Bearer "+gToken}});
@@ -1200,11 +1201,46 @@ async function gmailInboxRest(){
   }
   return caps;
 }
+/* ===== Gmail write (gmail.modify): marca "Processado no Painel" + arquiva ao triar ===== */
+var PROC_LABEL_NAME="📥 Processado no Painel", PROC_LABEL_ID=null;
+async function ensureProcLabel(){
+  if(PROC_LABEL_ID) return PROC_LABEL_ID;
+  if(!gToken) return null;
+  try{
+    var lr=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/labels",{headers:{Authorization:"Bearer "+gToken}});
+    var ld=await lr.json();
+    var f=(ld.labels||[]).filter(function(l){ return l.name===PROC_LABEL_NAME; })[0];
+    if(f){ PROC_LABEL_ID=f.id; return f.id; }
+    var cr=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/labels",{method:"POST",
+      headers:{Authorization:"Bearer "+gToken,"Content-Type":"application/json"},
+      body:JSON.stringify({name:PROC_LABEL_NAME,labelListVisibility:"labelShow",messageListVisibility:"show"})});
+    var cd=await cr.json(); PROC_LABEL_ID=cd.id||null; return PROC_LABEL_ID;
+  }catch(e){ return null; }
+}
+/* msgId = id da mensagem Gmail (ext_id sem o prefixo "gm:"). Só roda logado no standalone. */
+async function gmailArchive(msgId){
+  if(!gToken||!msgId) return;
+  try{
+    var lid=await ensureProcLabel();
+    var body={removeLabelIds:["INBOX"]}; if(lid) body.addLabelIds=[lid];
+    await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/"+encodeURIComponent(msgId)+"/modify",
+      {method:"POST",headers:{Authorization:"Bearer "+gToken,"Content-Type":"application/json"},body:JSON.stringify(body)});
+  }catch(e){}
+}
+async function gmailUnarchive(msgId){
+  if(!gToken||!msgId) return;
+  try{
+    var lid=await ensureProcLabel();
+    var body={addLabelIds:["INBOX"]}; if(lid) body.removeLabelIds=[lid];
+    await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/"+encodeURIComponent(msgId)+"/modify",
+      {method:"POST",headers:{Authorization:"Bearer "+gToken,"Content-Type":"application/json"},body:JSON.stringify(body)});
+  }catch(e){}
+}
 async function loadInbox(){
   try{
     var caps;
     if(COWORK){
-      var r=await mcp(TOOL_GMAIL,{ query:"subject:#inbox newer_than:60d", pageSize: 20 });
+      var r=await mcp(TOOL_GMAIL,{ query:"in:inbox subject:#inbox", pageSize: 60 });
       var data=unwrap(r);
       var threads=data.threads||data.items||[];
       caps=[];
@@ -1515,7 +1551,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.6.1";
+var APP_VERSION="2.7.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -1804,6 +1840,8 @@ var INBOX=(function(){
     rows.unshift(row); save(); repaint();
     var lbl=({tarefa:"Tarefa",insight:"Insight",referencia:"Referência",arquivo:"Arquivado"})[destino]||destino;
     toast(lbl+" ✓");
+    /* email triado → marca "Processado no Painel" + sai da caixa do Gmail (só standalone logado) */
+    if(c.fonte==="email" && ext.indexOf("gm:")===0){ try{ gmailArchive(ext.slice(3)); }catch(e){} }
     if(SB.enabled()&&SB.loggedIn()){
       SB.rest("POST","painel_inbox",
         {ext_id:row.ext_id, fonte:row.fonte, titulo:row.titulo, corpo:row.corpo, destino:row.destino, status:row.status, capturado_em:row.capturado_em},
@@ -1816,6 +1854,8 @@ var INBOX=(function(){
   function undo(ext){
     rows=rows.filter(function(r){ return r.ext_id!==ext; }); save(); repaint();
     if(SB.enabled()&&SB.loggedIn()) SB.rest("DELETE","painel_inbox?ext_id=eq."+encodeURIComponent(ext)).catch(function(){});
+    /* desfez triagem de um email → volta pra caixa do Gmail (tira o label, readiciona INBOX) */
+    if(ext.indexOf("gm:")===0){ try{ gmailUnarchive(ext.slice(3)); }catch(e){} }
   }
   function toggleDone(ext){
     var r=byExt(ext); if(!r) return;
