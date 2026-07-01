@@ -608,9 +608,18 @@ var gToken=null, gTokenClient=null, _gpending=null, _grefreshTimer=null;
 function gtokLoad(){ try{ var s=JSON.parse(localStorage.getItem(GTOK_KEY)||"null"); if(s&&s.token&&s.exp&&Date.now()<s.exp-60000) return s; }catch(e){} return null; }
 function gtokSave(tok,sec){ try{ localStorage.setItem(GTOK_KEY, JSON.stringify({token:tok, exp:Date.now()+(Number(sec)||3600)*1000})); }catch(e){} }
 function gtokClear(){ try{ localStorage.removeItem(GTOK_KEY); }catch(e){} gToken=null; if(_grefreshTimer){ clearTimeout(_grefreshTimer); _grefreshTimer=null; } }
-function gConnected(){ return !!(gtokLoad()||gToken); }
+/* conectado = tem token OU já conectou antes (flag durável) — mantém a UI "conectada"
+   entre sessões mesmo quando o token de 1h expirou (reconecta em 1 toque, sem novo login). */
+function gConnected(){ var f=false; try{ f=!COWORK&&!!localStorage.getItem(GCONN_KEY); }catch(e){} return !!(gtokLoad()||gToken||f); }
+function gHasToken(){ return !!(gtokLoad()||gToken); }
 try{ if(!COWORK){ var __gs=gtokLoad(); if(__gs) gToken=__gs.token; } }catch(e){}
 function connectPanel(titulo){
+  var f=false; try{ f=!COWORK&&!!localStorage.getItem(GCONN_KEY); }catch(e){}
+  if(f){  /* já conectou antes; token expirou → 1 toque religa sem novo login */
+    return '<div class="errbox"><div class="e-t">🔌 '+esc(titulo)+'</div>'+
+      '<div class="e-s">Sua sessão do Google pausou. Toque pra religar — sem novo login. '+
+      '<button class="btn sm primary" style="margin-left:6px" onclick="syncGoogle()">🔄 Sincronizar</button></div></div>';
+  }
   return '<div class="errbox"><div class="e-t">🔌 '+esc(titulo)+'</div>'+
     '<div class="e-s">Conecte sua Conta Google em <b>⚙️ Configuração</b> pra ver isto ao vivo. '+
     '<button class="btn sm" style="margin-left:6px" onclick="nav(\'config\')">Ir pra Configuração</button></div></div>';
@@ -1573,7 +1582,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.8.0";
+var APP_VERSION="2.8.1";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");

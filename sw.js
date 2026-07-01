@@ -1,6 +1,6 @@
 /* Painel Central — service worker (PWA) */
 /* HTML = network-first (sempre fresco online, cai pro cache offline); demais assets = cache-first. */
-var CACHE = "painel-central-v13";
+var CACHE = "painel-central-v14";
 var ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", function(e){
