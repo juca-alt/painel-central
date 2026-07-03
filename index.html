@@ -2,9 +2,10 @@
 {
   "name": "Painel Central",
   "schemaVersion": 1,
-  "description": "Painel Central do Gustavo (Jucá2.0) — painel único: agenda viva do Google Calendar (8 categorias), Tarefas ao vivo da planilha Central de Tarefas (Backlog + Bússola + atrasadas), Inbox Geral (email #inbox + Dump da planilha), Feira estoque-driven, Saúde, Provas Camila, atalhos pré-conectados ao ecossistema (Google Tasks, Gmail, Kommo, Trello, Organizze, Gemini) e Fôlego discreto.",
+  "description": "Painel Central do Gustavo (Jucá2.0) — painel único: agenda viva do Google Calendar (8 categorias, edição de eventos + checklist guiado), Tarefas ao vivo da planilha Central de Tarefas (Backlog + Bússola + atrasadas), Inbox Geral (email #inbox + Dump da planilha), Feira estoque-driven, Saúde, Provas Camila, atalhos pré-conectados ao ecossistema (Google Tasks, Gmail, Kommo, Trello, Organizze, Gemini) e Fôlego discreto.",
   "mcpTools": [
     "mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__list_events",
+    "mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__update_event",
     "mcp__52f54413-7c52-4d16-842e-ab7145324b3d__read_file_content",
     "mcp__66384105-b7c1-4a11-b7e4-8b3258bcfadf__search_threads"
   ],
@@ -71,6 +72,7 @@
   .sub{color:var(--muted);font-size:13px;margin:2px 0 18px}
   .head{display:flex;align-items:center;gap:12px;margin-bottom:4px}
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+  .cards.c5{grid-template-columns:repeat(auto-fit,minmax(105px,1fr))}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
   .card.click{cursor:pointer}
   .card.click:hover{border-color:var(--accent)}
@@ -186,6 +188,20 @@
   .mes-more{font-size:10px;color:var(--muted)}
   .t-sec{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px;font-weight:600}
   .t-sec:first-child{margin-top:0}
+  /* ===== evento: chip de checklist na agenda + modal de edição/checklist guiado ===== */
+  .ev-ckb{font-size:10px;background:var(--accent-soft);border-radius:8px;padding:1px 6px;margin-left:6px;color:var(--muted);white-space:nowrap}
+  .ck-hl{outline:2px solid var(--accent);border-radius:10px;padding:4px}
+  .ck-item{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--line);font-size:13.5px}
+  .ck-item.done .ck-t{text-decoration:line-through;color:var(--muted)}
+  .ck-item .ck-t{flex:1;min-width:0}
+  .ck-item .ck-x{color:var(--muted);cursor:pointer;padding:0 4px}
+  .ck-item .ck-x:hover{color:var(--danger)}
+  .ck-add{display:flex;gap:8px;margin-top:8px}
+  .ck-add input{flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:inherit;color:var(--txt)}
+  .gd-bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin:4px 0 10px}
+  .gd-bar>div{height:100%;background:var(--accent);border-radius:6px;transition:width .25s}
+  .gd-sub{font-size:12px;color:var(--muted);margin-bottom:10px}
+  .gd-big{font-size:20px;font-weight:700;line-height:1.35;margin:6px 0 4px}
   /* ===== responsivo: menu vira gaveta lateral à esquerda (abre/retrai) ===== */
   .menu-toggle{display:none}
   .side-overlay{display:none}
@@ -377,10 +393,12 @@
       <div class="head"><h1 id="saudacao">Hoje</h1></div>
       <div class="sub" id="data-hoje"></div>
       <div id="cutucadas"></div>
-      <div class="cards">
-        <div class="card click" onclick="nav('tarefas')"><div class="k">Tarefas abertas</div><div class="v" id="h-ab">–</div><div class="s">na Central de Tarefas</div></div>
-        <div class="card click" onclick="nav('tarefas')"><div class="k">Atrasadas</div><div class="v red" id="h-atr">–</div><div class="s">prazo vencido</div></div>
-        <div class="card click" onclick="nav('inbox')"><div class="k">Inbox geral</div><div class="v" id="h-inb">–</div><div class="s">capturas sem triagem</div></div>
+      <div class="cards c5">
+        <div class="card click" onclick="nav('inbox')"><div class="k">Inbox</div><div class="v" id="h-inb">–</div><div class="s">sem triagem</div></div>
+        <div class="card click" onclick="nav('tarefas')"><div class="k">Vencidas</div><div class="v red" id="h-venc">–</div><div class="s">prazo vencido</div></div>
+        <div class="card click" onclick="nav('tarefas')"><div class="k">Hoje</div><div class="v" id="h-hoje">–</div><div class="s">vencem hoje</div></div>
+        <div class="card click" onclick="nav('tarefas')"><div class="k">Amanhã</div><div class="v" id="h-amn">–</div><div class="s">vencem amanhã</div></div>
+        <div class="card click" onclick="nav('tarefas')"><div class="k">Essa semana</div><div class="v" id="h-sem">–</div><div class="s">até sábado</div></div>
       </div>
       <div class="bar">
         <button class="btn sm" onclick="aShift(-1)" title="anterior">‹</button>
@@ -577,6 +595,7 @@ function isoLocal(d){ return d.getFullYear()+"-"+fmt2(d.getMonth()+1)+"-"+fmt2(d
 
 /* ================= constantes de conexão ================= */
 var TOOL_CAL="mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__list_events";
+var TOOL_CAL_UPD="mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__update_event";
 var TOOL_DRIVE="mcp__52f54413-7c52-4d16-842e-ab7145324b3d__read_file_content";
 var TOOL_GMAIL="mcp__66384105-b7c1-4a11-b7e4-8b3258bcfadf__search_threads";
 var SHEET_ID="1Am0Z2e4qoYPpy8eUNIzpPBn_30f9Fzsl64CwS1IVx9M";
@@ -751,7 +770,11 @@ var CAT_RULES=[
   {re:/lembrete/i, cat:"LEMBRETE", col:"var(--c-lembrete)"},
   {re:/respirar|mentalizar|rotina|briefing|revis[ãa]o|ritual|almo[çc]o|gym|treino/i, cat:"ROTINA", col:"var(--c-rotina)"}
 ];
-function categoriza(t){
+var CATS=CAT_RULES.map(function(r){return {cat:r.cat, col:r.col};}).concat([{cat:"PESSOAL", col:"var(--c-pessoal)"}]);
+function catByName(n){ for(var i=0;i<CATS.length;i++) if(CATS[i].cat===n) return CATS[i]; return null; }
+function categoriza(t, o){
+  /* override manual (Supabase) vem primeiro; senão, regex do título como sempre */
+  if(o && o.id){ var ov=EVMETA.catOf(o); if(ov){ var c=catByName(ov); if(c) return c; } }
   for(var i=0;i<CAT_RULES.length;i++) if(CAT_RULES[i].re.test(t||"")) return CAT_RULES[i];
   return {cat:"PESSOAL", col:"var(--c-pessoal)"};
 }
@@ -759,6 +782,7 @@ var MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto
 var DIAS_MIN=["dom","seg","ter","qua","qui","sex","sáb"];
 var aView="d4", aDate=new Date(); aDate.setHours(0,0,0,0);
 var evCache={};
+var EVIDX={};   /* id -> evento cru do Google (pro modal de edição) */
 async function fetchEvents(ini,fim){
   var key=ini.getTime()+"|"+fim.getTime();
   if(evCache[key]) return evCache[key];
@@ -784,12 +808,14 @@ async function fetchEvents(ini,fim){
     all=(dd.items||[]);
   }
   all=all.filter(function(e){return e.status!=='cancelled';});
+  all.forEach(function(e){ if(e.id) EVIDX[e.id]=e; });
   evCache[key]=all;
   return all;
 }
 function evObj(e){
   var allday=!!(e.start&&e.start.date&&!e.start.dateTime);
-  return {allday:allday, ini:allday?null:e.start.dateTime, fim:allday?null:(e.end&&e.end.dateTime),
+  return {id:e.id||"", rec:e.recurringEventId||"",
+    allday:allday, ini:allday?null:e.start.dateTime, fim:allday?null:(e.end&&e.end.dateTime),
     t:e.summary||"(sem título)", loc:e.location||"",
     dia: allday?e.start.date.slice(0,10):isoLocal(new Date(e.start.dateTime))};
 }
@@ -838,11 +864,17 @@ function aShift(dir){
 }
 function aHoje(){ aDate=new Date(); aDate.setHours(0,0,0,0); loadAgendaView(); }
 function goDia(iso){ aDate=new Date(iso+"T00:00:00"); setAView('dia'); }
+function ckChip(id){
+  var m=id?EVMETA.get(id):null; if(!m||!m.checklist||!m.checklist.length) return '';
+  var dn=0; m.checklist.forEach(function(x){ if(x.done)dn++; });
+  return '<span class="ev-ckb">'+dn+'/'+m.checklist.length+' ✓</span>';
+}
 function evHtml(o,mini){
-  var c=categoriza(o.t);
+  var c=categoriza(o.t,o);
   if(mini) return '<div class="ev mini'+(o.allday?' all':'')+'" style="border-left-color:'+c.col+'" title="'+esc(o.t)+'">'+(o.allday?'':hora(o.ini)+' ')+esc(o.t)+'</div>';
-  return '<div class="ev'+(o.allday?' all':'')+'" style="border-left-color:'+c.col+'">'+
-    '<span class="ev-t">'+(o.allday?'dia todo':hora(o.ini)+(o.fim?'–'+hora(o.fim):''))+'</span>'+esc(o.t)+'</div>';
+  var sid=(o.id||'').replace(/['"\\]/g,'');
+  return '<div class="ev'+(o.allday?' all':'')+'" style="border-left-color:'+c.col+(sid?';cursor:pointer':'')+'"'+(sid?' onclick="EVMODAL.open(\''+sid+'\')"':'')+'>'+
+    '<span class="ev-t">'+(o.allday?'dia todo':hora(o.ini)+(o.fim?'–'+hora(o.fim):''))+'</span>'+esc(o.t)+ckChip(o.id)+'</div>';
 }
 async function loadAgendaView(){
   var r=aRange();
@@ -868,9 +900,10 @@ function renderVDia(m){
   var label = k===isoLocal(new Date())?"Hoje":DIAS[aDate.getDay()]+" "+fmt2(aDate.getDate())+"/"+fmt2(aDate.getMonth()+1);
   var html='<div class="panel"><h3>'+esc(label)+'<span class="count">'+arr.length+' evento'+(arr.length>1?'s':'')+'</span></h3>';
   arr.forEach(function(ev){
-    var c=categoriza(ev.t);
-    html+='<div class="row"><div class="tm">'+(ev.allday?'dia todo':hora(ev.ini)+(ev.fim?'–'+hora(ev.fim):''))+'</div>'+
-      '<div class="nm">'+esc(ev.t)+(ev.loc?'<small>'+esc(ev.loc)+'</small>':'')+'</div>'+
+    var c=categoriza(ev.t,ev);
+    var sid=(ev.id||'').replace(/['"\\]/g,'');
+    html+='<div class="row"'+(sid?' onclick="EVMODAL.open(\''+sid+'\')" style="cursor:pointer"':'')+'><div class="tm">'+(ev.allday?'dia todo':hora(ev.ini)+(ev.fim?'–'+hora(ev.fim):''))+'</div>'+
+      '<div class="nm">'+esc(ev.t)+ckChip(ev.id)+(ev.loc?'<small>'+esc(ev.loc)+'</small>':'')+'</div>'+
       '<span class="chip" style="background:'+c.col+'">'+c.cat+'</span></div>';
   });
   $('agenda-out').innerHTML=html+'</div>';
@@ -913,7 +946,7 @@ function loadAgenda(){
   $('saudacao').textContent = (hoje.getHours()<12?"Bom dia":hoje.getHours()<18?"Boa tarde":"Boa noite")+", Gustavo";
   $('data-hoje').textContent = DIAS[hoje.getDay()]+", "+fmt2(hoje.getDate())+"/"+fmt2(hoje.getMonth()+1)+"/"+hoje.getFullYear()+" · Recife";
   renderCutucadas(hoje);
-  loadAgendaView();
+  EVMETA.load().then(function(){ loadAgendaView(); });
 }
 /* Calendar bidirecional: cria evento em linguagem natural (quickAdd) escrevendo no Google. */
 function calQuickAdd(){
@@ -926,6 +959,42 @@ function calQuickAdd(){
     .then(function(r){ if(r.status===401){ gtokClear(); throw new Error("sessão expirou — toque 🔄"); } if(!r.ok) throw new Error("Calendar "+r.status); return r.json(); })
     .then(function(){ toast("Evento criado ✓ (Google)"); loadAgendaView(); })
     .catch(function(e){ toast("Não criei: "+((e&&e.message)||e)); });
+}
+/* Calendar bidirecional: edita título/data/hora de um evento existente.
+   Recorrente: PATCH no id da INSTÂNCIA (singleEvents=true) → muda só a ocorrência. */
+function gcalUpdate(id, t, allday, dia, hi, hf){
+  function endTimed(){
+    if(hf) return dia+"T"+hf+":00";
+    var d=new Date(dia+"T"+hi+":00"); d.setHours(d.getHours()+1);   /* sem fim: assume 1h */
+    return isoLocal(d)+"T"+fmt2(d.getHours())+":"+fmt2(d.getMinutes())+":00";
+  }
+  function endAllday(){ var d=new Date(dia+"T00:00:00"); d.setDate(d.getDate()+1); return isoLocal(d); } /* end.date é exclusivo */
+  if(COWORK){
+    var args={eventId:id, summary:t, timeZone:"America/Recife"};
+    if(allday){ args.allDay=true; args.startTime=dia; args.endTime=endAllday(); }
+    else { args.startTime=dia+"T"+hi+":00"; args.endTime=endTimed(); }
+    return mcp(TOOL_CAL_UPD,args).then(unwrap).catch(function(e){
+      var s=String(e&&e.message||e);
+      throw new Error(/not.?found|unknown|unavailable|__STANDALONE__/i.test(s)?"edição indisponível aqui — usa o app instalado (PWA)":s.slice(0,120));
+    });
+  }
+  if(!gHasToken()) return Promise.reject(new Error("Conecte o Google primeiro"));
+  var body={summary:t};
+  if(allday){
+    /* PATCH faz merge: os null limpam o dateTime antigo (senão o Google rejeita tipo misto) */
+    body.start={date:dia, dateTime:null, timeZone:null};
+    body.end={date:endAllday(), dateTime:null, timeZone:null};
+  } else {
+    body.start={dateTime:dia+"T"+hi+":00", timeZone:"America/Recife", date:null};
+    body.end={dateTime:endTimed(), timeZone:"America/Recife", date:null};
+  }
+  return fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events/"+encodeURIComponent(id),
+    {method:"PATCH", headers:{Authorization:"Bearer "+gToken,"Content-Type":"application/json"}, body:JSON.stringify(body)})
+    .then(function(r){
+      if(r.status===401){ gtokClear(); throw new Error("sessão expirou — toque 🔄"); }
+      if(!r.ok) throw new Error("Calendar "+r.status);
+      return r.json();
+    });
 }
 
 /* ================= cutucadas (gatilhos no momento certo) ================= */
@@ -1215,14 +1284,29 @@ function gtCreate(listId, idx){
 function gtCreateKey(ev, listId, idx){ if(ev&&ev.key==="Enter"){ ev.preventDefault(); gtCreate(listId, idx); } }
 function renderGTasks(groups){
   var box=$('gtasks-out'); if(!box) return; box.__groups=groups;
-  /* cards do topo passam a refletir o Google Tasks (fonte primária das Tarefas) */
+  /* cards do topo passam a refletir o Google Tasks (fonte primária das Tarefas).
+     Compara STRING de data (t.due vem "...T00:00:00.000Z"; new Date() em Recife
+     cairia no dia local anterior — off-by-one de fuso). */
   var today=new Date(); today.setHours(0,0,0,0);
-  var totOpen=0, overdue=0, totDone=0;
+  var hojeIso=isoLocal(today);
+  var amn=new Date(today); amn.setDate(amn.getDate()+1); var amnIso=isoLocal(amn);
+  var fimSem=new Date(today); fimSem.setDate(fimSem.getDate()+(7-fimSem.getDay())); var fimSemIso=isoLocal(fimSem); /* domingo próximo (exclusivo; semana dom–sáb) */
+  var totOpen=0, overdue=0, totDone=0, cHoje=0, cAmn=0, cSem=0;
   groups.forEach(function(g){ g.tarefas.forEach(function(t){
-    if(t.status==="completed"){ totDone++; }
-    else { totOpen++; var d=gtDue(t); if(d&&!isNaN(d)&&d.getTime()<today.getTime()) overdue++; }
+    if(t.status==="completed"){ totDone++; return; }
+    totOpen++;
+    if(!t.due) return;
+    var d=String(t.due).slice(0,10);
+    if(d<hojeIso) overdue++;
+    else if(d===hojeIso) cHoje++;
+    else if(d===amnIso) cAmn++;
+    else if(d<fimSemIso) cSem++;
   }); });
   try{ $('t-ab').textContent=totOpen; $('t-atr').textContent=overdue; $('t-done').textContent=totDone; }catch(e){}
+  try{
+    $('h-venc').textContent=overdue; $('h-hoje').textContent=cHoje; $('h-amn').textContent=cAmn; $('h-sem').textContent=cSem;
+    var bA=$('bdg-atr'); if(bA){ bA.textContent=overdue; bA.style.display=overdue?'inline-block':'none'; }
+  }catch(e){}
   var h='<div class="panel"><h3>📋 Google Tasks — por projeto<span class="count">'+totOpen+'</span>'
       +'<span style="float:right;font-weight:400;font-size:12px">ordenar: '
       +'<span class="lk" style="cursor:pointer;color:'+(GTASKS_SORT==="due"?"var(--accent)":"var(--muted)")+'" onclick="setGTSort(\'due\')">prazo</span> · '
@@ -1295,20 +1379,11 @@ async function loadCentral(){
     renderTarefas(d);
     renderDump(d);
     renderSaude(d);
-    /* cards do Hoje + badges */
-    var abertas=d.backlog.filter(isOpen), atrasadas=abertas.filter(isLate), pend=dumpPend(d);
-    var pendU=pend.filter(function(s){ return !INBOX.isTriaged("dump:"+INBOX.hash(s)); });
-    $('h-ab').textContent=abertas.length;
-    $('h-atr').textContent=atrasadas.length;
-    $('h-inb').textContent=pendU.length;
-    if(atrasadas.length){ $('bdg-atr').textContent=atrasadas.length; $('bdg-atr').style.display='inline-block'; }
-    if(pendU.length){ $('bdg-inb').textContent=pendU.length; $('bdg-inb').style.display='inline-block'; }
-    else { $('bdg-inb').style.display='none'; }
+    /* cards do Hoje/badges agora vêm do Google Tasks (renderGTasks) e do INBOX (repaint) */
   }catch(e){
     if(!COWORK && (!gToken || String(e&&e.message)==="__NEEDCONNECT__")){
       var cp=connectPanel('Conectar pra ver Tarefas e Saúde ao vivo');
       $('tarefas-out').innerHTML=cp; $('bussola-out').innerHTML=""; $('dump-out').innerHTML=""; $('saude-out').innerHTML=cp;
-      $('h-ab').textContent='–'; $('h-atr').textContent='–'; $('h-inb').textContent='–';
       return;
     }
     if(!COWORK){
@@ -1705,7 +1780,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.10.0";
+var APP_VERSION="2.11.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -1933,6 +2008,37 @@ var SB=(function(){
   return {init:init,enabled:enabled,loggedIn:loggedIn,email:email,uid:uid,rest:rest,signIn:signIn,signOut:signOut,pull:pull,queueAll:queueAll,del:del,bar:bar,onChange:onChange};
 })();
 
+/* ================= EVMETA: categoria manual + checklist por evento (Supabase) =================
+   painel_event_meta: event_id -> {cat, checklist}. Categoria de recorrente grava no id da
+   SÉRIE (recurringEventId, vale pra todas as ocorrências); checklist grava no id da
+   INSTÂNCIA (o de hoje não pode aparecer feito amanhã). Sem login: só em memória. */
+var EVMETA=(function(){
+  var map={}, warned=false;
+  function load(){
+    if(!SB.enabled()||!SB.loggedIn()){ map={}; return Promise.resolve(); }
+    return SB.rest("GET","painel_event_meta?select=event_id,cat,checklist")
+      .then(function(r){ return r.ok?r.json():[]; })
+      .then(function(rows){ map={}; (rows||[]).forEach(function(r){ map[r.event_id]=r; }); })
+      .catch(function(){});
+  }
+  function get(id){ return map[id]||null; }
+  function catOf(o){ var m=map[o.id]||(o.rec?map[o.rec]:null)||null; return (m&&m.cat)||null; }
+  function upsert(eventId, patch){
+    var row=map[eventId]||(map[eventId]={event_id:eventId, cat:null, checklist:[]});
+    Object.assign(row, patch);   /* otimista: UI reflete na hora */
+    if(!SB.enabled()||!SB.loggedIn()){
+      if(!warned){ toast("Conecte (login do painel) pra salvar categoria/checklist"); warned=true; }
+      return Promise.resolve(false);
+    }
+    return SB.rest("POST","painel_event_meta?on_conflict=event_id",
+      {event_id:eventId, cat:row.cat, checklist:row.checklist},
+      {Prefer:"resolution=merge-duplicates,return=minimal"})
+      .then(function(r){ if(!r.ok) toast("Não sincronizei (rodou a migration painel_event_meta?)"); return r.ok; })
+      .catch(function(){ toast("Sem rede — fica em memória até recarregar"); return false; });
+  }
+  return {load:load, get:get, catOf:catOf, upsert:upsert};
+})();
+
 /* ================= INBOX: triagem & roteamento (offline-first + sync Supabase) =================
    Ledger único de capturas triadas (painel_inbox). Captura sem linha = "sem triagem".
    1 clique grava a linha (destino) → some do Inbox, aparece na lista do destino.
@@ -2081,7 +2187,13 @@ var INBOX=(function(){
     });
     el.innerHTML=h+'</div>';
   }
-  function repaint(){ try{ paintEmail(); paintDump(); paintRouted(); paintTarefas(); }catch(e){} }
+  /* card "Inbox" do Hoje + badge lateral: capturas (email + dump) ainda sem triagem */
+  function paintCount(){
+    var pend=emailCaps.concat(dumpCaps).filter(function(c){ return !isTriaged(c.ext_id); }).length;
+    var e=$('h-inb'); if(e) e.textContent=pend;
+    var b=$('bdg-inb'); if(b){ b.textContent=pend; b.style.display=pend?'inline-block':'none'; }
+  }
+  function repaint(){ try{ paintEmail(); paintDump(); paintRouted(); paintTarefas(); paintCount(); }catch(e){} }
 
   return {pull:pull, setEmail:setEmail, setDump:setDump, route:route, undo:undo, toggleDone:toggleDone,
           isTriaged:isTriaged, hash:hash, repaint:repaint, listBy:listBy};
@@ -2498,7 +2610,128 @@ var GAEL=(function(){
   function del(ent,id){if(!SB.loggedIn()){toast('Conecte pra excluir');return;}if(!confirm('Excluir este registro?'))return;SB.rest('DELETE',T[ent]+'?id=eq.'+encodeURIComponent(id)).then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t||('HTTP '+r.status));});closeModal();toast('Excluído');return loadOne(ent).then(function(){if(isOpen())paint();});}).catch(function(e){toast('Erro: '+String(e&&e.message||e).slice(0,90));});}
   return {render:render,refreshIfOpen:refreshIfOpen,sel:sel,openForm:openForm,save:save,del:del,closeModal:closeModal};
 })();
-SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();});
+
+/* ================= EVMODAL: detalhe/edição de evento da agenda + checklist guiado =================
+   Toca num evento -> modal (mesmo visual do gael-modal): título, data, hora, categoria
+   e checklist com "modo guiado" (um passo por vez, concluir e avançar, progresso). */
+var EVMODAL=(function(){
+  var cur=null;   /* {id, rec, raw, guided, gi, fld} */
+  function ck(){ var m=EVMETA.get(cur.id); return (m&&m.checklist)||[]; }
+  function ckDone(list){ var n=0; list.forEach(function(x){ if(x.done)n++; }); return n; }
+
+  function open(id){
+    var raw=EVIDX[id]; if(!raw){ toast("Evento não encontrado — recarrega a agenda"); return; }
+    cur={id:id, rec:raw.recurringEventId||"", raw:raw, guided:false, gi:0, fld:null};
+    paint();
+    /* evento "tarefa": abre com o checklist em evidência */
+    if(/tarefa/i.test(raw.summary||"")) setTimeout(function(){
+      var el=$('ev-ck-sec'); if(el){ try{ el.scrollIntoView({block:'nearest'}); }catch(e){} el.classList.add('ck-hl'); }
+    },30);
+  }
+  function closeDom(){ var m=$('ev-modal-bg'); if(m&&m.parentNode)m.parentNode.removeChild(m); }
+  function close(){ closeDom(); cur=null; }
+
+  function formHtml(){
+    var raw=cur.raw, f=cur.fld;
+    var allday=f?f.allday:!!(raw.start&&raw.start.date&&!raw.start.dateTime);
+    var dia=f?f.dia:(raw.start&&raw.start.date?raw.start.date.slice(0,10):isoLocal(new Date(raw.start.dateTime)));
+    var hi=f?f.hi:((raw.start&&raw.start.dateTime)?hora(raw.start.dateTime):'');
+    var hf=f?f.hf:((raw.end&&raw.end.dateTime)?hora(raw.end.dateTime):'');
+    var tit=f?f.t:(raw.summary||'');
+    var effCat=f?f.cat:categoriza(raw.summary||'', {id:cur.id, rec:cur.rec}).cat;
+    var h='<div class="g-fld"><label>Título *</label><input type="text" id="ev-f-t" value="'+esc(tit)+'"></div>';
+    h+='<div class="g-fld g-chk"><input type="checkbox" id="ev-f-allday"'+(allday?' checked':'')+' onchange="EVMODAL.allday(this.checked)"><label for="ev-f-allday">Dia todo</label></div>';
+    h+='<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +'<div class="g-fld" style="flex:1;min-width:110px"><label>Data</label><input type="date" id="ev-f-dia" value="'+dia+'"></div>'
+      +'<div class="g-fld" style="flex:1;min-width:85px"><label>Início</label><input type="time" id="ev-f-hi" value="'+hi+'"'+(allday?' disabled':'')+'></div>'
+      +'<div class="g-fld" style="flex:1;min-width:85px"><label>Fim</label><input type="time" id="ev-f-hf" value="'+hf+'"'+(allday?' disabled':'')+'></div></div>';
+    h+='<div class="g-fld"><label>Categoria</label><select id="ev-f-cat">'+CATS.map(function(c){return '<option'+(c.cat===effCat?' selected':'')+'>'+c.cat+'</option>';}).join('')+'</select></div>';
+    if(cur.rec) h+='<div class="note" style="margin:0 0 10px">🔁 Evento recorrente — título/data/hora mudam <b>só nesta ocorrência</b>; a categoria vale pra série toda.</div>';
+    h+='<div id="ev-ck-sec">'+ckHtml()+'</div>';
+    h+='<div class="g-foot"><div class="spacer"></div><button class="btn sm" onclick="EVMODAL.close()">Cancelar</button><button class="btn primary sm" onclick="EVMODAL.save()">Salvar</button></div>';
+    return h;
+  }
+  function ckHtml(){
+    var list=ck(), dn=ckDone(list);
+    var h='<div class="t-sec" style="margin:14px 0 6px">Checklist'+(list.length?' <span style="font-weight:400;text-transform:none">'+dn+'/'+list.length+' ✓</span>':'')+'</div>';
+    list.forEach(function(it,i){
+      h+='<div class="ck-item'+(it.done?' done':'')+'">'
+        +'<span class="rt-ck'+(it.done?' on':'')+'" onclick="EVMODAL.ckToggle('+i+')">'+(it.done?'☑':'☐')+'</span>'
+        +'<span class="ck-t">'+esc(it.t)+'</span>'
+        +'<span class="ck-x" title="Remover" onclick="EVMODAL.ckDel('+i+')">✕</span></div>';
+    });
+    h+='<div class="ck-add"><input id="ev-ck-in" type="text" placeholder="Adicionar passo…" onkeydown="if(event.key===\'Enter\')EVMODAL.ckAdd()">'
+      +'<button class="btn sm" onclick="EVMODAL.ckAdd()">+ passo</button></div>';
+    if(list.length&&dn<list.length) h+='<button class="btn primary sm" style="width:100%;margin-top:10px" onclick="EVMODAL.guide()">▶ Modo guiado</button>';
+    return h;
+  }
+  function guideHtml(){
+    var list=ck(), n=list.length, dn=ckDone(list);
+    if(cur.gi<0) return '<div><div class="gd-bar"><div style="width:100%"></div></div>'
+      +'<div class="gd-big">Tudo feito 🎉</div><div class="gd-sub">'+n+' de '+n+' passos concluídos.</div>'
+      +'<div class="g-foot"><div class="spacer"></div><button class="btn primary sm" onclick="EVMODAL.guideExit()">Voltar ao evento</button></div></div>';
+    var it=list[cur.gi], pct=n?Math.round(dn*100/n):0;
+    var hasNext=nextUndone(cur.gi+1)>=0;
+    return '<div><div class="gd-bar"><div style="width:'+pct+'%"></div></div>'
+      +'<div class="gd-sub">Passo '+(cur.gi+1)+' de '+n+' · '+dn+' ✓</div>'
+      +'<div class="gd-big">'+esc(it.t)+'</div>'
+      +'<button class="btn primary" style="width:100%;margin:14px 0 6px;padding:11px" onclick="EVMODAL.guideDone()">✓ Concluir e avançar</button>'
+      +'<div class="g-foot">'+(hasNext?'<button class="btn sm" onclick="EVMODAL.guideSkip()">pular ›</button>':'')
+      +'<div class="spacer"></div><button class="btn sm" onclick="EVMODAL.guideExit()">sair do modo guiado</button></div></div>';
+  }
+  function paint(){
+    closeDom();
+    var bg=document.createElement('div'); bg.className='gael-modal-bg'; bg.id='ev-modal-bg';
+    bg.onclick=function(e){ if(e.target===bg) EVMODAL.close(); };
+    bg.innerHTML='<div class="gael-modal"><h3>'+(cur.guided?'🎯 Modo guiado':'📅 Evento')+'</h3>'+(cur.guided?guideHtml():formHtml())+'</div>';
+    document.body.appendChild(bg);
+  }
+  function paintCk(){ var el=$('ev-ck-sec'); if(el) el.innerHTML=ckHtml(); }
+  function saveFld(){ try{ cur.fld={t:$('ev-f-t').value, allday:$('ev-f-allday').checked, dia:$('ev-f-dia').value, hi:$('ev-f-hi').value, hf:$('ev-f-hf').value, cat:$('ev-f-cat').value}; }catch(e){} }
+  function allday(on){ var hi=$('ev-f-hi'), hf=$('ev-f-hf'); if(hi)hi.disabled=on; if(hf)hf.disabled=on; }
+
+  /* checklist */
+  function ckSave(list){ EVMETA.upsert(cur.id,{checklist:list}); }
+  function ckAdd(){ var inp=$('ev-ck-in'); var v=(inp&&inp.value||'').trim(); if(!v)return;
+    var list=ck(); list.push({t:v,done:false}); ckSave(list); paintCk();
+    var ni=$('ev-ck-in'); if(ni) ni.focus(); }
+  function ckToggle(i){ var list=ck(); if(!list[i])return; list[i].done=!list[i].done; ckSave(list); paintCk(); }
+  function ckDel(i){ var list=ck(); if(!list[i])return; list.splice(i,1); ckSave(list); paintCk(); }
+
+  /* modo guiado */
+  function nextUndone(from){ var list=ck(); for(var i=from;i<list.length;i++) if(!list[i].done) return i; return -1; }
+  function guide(){ saveFld(); cur.guided=true; cur.gi=nextUndone(0); paint(); }
+  function guideDone(){ var list=ck(); if(cur.gi<0||!list[cur.gi])return; list[cur.gi].done=true; ckSave(list); cur.gi=nextUndone(0); paint(); }
+  function guideSkip(){ var n=nextUndone(cur.gi+1); if(n>=0){ cur.gi=n; paint(); } }
+  function guideExit(){ cur.guided=false; paint(); }
+
+  function save(){
+    var t=($('ev-f-t').value||'').trim(); if(!t){ toast('Título vazio'); return; }
+    var alldayV=$('ev-f-allday').checked, dia=$('ev-f-dia').value, hi=$('ev-f-hi').value, hf=$('ev-f-hf').value;
+    if(!dia){ toast('Escolhe a data'); return; }
+    if(!alldayV && !hi){ toast('Escolhe a hora de início'); return; }
+    /* categoria: só grava override se o usuário mudou a efetiva; recorrente grava na série */
+    var selCat=$('ev-f-cat').value;
+    var eff=categoriza(cur.raw.summary||'', {id:cur.id, rec:cur.rec}).cat;
+    if(selCat!==eff) EVMETA.upsert(cur.rec||cur.id, {cat:selCat});
+    /* título/data/hora: só chama o Google se algo mudou */
+    var raw=cur.raw;
+    var oAll=!!(raw.start&&raw.start.date&&!raw.start.dateTime);
+    var oDia=oAll?raw.start.date.slice(0,10):isoLocal(new Date(raw.start.dateTime));
+    var oHi=oAll?'':hora(raw.start.dateTime), oHf=(!oAll&&raw.end&&raw.end.dateTime)?hora(raw.end.dateTime):'';
+    var changed=(t!==(raw.summary||'')||alldayV!==oAll||dia!==oDia||(!alldayV&&(hi!==oHi||hf!==oHf)));
+    if(!changed){ close(); toast('Salvo ✓'); loadAgendaView(); return; }
+    toast('Salvando…');
+    gcalUpdate(cur.id, t, alldayV, dia, hi, hf)
+      .then(function(){ evCache={}; close(); toast('Evento atualizado ✓'); loadAgendaView(); })
+      .catch(function(e){ toast('Não salvei no Google: '+String(e&&e.message||e).slice(0,90)); });
+  }
+
+  return {open:open, close:close, save:save, allday:allday,
+          ckAdd:ckAdd, ckToggle:ckToggle, ckDel:ckDel,
+          guide:guide, guideDone:guideDone, guideSkip:guideSkip, guideExit:guideExit};
+})();
+SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
 SB.init();
 try{var _q=new URLSearchParams(location.search);if(_q.get("demo")==="1"){nav("funcionario");CASA.demo(_q.get("ver")||"admin");}}catch(e){}
 
