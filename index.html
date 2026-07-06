@@ -581,6 +581,21 @@ function openLink(u){
   try{ w=window.open(u,"_blank"); }catch(e){}
   if(!w){ copyText(u,"Aba bloqueada — link copiado, cola no navegador"); }
 }
+/* WhatsApp click-to-chat (wa.me): sem API, sem servidor. Com número → abre a conversa; sem número → deixa escolher o contato. */
+function onlyDigits(s){ return String(s==null?"":s).replace(/\D/g,""); }
+function waPhone(phone){
+  var d=onlyDigits(phone);
+  if(!d) return "";
+  if(d.charAt(0)==="0") d=d.replace(/^0+/,"");          // tira zeros à esquerda
+  if(d.length<=11 && d.indexOf("55")!==0) d="55"+d;      // número BR local (DDD+num) → prefixa país
+  return d;
+}
+function waSend(phone,text){
+  var d=waPhone(phone);
+  var url=d ? ("https://wa.me/"+d+"?text="+encodeURIComponent(text||""))
+            : ("https://api.whatsapp.com/send?text="+encodeURIComponent(text||""));
+  openLink(url);
+}
 function unwrap(r){
   if(!r) throw new Error("sem resposta");
   if(r.isError){ var m=(r.content&&r.content[0]&&r.content[0].text)||"erro no conector"; throw new Error(m); }
@@ -1780,7 +1795,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.11.0";
+var APP_VERSION="2.12.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2320,7 +2335,11 @@ var CASA=(function(){
      '<div class="cz-row" style="margin-top:14px"><label class="cz-fld">Carga mensal alvo (h)<input id="cz-carga" class="cz-num" type="number" min="0" step="1" oninput="CASA.onCarga(this.value)"></label><span class="cz-muted" style="align-self:flex-end">Padrão por dia: <b>8h48</b></span></div>'+
      '<div class="cz-stats"><div class="cz-stat"><div class="v" id="cz-s-dia">–</div><div class="l">Horas/dia médio</div></div><div class="cz-stat"><div class="v" id="cz-s-sem">–</div><div class="l">Horas/semana</div></div><div class="cz-stat"><div class="v" id="cz-s-mes">–</div><div class="l">Planejado no mês</div></div><div class="cz-stat" id="cz-s-saldo-box"><div class="v" id="cz-s-saldo">–</div><div class="l">vs carga alvo</div></div></div></div>'+
     '<div class="cz-card"><h2>📅 Como cai no mês <span class="cz-muted" id="cz-cal-mes"></span></h2><div class="cz-cal" id="cz-cal"></div></div>'+
-    '<div class="cz-card cz-noprint"><h2>📋 Quadro pra mandar pra '+esc(f.nome)+'</h2><p class="cz-muted">Texto pronto pra colar no WhatsApp.</p><textarea id="cz-quadro" class="cz-ta" readonly></textarea><div class="cz-row" style="margin-top:10px"><button class="btn primary" onclick="CASA.copyQuadro()">📋 Copiar quadro</button><span id="cz-copy-msg" class="cz-muted"></span></div></div>'+
+    '<div class="cz-card cz-noprint"><h2>📲 Quadro pra mandar pra '+esc(f.nome)+'</h2><p class="cz-muted">Manda direto no WhatsApp ou copia o texto pra colar.</p><textarea id="cz-quadro" class="cz-ta" readonly></textarea>'+
+     '<div class="cz-row" style="margin-top:10px;align-items:flex-end"><label class="cz-fld" style="min-width:180px">WhatsApp de '+esc(f.nome||"")+'<input id="cz-wa-tel" class="cz-txt" type="tel" inputmode="tel" placeholder="(81) 9 9999-9999" value="'+esc((f.ident&&f.ident.telefone)||"")+'" oninput="CASA.setIdent(\'telefone\',this.value)"></label>'+
+      '<button class="btn primary" onclick="CASA.sendQuadro()">📲 Enviar no WhatsApp</button>'+
+      '<button class="btn" onclick="CASA.copyQuadro()">📋 Copiar</button><span id="cz-copy-msg" class="cz-muted"></span></div>'+
+     '<div class="cz-muted" style="margin-top:6px;font-size:12px">'+((SB.enabled()&&SB.loggedIn())?'O número fica salvo no Supabase (protegido). ':'⚠️ Sem conexão, o número não fica salvo neste aparelho (é dado pessoal). ')+'Sem número, o WhatsApp deixa você escolher o contato.</div></div>'+
    '</section>';}
   function pontoShell(){return ''+
    '<section id="cz-tab-ponto" style="display:none">'+
@@ -2416,6 +2435,7 @@ var CASA=(function(){
 
   /* ---------- copy ---------- */
   function copyQuadro(){copyText(gid("cz-quadro").value,"Quadro copiado");setT("cz-copy-msg","✓ copiado");setTimeout(function(){setT("cz-copy-msg","");},2500);}
+  function sendQuadro(){var f=cur();waSend((f.ident&&f.ident.telefone)||"",gid("cz-quadro").value);}
   function copyResumo(){var x=cm();var txt="*Cartão de ponto — "+cur().nome+" · "+x.nome+"*\nTrabalhadas: "+gid("cz-p-trab").textContent+"\nPrevistas: "+gid("cz-p-prev").textContent+"\nHoras extras: "+gid("cz-p-extra").textContent+"\nSaldo do mês: "+gid("cz-p-saldo").textContent+"\nBanco acumulado: "+gid("cz-p-banco").textContent;
     copyText(txt,"Resumo copiado");setT("cz-copy-msg2","✓ copiado");setTimeout(function(){setT("cz-copy-msg2","");},2500);}
 
@@ -2547,7 +2567,7 @@ var CASA=(function(){
   }
   function _previewCheckin(){var f=state.funcionarios[0];if(!f){f=defFunc("Débora","Empregada Doméstica","");state.funcionarios.push(f);}renderCheckin(f);}
 
-  return {render:render,refreshIfOpen:refreshIfOpen,open:open,back:back,addFunc:addFunc,removeFunc:removeFunc,rename:rename,setTab:setTab,setIdent:setIdent,setCenario:setCenario,onVig:onVig,onCarga:onCarga,setDay:setDay,onBanco:onBanco,setP:setP,preencherPrevisto:preencherPrevisto,copyQuadro:copyQuadro,copyResumo:copyResumo,baterPonto:baterPonto,lembrarVolta:lembrarVolta,empTab:empTab,setInvite:setInvite,usarLocalAtual:usarLocalAtual,setRaio:setRaio,setLocalEndereco:setLocalEndereco,setLocalCep:setLocalCep,geocodeLocal:geocodeLocal,removerLocal:removerLocal,verComoFunc:verComoFunc,voltarAdmin:voltarAdmin,demo:demo,_previewCheckin:_previewCheckin};
+  return {render:render,refreshIfOpen:refreshIfOpen,open:open,back:back,addFunc:addFunc,removeFunc:removeFunc,rename:rename,setTab:setTab,setIdent:setIdent,setCenario:setCenario,onVig:onVig,onCarga:onCarga,setDay:setDay,onBanco:onBanco,setP:setP,preencherPrevisto:preencherPrevisto,copyQuadro:copyQuadro,sendQuadro:sendQuadro,copyResumo:copyResumo,baterPonto:baterPonto,lembrarVolta:lembrarVolta,empTab:empTab,setInvite:setInvite,usarLocalAtual:usarLocalAtual,setRaio:setRaio,setLocalEndereco:setLocalEndereco,setLocalCep:setLocalCep,geocodeLocal:geocodeLocal,removerLocal:removerLocal,verComoFunc:verComoFunc,voltarAdmin:voltarAdmin,demo:demo,_previewCheckin:_previewCheckin};
 })();
 /* ================= Saúde · Gael (histórico vivo — Supabase gael_*) ================= */
 var GAEL=(function(){
