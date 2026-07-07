@@ -1,11 +1,28 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-07-01 · Leia isto primeiro ao retomar. **Produção: v2.10.0.**
+**Última atualização:** 2026-07-04 · Leia isto primeiro ao retomar. **Produção: v2.12.0.**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
 ---
 
-## 🟢 RETOMAR AQUI — sessão 01/07 (INBOX #inbox + INTEGRAÇÃO GOOGLE completas)
+## 🟢 RETOMAR AQUI — sessão 04/07 (WhatsApp Fase 1 = click-to-chat, NO AR v2.12.0)
+
+**Frente nova:** integração do Painel com **WhatsApp Business**, decidida em **fila por complexidade** (roadmap de 6 fases). Brainstorm + Kanban visual gerados nesta sessão.
+
+**Fase 1 ENTREGUE e no ar (v2.12.0):** o card "Quadro pra mandar pra <funcionário>" (Casa › Funcionário, aba Carga & Horário) ganhou **envio direto no WhatsApp** (click-to-chat, `wa.me`) — sem servidor, sem API, custo zero.
+- Helper global **`waSend(phone,text)` + `waPhone(phone)`** (logo após `openLink`, ~linha 584): gera link `wa.me`. **Normaliza número BR local** (DDD+número) prefixando `55` sozinho; sem número → `api.whatsapp.com/send` (deixa escolher contato).
+- Card ganhou **campo de telefone** (`#cz-wa-tel`) + botão **"📲 Enviar no WhatsApp"** ao lado do "Copiar". Nova função `CASA.sendQuadro()` (exposta na API pública do IIFE `CASA`).
+- **PII protegida:** telefone vai em `ident.telefone` → sincroniza no Supabase (`data jsonb`, RLS); `scrub()` remove do localStorage (mesmo padrão de CPF/nome). Offline não persiste — o card avisa.
+- Bump `APP_VERSION` 2.11.0→**2.12.0** + `sw.js` cache v17→**v18**. `index-next.html` sincronizado.
+- **Verificado** (tem `node` no ambiente remoto): `node --check` do app limpo; testes da lógica de link OK; **rodado em Chromium headless** (Playwright) — clique gera `https://wa.me/5581988887777?text=<quadro>` correto.
+
+**Roadmap das próximas fases (por complexidade):** 2) Base de contatos (`painel_contatos`, só Supabase, R$0) · 3) Envio real via **Supabase Edge Function** `wa-send` + alertas pra você (1ª infra server-side; setup Meta Business) · 4) Disparos pra clientes (templates aprovados) · 5) Atendimento bidirecional no Inbox (webhook `wa-webhook` → `painel_wa_mensagens`) · 6) Atendente de IA (Claude na `wa-webhook`). **Ponto-chave:** app não tem servidor → tudo que precisa de webhook/segredo vai em Edge Function (Supabase). Preço Meta desde 07/2025 = por mensagem; resposta em 24h grátis.
+
+**Alvo bônus rápido pendente:** botão WhatsApp na equipe de saúde do Gael (campo `contato` livre, no engine `GAEL`).
+
+---
+
+## 🟢 (histórico) sessão 01/07 — INBOX #inbox + INTEGRAÇÃO GOOGLE completas
 
 **Tudo desta sessão está NO AR e VERIFICADO ao vivo (v2.5.1 → v2.10.0):**
 - **Inbox = captura→triagem→roteamento:** email `#inbox` do Gmail é lido → você tria (Tarefa/Insight/Referência/Arquivar) → email é **marcado "📥 Processado no Painel" + arquivado** no Gmail. Tabela Supabase `painel_inbox` (RLS owner). Tarefa roteada espelha no topo do módulo Tarefas.
