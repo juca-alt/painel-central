@@ -342,6 +342,26 @@
   #view-gael .g-acts button{border:none;background:none;color:var(--muted);cursor:pointer;font-size:15px;padding:3px 4px;border-radius:6px}
   #view-gael .g-acts button:hover{color:var(--accent);background:var(--accent-soft)}
   #view-gael .g-bdg{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;white-space:nowrap;margin-left:4px}
+  /* Contatos — reusa o motor visual do Gael, escopado à sua view */
+  #view-contatos .g-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 12px}
+  #view-contatos .g-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;font-size:13px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}
+  #view-contatos .g-pill:hover{border-color:var(--accent)}
+  #view-contatos .g-pill .ct{font-size:11px;background:var(--chip);color:var(--muted);padding:0 6px;border-radius:20px}
+  #view-contatos .g-pill.on{background:var(--accent-soft);color:#173404;border-color:transparent}
+  #view-contatos .g-pill.on .ct{background:#c0dd97;color:#173404}
+  #view-contatos .g-pill i.ti{font-size:15px}
+  #view-contatos .g-row{display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-bottom:1px solid var(--line)}
+  #view-contatos .g-row:last-child{border-bottom:none}
+  #view-contatos .g-pri{font-size:14px;color:var(--txt)}
+  #view-contatos .g-sec{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+  #view-contatos .g-right{margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0}
+  #view-contatos .g-acts{display:flex;gap:4px}
+  #view-contatos .g-acts button{border:none;background:none;color:var(--muted);cursor:pointer;font-size:15px;padding:3px 4px;border-radius:6px}
+  #view-contatos .g-acts button:hover{color:var(--accent);background:var(--accent-soft)}
+  #view-contatos .g-bdg{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;white-space:nowrap}
+  #view-contatos .ct-wa{border:none;background:#25d366;color:#fff;cursor:pointer;font-size:14px;padding:6px 9px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;font-weight:600;white-space:nowrap}
+  #view-contatos .ct-wa:hover{background:#1ebe5a}
+  #view-contatos .ct-search{flex:1;min-width:150px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;color:var(--txt);background:#fff}
   .gael-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto}
   .gael-modal{background:var(--card);border-radius:14px;width:100%;max-width:520px;padding:18px 20px}
   .gael-modal h3{margin:0 0 14px;font-size:16px}
@@ -372,6 +392,7 @@
       </div>
       <a id="nav-saude" onclick="nav('saude')"><i class="ti ti-leaf"></i> Saúde</a>
       <a id="nav-gael" onclick="nav('gael')"><i class="ti ti-heart"></i> Saúde · Gael</a>
+      <a id="nav-contatos" onclick="nav('contatos')"><i class="ti ti-address-book"></i> Contatos</a>
       <a id="nav-camila" onclick="nav('camila')"><i class="ti ti-book"></i> Provas Camila</a>
       <a id="nav-atalhos" onclick="nav('atalhos')"><i class="ti ti-link"></i> Atalhos</a>
       <a id="nav-config" onclick="nav('config')"><i class="ti ti-settings"></i> Configuração</a>
@@ -534,6 +555,9 @@
     <!-- ============ SAÚDE · GAEL ============ -->
     <section id="view-gael" style="display:none"></section>
 
+    <!-- ============ CONTATOS (base de contatos · WhatsApp Fase 2) ============ -->
+    <section id="view-contatos" style="display:none"></section>
+
     <!-- ============ CAMILA ============ -->
     <section id="view-camila" style="display:none">
       <div class="head"><h1>📚 Provas Camila</h1></div>
@@ -611,6 +635,7 @@ function isoLocal(d){ return d.getFullYear()+"-"+fmt2(d.getMonth()+1)+"-"+fmt2(d
 /* ================= constantes de conexão ================= */
 var TOOL_CAL="mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__list_events";
 var TOOL_CAL_UPD="mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__update_event";
+var TOOL_CAL_DEL="mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__delete_event";
 var TOOL_DRIVE="mcp__52f54413-7c52-4d16-842e-ab7145324b3d__read_file_content";
 var TOOL_GMAIL="mcp__66384105-b7c1-4a11-b7e4-8b3258bcfadf__search_threads";
 var SHEET_ID="1Am0Z2e4qoYPpy8eUNIzpPBn_30f9Fzsl64CwS1IVx9M";
@@ -759,7 +784,7 @@ function renderConfig(){
 }
 
 /* ================= navegação ================= */
-var VIEWS=["hoje","tarefas","inbox","feira","funcionario","saude","gael","camila","atalhos","config"];
+var VIEWS=["hoje","tarefas","inbox","feira","funcionario","saude","gael","contatos","camila","atalhos","config"];
 function toggleSide(){ document.body.classList.toggle('side-open'); }
 function nav(v){
   VIEWS.forEach(function(k){
@@ -769,6 +794,7 @@ function nav(v){
   if(v==='feira'){ renderCards(); gerar(); }
   if(v==='funcionario'){ CASA.render(); }
   if(v==='gael'){ GAEL.render(); }
+  if(v==='contatos'){ CONTATOS.render(); }
   if(v==='config'){ renderConfig(); }
   var inCasa=(v==='feira'||v==='funcionario'); var nc=$('nav-casa');
   if(nc){ nc.classList.toggle('active', inCasa); if(inCasa){ $('casa-sub').classList.remove('collapsed'); nc.classList.remove('collapsed'); } }
@@ -1009,6 +1035,23 @@ function gcalUpdate(id, t, allday, dia, hi, hf){
       if(r.status===401){ gtokClear(); throw new Error("sessão expirou — toque 🔄"); }
       if(!r.ok) throw new Error("Calendar "+r.status);
       return r.json();
+    });
+}
+/* Calendar bidirecional: EXCLUI evento. Recorrente: DELETE no id da instância → só a ocorrência. */
+function gcalDelete(id){
+  if(COWORK){
+    return mcp(TOOL_CAL_DEL,{eventId:id}).then(unwrap).catch(function(e){
+      var s=String(e&&e.message||e);
+      throw new Error(/not.?found|unknown|unavailable|__STANDALONE__/i.test(s)?"exclusão indisponível aqui — usa o app instalado (PWA)":s.slice(0,120));
+    });
+  }
+  if(!gHasToken()) return Promise.reject(new Error("Conecte o Google primeiro"));
+  return fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events/"+encodeURIComponent(id),
+    {method:"DELETE", headers:{Authorization:"Bearer "+gToken}})
+    .then(function(r){
+      if(r.status===401){ gtokClear(); throw new Error("sessão expirou — toque 🔄"); }
+      if(!r.ok && r.status!==410) throw new Error("Calendar "+r.status);   /* 410 = já não existia */
+      return null;
     });
 }
 
@@ -1558,6 +1601,7 @@ var MODULOS=[
   {i:"📬",n:"Inbox Geral",d:"Capturas #inbox + Dump sem triagem.",v:"inbox"},
   {i:"🛒",n:"Feira",d:"Estoque-driven: lista pronta por canal.",v:"feira"},
   {i:"🍃",n:"Saúde",d:"Pendências de saúde — tuas e do Gael.",v:"saude"},
+  {i:"📇",n:"Contatos",d:"Base de contatos com WhatsApp de 1 clique.",v:"contatos"},
   {i:"📚",n:"Provas Camila",d:"Próximas provas + despacho de pesquisa.",v:"camila"}
 ];
 function renderAtalhos(){
@@ -1795,7 +1839,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.12.0";
+var APP_VERSION="2.13.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2631,6 +2675,81 @@ var GAEL=(function(){
   return {render:render,refreshIfOpen:refreshIfOpen,sel:sel,openForm:openForm,save:save,del:del,closeModal:closeModal};
 })();
 
+/* ================= CONTATOS: base de contatos + WhatsApp de 1 clique (Supabase) =================
+   painel_contatos (RLS owner). Telefone/email = PII → só logado (mesma regra do CASA/GAEL).
+   Fundação da integração WhatsApp: os números guardados aqui é que as próximas fases
+   (envio real via wa-send, disparos, atendimento) vão consumir. Reusa waSend() da Fase 1. */
+var CONTATOS=(function(){
+  var T='painel_contatos';
+  var rows=[], q='', catf='todos', loaded=false;
+  var CATS=[
+    {k:'cliente',    l:'Clientes',     col:['#eaf3de','#173404']},
+    {k:'lead',       l:'Leads',        col:['#e6f1fb','#042c53']},
+    {k:'fornecedor', l:'Fornecedores', col:['#faeeda','#412402']},
+    {k:'equipe',     l:'Equipe',       col:['#eeedfe','#26215c']},
+    {k:'pessoal',    l:'Pessoal',      col:['#e1f5ee','#04342c']},
+    {k:'outro',      l:'Outros',       col:['#f1efe8','#5f5e5a']}
+  ];
+  var FIELDS=[
+    {k:'nome',      l:'Nome', req:true},
+    {k:'telefone',  l:'Telefone / WhatsApp', t:'tel'},
+    {k:'categoria', l:'Categoria', t:'sel', opts:['cliente','lead','fornecedor','equipe','pessoal','outro']},
+    {k:'relacao',   l:'Relação / empresa'},
+    {k:'email',     l:'Email', t:'email'},
+    {k:'notas',     l:'Notas', t:'ta'}
+  ];
+  function catOf(k){for(var i=0;i<CATS.length;i++)if(CATS[i].k===k)return CATS[i];return CATS[CATS.length-1];}
+  function badge(k){var c=catOf(k);return '<span class="g-bdg" style="background:'+c.col[0]+';color:'+c.col[1]+'">'+esc(c.k)+'</span>';}
+  function isOpen(){var h=$('view-contatos');return !!(h&&h.style.display!=='none');}
+  function byId(id){for(var i=0;i<rows.length;i++)if(rows[i].id===id)return rows[i];return {};}
+  function load(){return SB.rest('GET',T+'?select=*&order=nome.asc').then(function(r){return r.ok?r.json():[];}).then(function(d){rows=d||[];loaded=true;return rows;}).catch(function(){rows=rows||[];});}
+  function norm(s){return String(s==null?'':s).toLowerCase();}
+  function filtered(){
+    var list=rows;
+    if(catf!=='todos')list=list.filter(function(r){return (r.categoria||'outro')===catf;});
+    var t=norm(q).trim();
+    if(t)list=list.filter(function(r){return norm(r.nome).indexOf(t)>=0||norm(r.telefone).indexOf(t)>=0||norm(r.relacao).indexOf(t)>=0||norm(r.email).indexOf(t)>=0;});
+    return list;
+  }
+  function headHtml(){return '<div class="head"><h1><i class="ti ti-address-book" style="color:var(--accent)"></i> Contatos</h1></div><div class="sub">Base de contatos com <b>WhatsApp de 1 clique</b> — a fundação das próximas fases da integração. Telefone e email ficam protegidos por login (RLS).</div>';}
+  function pillsHtml(){
+    var tot=rows.length, all='<button class="g-pill'+(catf==='todos'?' on':'')+'" onclick="CONTATOS.setCat(\'todos\')">Todos <span class="ct">'+tot+'</span></button>';
+    return '<div class="g-tabs" id="ct-pills">'+all+CATS.map(function(c){var n=rows.filter(function(r){return (r.categoria||'outro')===c.k;}).length;if(!n&&catf!==c.k)return '';return '<button class="g-pill'+(catf===c.k?' on':'')+'" onclick="CONTATOS.setCat(\''+c.k+'\')">'+esc(c.l)+' <span class="ct">'+n+'</span></button>';}).join('')+'</div>';}
+  function toolbarHtml(){return '<div class="bar"><input class="ct-search" id="ct-q" type="search" placeholder="Buscar por nome, telefone, empresa…" value="'+esc(q)+'" oninput="CONTATOS.setSearch(this.value)"><button class="btn primary sm" onclick="CONTATOS.openForm()"><i class="ti ti-plus"></i> Novo contato</button></div>';}
+  function rowHtml(r){
+    var sec=[r.relacao,r.email].filter(Boolean).join(' · ');
+    var wa=r.telefone?'<button class="ct-wa" title="Abrir conversa no WhatsApp" onclick="CONTATOS.wa(\''+r.id+'\')"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button>':'';
+    var acts='<div class="g-acts"><button title="Editar" onclick="CONTATOS.openForm(\''+r.id+'\')"><i class="ti ti-edit"></i></button><button title="Excluir" onclick="CONTATOS.del(\''+r.id+'\')"><i class="ti ti-trash"></i></button></div>';
+    return '<div class="g-row"><div style="flex:1;min-width:0"><div class="g-pri">'+esc(r.nome)+' '+badge(r.categoria)+'</div>'+(r.telefone?'<div class="g-sec">'+esc(r.telefone)+(sec?' · '+esc(sec):'')+'</div>':(sec?'<div class="g-sec">'+esc(sec)+'</div>':''))+'</div><div class="g-right">'+wa+acts+'</div></div>';
+  }
+  function listHtml(){
+    var list=filtered();
+    if(!rows.length)return '<div class="empty">Nenhum contato ainda — use “Novo contato”.</div>';
+    if(!list.length)return '<div class="empty">Nada encontrado com esse filtro.</div>';
+    return '<div class="panel">'+list.map(rowHtml).join('')+'</div>';
+  }
+  function paintList(){var el=$('ct-list');if(el)el.innerHTML=listHtml();}
+  function paintPills(){var el=$('ct-pills');if(el)el.outerHTML=pillsHtml();}
+  function paint(){var h=$('view-contatos');if(!h)return;h.innerHTML=headHtml()+toolbarHtml()+pillsHtml()+'<div id="ct-list">'+listHtml()+'</div>';}
+  function connectPrompt(){return '<div class="errbox" style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-weight:600"><i class="ti ti-lock" style="vertical-align:-2px"></i> Conectar uma vez</span><span class="g-sec" style="margin:0">telefone e email são protegidos por login — mesmo login do resto do painel.</span><input id="ct-email" type="email" placeholder="seu@email.com" style="padding:7px 9px;border:1px solid var(--line);border-radius:8px"><button class="btn primary sm" onclick="SB.signIn((document.getElementById(\'ct-email\')||{}).value)">Enviar link</button></div>';}
+  function render(){var h=$('view-contatos');if(!h)return;if(!SB.enabled()){h.innerHTML=headHtml()+SB.bar();return;}if(!SB.loggedIn()){h.innerHTML=headHtml()+connectPrompt();return;}h.innerHTML=headHtml()+'<div class="loading">Carregando contatos…</div>';load().then(function(){if(isOpen())paint();});}
+  function refreshIfOpen(){if(isOpen())render();}
+  function setSearch(v){q=v;paintList();}
+  function setCat(k){catf=k;paintPills();paintList();}
+  function wa(id){var r=byId(id);waSend(r.telefone||'','');}
+  function fieldInput(f,row){var v=row[f.k];var id='ct-f-'+f.k;var inner;
+    if(f.t==='sel'){inner='<select id="'+id+'">'+f.opts.map(function(o){return '<option'+(String(v==null?'outro':v)===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';}
+    else if(f.t==='ta'){inner='<textarea id="'+id+'">'+esc(v==null?'':v)+'</textarea>';}
+    else{var typ=f.t==='tel'?'tel':(f.t==='email'?'email':'text');inner='<input type="'+typ+'" id="'+id+'" value="'+esc(v==null?'':v)+'">';}
+    return '<div class="g-fld"><label>'+esc(f.l)+(f.req?' *':'')+'</label>'+inner+'</div>';
+  }
+  function openForm(id){var row=id?byId(id):{};var body=FIELDS.map(function(f){return fieldInput(f,row);}).join('');closeModal();var bg=document.createElement('div');bg.className='gael-modal-bg';bg.id='ct-modal-bg';bg.onclick=function(e){if(e.target===bg)closeModal();};var ttl=(id?'Editar':'Novo')+' contato';var dl=id?'<button class="btn sm" style="color:var(--danger);border-color:var(--danger)" onclick="CONTATOS.del(\''+id+'\')"><i class="ti ti-trash"></i> Excluir</button>':'';bg.innerHTML='<div class="gael-modal"><h3>'+ttl+'</h3>'+body+'<div class="g-foot">'+dl+'<div class="spacer"></div><button class="btn sm" onclick="CONTATOS.closeModal()">Cancelar</button><button class="btn primary sm" onclick="CONTATOS.save('+(id?('\''+id+'\''):'null')+')">Salvar</button></div></div>';document.body.appendChild(bg);var n=$('ct-f-nome');if(n)n.focus();}
+  function closeModal(){var m=$('ct-modal-bg');if(m&&m.parentNode)m.parentNode.removeChild(m);}
+  function save(id){if(!SB.loggedIn()){toast('Conecte pra salvar');return;}var body={};for(var i=0;i<FIELDS.length;i++){var f=FIELDS[i];var el=$('ct-f-'+f.k);if(!el)continue;var val=el.value;if(val==='')val=null;body[f.k]=val;}if(!body.nome){toast('Preencha: Nome');return;}if(!body.categoria)body.categoria='outro';var p=id?SB.rest('PATCH',T+'?id=eq.'+encodeURIComponent(id),body,{Prefer:'return=minimal'}):SB.rest('POST',T,body,{Prefer:'return=minimal'});p.then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t||('HTTP '+r.status));});closeModal();toast(id?'Atualizado':'Contato adicionado');return load().then(function(){if(isOpen())paint();});}).catch(function(e){toast('Erro: '+String(e&&e.message||e).slice(0,90));});}
+  function del(id){if(!SB.loggedIn()){toast('Conecte pra excluir');return;}if(!confirm('Excluir este contato?'))return;SB.rest('DELETE',T+'?id=eq.'+encodeURIComponent(id)).then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t||('HTTP '+r.status));});closeModal();toast('Excluído');return load().then(function(){if(isOpen())paint();});}).catch(function(e){toast('Erro: '+String(e&&e.message||e).slice(0,90));});}
+  return {render:render,refreshIfOpen:refreshIfOpen,setSearch:setSearch,setCat:setCat,wa:wa,openForm:openForm,save:save,del:del,closeModal:closeModal};
+})();
+
 /* ================= EVMODAL: detalhe/edição de evento da agenda + checklist guiado =================
    Toca num evento -> modal (mesmo visual do gael-modal): título, data, hora, categoria
    e checklist com "modo guiado" (um passo por vez, concluir e avançar, progresso). */
@@ -2668,7 +2787,7 @@ var EVMODAL=(function(){
     h+='<div class="g-fld"><label>Categoria</label><select id="ev-f-cat">'+CATS.map(function(c){return '<option'+(c.cat===effCat?' selected':'')+'>'+c.cat+'</option>';}).join('')+'</select></div>';
     if(cur.rec) h+='<div class="note" style="margin:0 0 10px">🔁 Evento recorrente — título/data/hora mudam <b>só nesta ocorrência</b>; a categoria vale pra série toda.</div>';
     h+='<div id="ev-ck-sec">'+ckHtml()+'</div>';
-    h+='<div class="g-foot"><div class="spacer"></div><button class="btn sm" onclick="EVMODAL.close()">Cancelar</button><button class="btn primary sm" onclick="EVMODAL.save()">Salvar</button></div>';
+    h+='<div class="g-foot"><button class="btn sm" style="color:var(--danger);border-color:var(--danger)" onclick="EVMODAL.del()"><i class="ti ti-trash"></i> Excluir</button><div class="spacer"></div><button class="btn sm" onclick="EVMODAL.close()">Cancelar</button><button class="btn primary sm" onclick="EVMODAL.save()">Salvar</button></div>';
     return h;
   }
   function ckHtml(){
@@ -2747,11 +2866,21 @@ var EVMODAL=(function(){
       .catch(function(e){ toast('Não salvei no Google: '+String(e&&e.message||e).slice(0,90)); });
   }
 
-  return {open:open, close:close, save:save, allday:allday,
+  function del(){
+    if(!cur) return;
+    var raw=cur.raw;
+    if(!confirm('Excluir "'+(raw.summary||'(sem título)')+'" do Google Calendar?'+(cur.rec?' Recorrente: só ESTA ocorrência sai.':''))) return;
+    toast('Excluindo…');
+    gcalDelete(cur.id)
+      .then(function(){ delete EVIDX[cur.id]; evCache={}; close(); toast('Evento excluído ✓ (Google)'); loadAgendaView(); })
+      .catch(function(e){ toast('Não excluí: '+String(e&&e.message||e).slice(0,90)); });
+  }
+
+  return {open:open, close:close, save:save, del:del, allday:allday,
           ckAdd:ckAdd, ckToggle:ckToggle, ckDel:ckDel,
           guide:guide, guideDone:guideDone, guideSkip:guideSkip, guideExit:guideExit};
 })();
-SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
+SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();CONTATOS.refreshIfOpen();EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
 SB.init();
 try{var _q=new URLSearchParams(location.search);if(_q.get("demo")==="1"){nav("funcionario");CASA.demo(_q.get("ver")||"admin");}}catch(e){}
 
