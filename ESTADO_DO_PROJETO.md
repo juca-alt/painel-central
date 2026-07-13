@@ -1,11 +1,19 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-07-13 · Leia isto primeiro ao retomar. **Produção: v2.14.0.**
+**Última atualização:** 2026-07-13 · Leia isto primeiro ao retomar. **Produção: v2.15.0.**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
 ---
 
-## 🟢 RETOMAR AQUI — sessão 13/07 (Módulo PROJETOS + Tarefas limpa + editar/excluir evento, NO AR v2.14.0)
+## 🟢 RETOMAR AQUI — sessão 13/07 (b) — Status ✅/❌ de evento (NO AR v2.15.0)
+
+**Frente entregue e VERIFICADA no preview + NO AR (commit `7cb499e`):** cada evento da Agenda ganhou **botão ✅/❌ pra marcar feito/não-feito**. Como o Google Calendar **não tem estado "feito"**, o símbolo é **carimbado no PRÓPRIO TÍTULO do evento** (`gcalPatchTitle` = PATCH só do `summary`, preserva data/hora) → aparece em **qualquer visão do Google Agenda** — a referência visual que o Gustavo já usa no dia a dia. Toggle: clicar de novo limpa; trocar substitui (regex não duplica). Helpers `evStripStatus`/`evCurStatus`/`evSetStatus`/`evStatusBtns`. **2 lugares:** botões inline na **visão Dia** (título mostra sem o emoji, botão destaca o ativo) + linha **"Está feito?"** no modal do evento (`EVMODAL.status`, persiste no Salvar). Standalone via PATCH REST; Cowork via MCP `update_event` passando os horários crus. Recorrente = vale na ocorrência. Bônus: **tarefas concluídas do Google Tasks agora exibem ✅** (mesma linguagem). `APP_VERSION`→**2.15.0**, sw→**v21**. Verificado: toggle ✅→❌→limpar envia só `{summary}` no PATCH; day view + modal OK (screenshots mobile); console limpo.
+
+> Visões 4-dias/Semana/Mês mostram o emoji no título (indicador visual, sincronizado do Google) e tap → modal pra alterar; só a visão Dia tem os botões inline. Se quiser botões inline também nessas, é fácil.
+
+---
+
+## 🟢 (histórico) sessão 13/07 (a) — Módulo PROJETOS + Tarefas limpa + editar/excluir evento (v2.14.0)
 
 **3 frentes entregues e VERIFICADAS no preview + NO AR (commits `a26dfb7` parte + `0f82eab`):**
 
