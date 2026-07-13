@@ -1,9 +1,32 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-07-04 · Leia isto primeiro ao retomar. **Produção: v2.12.0.**
+**Última atualização:** 2026-07-13 · Leia isto primeiro ao retomar. **Produção: v2.14.0.**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
 ---
+
+## 🟢 RETOMAR AQUI — sessão 13/07 (Módulo PROJETOS + Tarefas limpa + editar/excluir evento, NO AR v2.14.0)
+
+**3 frentes entregues e VERIFICADAS no preview + NO AR (commits `a26dfb7` parte + `0f82eab`):**
+
+1. **📅 Editar/excluir evento pela UI (Agenda):** toca no evento → modal edita título/data/hora/categoria/checklist **e agora EXCLUI** (`gcalDelete` + botão 🗑️ no `EVMODAL`). Recorrente: edição/exclusão valem só na ocorrência clicada; categoria vale pra série. Standalone via API REST (`DELETE /events/{id}`, tolera 410); Cowork via MCP `delete_event`. *(a parte de editar já tinha vindo no commit do Contatos; a exclusão foi adicionada agora.)*
+
+2. **🗂️ Módulo PROJETOS novo** (nav abaixo de Tarefas) — **cada projeto = uma lista do Google Tasks.** Card com **barra de progresso**, contadores (abertas / vencidas em vermelho / concluídas) e próxima data. Botões: **Novo projeto** (cria tasklist), renomear (PATCH tasklist), excluir (DELETE tasklist — avisa que as tarefas somem; lista padrão do Google não apaga) e **quick-add de tarefa** (escreve na lista). **Sincronizado por construção com Tarefas**: `GT_GROUPS` é o cache compartilhado (fn `fetchTaskGroups`) — tarefa criada num projeto **já aparece no módulo Tarefas**, sem storage nova. *(Ideia do Gustavo: evoluir aqui os projetos de dev no Claude — Painel Central, CRM, Central Financeira etc.)*
+
+3. **✅ Tarefas — backlog da planilha APOSENTADO:** removidos o filtro Abertas/Atrasadas/Todas, o botão "Abrir planilha" e o bloco recolhido "Backlog da planilha (legado)". A **Bússola** (prioridades de fundo) virou painel próprio. Sublabels dos cards agora dizem "no Google Tasks / com prazo vencido / histórico no Google Tasks". `renderTarefas` só pinta Bússola (no Cowork mantém fallback dos cards). Google Tasks é a **fonte única**.
+
+**Verificado:** sintaxe JSC OK; preview (porta 8803, dados fake injetados) — Projetos renderiza 3 projetos com progresso/vencidas/próxima certos; 4 mutações batem endpoints corretos (POST tasks, POST/PATCH/DELETE tasklists); Tarefas sem filtro/planilha, Bússola isolada, sublabels novos; console limpo; mobile OK (screenshots). `APP_VERSION` 2.13.0→**2.14.0**, `sw.js` v19→**v20**.
+
+**Próximos passos possíveis (decidir na retomada):**
+1. **Metadata de projeto** (subir 1 degrau): tabela Supabase `painel_projetos` p/ status (ativo/pausado/concluído), descrição, link ao repo/chat — hoje o projeto só tem o que a lista do Google Tasks carrega (título + tarefas).
+2. **PROJ.abrir** hoje leva pro topo do gtasks-out; poderia focar/realçar a lista específica do projeto clicado.
+3. Retomar a frente **WhatsApp** (sessão paralela pausada — ver bloco abaixo): Fase 3 (Edge Function `wa-send`).
+
+---
+
+## 🟢 (histórico) sessão 04/07 — WhatsApp Fase 1 + Fase 2 Contatos (v2.12.0 → v2.13.0)
+
+> Entre esta sessão e a de 13/07 entrou o **v2.13.0** (commit `a26dfb7`): **módulo Contatos** (`painel_contatos`, Supabase RLS owner, WhatsApp de 1 clique) = **Fase 2** do roadmap WhatsApp. Nav `Contatos`, view Table-CRUD estilo Gael, migration `sql/painel_contatos.sql`. sw chegou a v19. *(Esse commit também carregou junto a 1ª versão do editar-evento.)*
 
 ## 🟢 RETOMAR AQUI — sessão 04/07 (WhatsApp Fase 1 = click-to-chat, NO AR v2.12.0)
 
