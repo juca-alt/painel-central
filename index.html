@@ -373,6 +373,23 @@
   .gael-modal .g-fld.g-chk input{width:auto}
   .gael-modal .g-fld.g-chk label{font-weight:600;color:var(--txt)}
   .gael-modal .g-foot{display:flex;gap:8px;align-items:center;margin-top:6px}
+  /* ===== Projetos (listas do Google Tasks) ===== */
+  #view-projetos .pj-grid{display:flex;flex-direction:column;gap:12px}
+  .pj-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .pj-top{display:flex;align-items:center;gap:8px;justify-content:space-between}
+  .pj-name{font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:7px;min-width:0;color:var(--txt)}
+  .pj-name i{color:var(--accent);flex-shrink:0}
+  .pj-name:hover{color:var(--accent)}
+  .pj-acts{display:flex;gap:4px;flex-shrink:0}
+  .pj-acts button{border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;border-radius:8px;padding:5px 9px;font-size:13px}
+  .pj-acts button:hover{color:var(--txt)}
+  .pj-bar{height:7px;background:var(--line);border-radius:20px;overflow:hidden;margin:12px 0 9px}
+  .pj-bar>div{height:100%;background:var(--accent);border-radius:20px;transition:width .3s}
+  .pj-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+  .pj-meta b{color:var(--txt);font-weight:600}
+  .pj-meta .over b,.pj-meta .over{color:var(--danger)}
+  .pj-add{display:flex;gap:6px;margin-top:12px}
+  .pj-add input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;font-size:13px;color:var(--txt);background:#fff}
 </style>
 </head>
 <body>
@@ -384,6 +401,7 @@
     <nav class="nav">
       <a id="nav-hoje" class="active" onclick="nav('hoje')"><i class="ti ti-home"></i> Hoje</a>
       <a id="nav-tarefas" onclick="nav('tarefas')"><i class="ti ti-checklist"></i> Tarefas <span class="bdg" id="bdg-atr"></span></a>
+      <a id="nav-projetos" onclick="nav('projetos')"><i class="ti ti-folders"></i> Projetos</a>
       <a id="nav-inbox" onclick="nav('inbox')"><i class="ti ti-inbox"></i> Inbox Geral <span class="bdg" id="bdg-inb"></span></a>
       <a id="nav-casa" class="group" onclick="toggleCasa()"><i class="ti ti-home-2"></i> Casa <i class="ti ti-chevron-down chev"></i></a>
       <div class="subnav" id="casa-sub">
@@ -444,21 +462,16 @@
     <!-- ============ TAREFAS ============ -->
     <section id="view-tarefas" style="display:none">
       <div class="head"><h1>✅ Tarefas</h1></div>
-      <div class="sub">Google Tasks por projeto — marcar/adicionar aqui já escreve no Google (bidirecional). A planilha antiga fica recolhida como legado.</div>
+      <div class="sub">Google Tasks é a fonte única — marcar/adicionar aqui já escreve no Google (bidirecional). Organize por projeto no módulo <b>🗂️ Projetos</b>; a Bússola (prioridades de fundo) segue abaixo.</div>
       <div class="bar">
-        <div class="seg" id="tfiltro">
-          <button class="active" data-f="abertas" onclick="setTFiltro('abertas')">Abertas</button>
-          <button data-f="atrasadas" onclick="setTFiltro('atrasadas')">Atrasadas</button>
-          <button data-f="todas" onclick="setTFiltro('todas')">Todas</button>
-        </div>
         <div class="spacer"></div>
-        <button class="btn" onclick="openLink(SHEET_URL)">📊 Abrir planilha</button>
-        <button class="btn" onclick="openLink('https://tasks.google.com')">☑ Google Tasks</button>
+        <button class="btn" onclick="nav('projetos')">🗂️ Projetos</button>
+        <button class="btn" onclick="openLink('https://tasks.google.com')">☑ Abrir Google Tasks</button>
       </div>
       <div class="cards">
-        <div class="card"><div class="k">Abertas</div><div class="v" id="t-ab">–</div><div class="s">backlog ativo</div></div>
-        <div class="card"><div class="k">Atrasadas</div><div class="v red" id="t-atr">–</div><div class="s">prazo vencido</div></div>
-        <div class="card"><div class="k">Concluídas</div><div class="v" id="t-done">–</div><div class="s">backlog + arquivo</div></div>
+        <div class="card"><div class="k">Abertas</div><div class="v" id="t-ab">–</div><div class="s">no Google Tasks</div></div>
+        <div class="card"><div class="k">Atrasadas</div><div class="v red" id="t-atr">–</div><div class="s">com prazo vencido</div></div>
+        <div class="card"><div class="k">Concluídas</div><div class="v" id="t-done">–</div><div class="s">histórico no Google Tasks</div></div>
       </div>
       <div id="tar-inbox"></div>
       <div id="gtasks-out"></div>
@@ -557,6 +570,17 @@
 
     <!-- ============ CONTATOS (base de contatos · WhatsApp Fase 2) ============ -->
     <section id="view-contatos" style="display:none"></section>
+
+    <!-- ============ PROJETOS (listas do Google Tasks como projetos) ============ -->
+    <section id="view-projetos" style="display:none">
+      <div class="head"><h1>🗂️ Projetos</h1></div>
+      <div class="sub">Cada projeto é uma <b>lista do Google Tasks</b>. Tarefa criada aqui já entra no módulo Tarefas e escreve no Google (bidirecional) — projeto e tarefas ficam sempre sincronizados.</div>
+      <div class="bar">
+        <div class="spacer"></div>
+        <button class="btn primary" onclick="PROJ.novo()"><i class="ti ti-plus"></i> Novo projeto</button>
+      </div>
+      <div id="projetos-out"><div class="loading">Lendo teus projetos do Google Tasks…</div></div>
+    </section>
 
     <!-- ============ CAMILA ============ -->
     <section id="view-camila" style="display:none">
@@ -784,7 +808,7 @@ function renderConfig(){
 }
 
 /* ================= navegação ================= */
-var VIEWS=["hoje","tarefas","inbox","feira","funcionario","saude","gael","contatos","camila","atalhos","config"];
+var VIEWS=["hoje","tarefas","projetos","inbox","feira","funcionario","saude","gael","contatos","camila","atalhos","config"];
 function toggleSide(){ document.body.classList.toggle('side-open'); }
 function nav(v){
   VIEWS.forEach(function(k){
@@ -795,6 +819,7 @@ function nav(v){
   if(v==='funcionario'){ CASA.render(); }
   if(v==='gael'){ GAEL.render(); }
   if(v==='contatos'){ CONTATOS.render(); }
+  if(v==='projetos'){ PROJ.render(); }
   if(v==='config'){ renderConfig(); }
   var inCasa=(v==='feira'||v==='funcionario'); var nc=$('nav-casa');
   if(nc){ nc.classList.toggle('active', inCasa); if(inCasa){ $('casa-sub').classList.remove('collapsed'); nc.classList.remove('collapsed'); } }
@@ -1233,20 +1258,24 @@ function isLate(t){
 }
 function dumpPend(d){ return (d.dump||[]).filter(function(s){ return s.indexOf("✅")<0; }); }
 
-var tFiltro="abertas";
-function setTFiltro(f){
-  tFiltro=f;
-  document.querySelectorAll('#tfiltro button').forEach(function(b){ b.classList.toggle('active', b.dataset.f===f); });
-  if(sheetData) renderTarefas(sheetData);
-}
 function renderTarefas(d){
-  var abertas=d.backlog.filter(isOpen);
-  var atrasadas=abertas.filter(isLate);
-  var done=d.backlog.concat(d.arquivo).filter(function(t){return t.status.k==="done";});
-  /* cards: fallback da planilha; o Google Tasks (renderGTasks) sobrescreve — é a fonte primária agora */
-  var gb=$('gtasks-out'); if(!(gb&&gb.__groups)){ $('t-ab').textContent=abertas.length; $('t-atr').textContent=atrasadas.length; $('t-done').textContent=done.length; }
-  $('bussola-out').innerHTML="";   /* bússola entra dentro do bloco legado abaixo */
-  /* bússola */
+  /* Backlog da planilha APOSENTADO — Google Tasks (renderGTasks) é a fonte única de tarefas e cards.
+     Da planilha sobrevive só a Bússola (prioridades de fundo, não é backlog). */
+  if(COWORK){ /* no Cowork o Google Tasks não roda; cards caem pro dado da planilha pra não ficar vazio */
+    var abertas=d.backlog.filter(isOpen), atrasadas=abertas.filter(isLate);
+    var done=d.backlog.concat(d.arquivo).filter(function(t){return t.status.k==="done";});
+    var hoje=new Date(); hoje.setHours(0,0,0,0); var hIso=isoLocal(hoje);
+    var amn=new Date(hoje); amn.setDate(amn.getDate()+1); var aIso=isoLocal(amn);
+    var fimSem=new Date(hoje); fimSem.setDate(fimSem.getDate()+(7-fimSem.getDay())); var fIso=isoLocal(fimSem);
+    var cH=0,cA=0,cS=0;
+    abertas.forEach(function(t){ if(!t.prazo) return; var p=isoLocal(t.prazo);
+      if(p===hIso)cH++; else if(p===aIso)cA++; else if(p>aIso&&p<fIso)cS++; });
+    try{
+      $('t-ab').textContent=abertas.length; $('t-atr').textContent=atrasadas.length; $('t-done').textContent=done.length;
+      $('h-venc').textContent=atrasadas.length; $('h-hoje').textContent=cH; $('h-amn').textContent=cA; $('h-sem').textContent=cS;
+    }catch(e){}
+  }
+  /* Bússola — prioridades de fundo (único remanescente da planilha) */
   var bs=(d.bussola||[]).slice().sort(function(a,b){return b.prio-a.prio;});
   var bh="";
   if(bs.length){
@@ -1258,38 +1287,29 @@ function renderTarefas(d){
     });
     bh+='</div>';
   }
-  /* lista da planilha */
-  var lista = tFiltro==="todas"?d.backlog : tFiltro==="atrasadas"?atrasadas : abertas;
-  var listaHtml="";
-  if(!lista.length){ listaHtml='<div class="empty">Nada aqui nesse filtro. 🎉</div>'; }
-  else{
-    var grupos={};
-    lista.forEach(function(t){ (grupos[t.categoria]=grupos[t.categoria]||[]).push(t); });
-    Object.keys(grupos).sort().forEach(function(cat){
-      var arr=grupos[cat];
-      arr.sort(function(a,b){ return (a.prazo?a.prazo.getTime():9e15) - (b.prazo?b.prazo.getTime():9e15); });
-      listaHtml+='<div class="panel"><h3><span class="chip" style="background:'+(CAT_COL[cat]||'var(--c-rotina)')+'">'+esc(cat)+'</span><span class="count">'+arr.length+'</span></h3>';
-      arr.forEach(function(t){
-        var late=isLate(t);
-        listaHtml+='<div class="row"><div class="tm'+(late?' late':'')+'">'+esc(t.prazoTxt||"sem prazo")+'</div>'+
-          '<div class="nm">'+esc(t.tarefa)+((t.projeto||t.obs)?'<small>'+esc(t.projeto)+(t.obs?' · '+esc(t.obs):'')+'</small>':'')+'</div>'+
-          '<span class="pill '+(late?'low':t.status.cls)+'">'+(late?'atrasada':t.status.lbl)+'</span></div>';
-      });
-      listaHtml+='</div>';
-    });
-  }
-  /* Google Tasks (gtasks-out, acima) é o primário; a planilha vira seção recolhida (legado) */
-  $('tarefas-out').innerHTML='<details style="margin-top:6px"><summary style="cursor:pointer;padding:11px 4px;color:var(--muted);font-size:13px;font-weight:600;user-select:none">🗂️ Backlog da planilha (legado) — abrir</summary><div style="margin-top:6px">'+bh+listaHtml+'</div></details>';
+  $('bussola-out').innerHTML=bh;
+  $('tarefas-out').innerHTML="";
   try{ INBOX.repaint(); }catch(e){}   /* espelha as tarefas roteadas no topo da tela */
 }
 /* ===== Google Tasks no módulo Tarefas: listas = PROJETOS, abertas + concluídas (histórico), ordenável.
    Leitura via tasks; escrita (marcar/criar) em gtToggle/gtCreate — bidirecional com o escopo `tasks`. ===== */
 var GTASKS_SORT="due";
+var GT_GROUPS=null;   /* cache das listas do Google Tasks — compartilhado por Tarefas e Projetos */
 async function gtGet(url){
   var r=await fetch(url,{headers:{Authorization:"Bearer "+gToken}});
   if(r.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); }
   if(r.status===403) throw new Error("Tasks 403 — verifica acesso/escopo");
   return r.json();
+}
+/* busca listas + tarefas do Google Tasks e guarda em GT_GROUPS (fonte única de Tarefas E Projetos) */
+async function fetchTaskGroups(){
+  var ld=await gtGet("https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=100");
+  var lists=(ld.items||[]), groups=[];
+  for(var i=0;i<lists.length;i++){
+    var td=await gtGet("https://tasks.googleapis.com/tasks/v1/lists/"+encodeURIComponent(lists[i].id)+"/tasks?showCompleted=true&showHidden=true&maxResults=100");
+    groups.push({ id:lists[i].id, nome:lists[i].title, tarefas:(td.items||[]) });
+  }
+  GT_GROUPS=groups; return groups;
 }
 async function loadGTasks(){
   var box=$('gtasks-out'); if(!box) return;
@@ -1297,13 +1317,9 @@ async function loadGTasks(){
   if(!gHasToken()){ box.innerHTML=connectPanel('Google Tasks'); return; }
   box.innerHTML='<div class="panel"><div class="loading">Lendo tuas listas do Google Tasks…</div></div>';
   try{
-    var ld=await gtGet("https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=100");
-    var lists=(ld.items||[]), groups=[];
-    for(var i=0;i<lists.length;i++){
-      var td=await gtGet("https://tasks.googleapis.com/tasks/v1/lists/"+encodeURIComponent(lists[i].id)+"/tasks?showCompleted=true&showHidden=true&maxResults=100");
-      groups.push({ id:lists[i].id, nome:lists[i].title, tarefas:(td.items||[]) });
-    }
+    var groups=await fetchTaskGroups();
     renderGTasks(groups);
+    try{ PROJ.refreshIfOpen(); }catch(e){}
   }catch(e){
     if(!gHasToken()||String(e&&e.message)==="__NEEDCONNECT__"){ box.innerHTML=connectPanel('Google Tasks'); return; }
     box.innerHTML='<div class="errbox"><div class="e-t">📋 Google Tasks</div><div class="e-s">'+esc(String((e&&e.message)||e))+'</div></div>';
@@ -1597,11 +1613,12 @@ var ATALHOS=[
 ];
 var MODULOS=[
   {i:"🏠",n:"Hoje",d:"Agenda viva + cutucadas + visão do dia.",v:"hoje"},
-  {i:"✅",n:"Tarefas",d:"Central de Tarefas ao vivo: backlog, atrasadas, Bússola.",v:"tarefas"},
+  {i:"✅",n:"Tarefas",d:"Google Tasks ao vivo: abertas, vencidas, Bússola.",v:"tarefas"},
   {i:"📬",n:"Inbox Geral",d:"Capturas #inbox + Dump sem triagem.",v:"inbox"},
   {i:"🛒",n:"Feira",d:"Estoque-driven: lista pronta por canal.",v:"feira"},
   {i:"🍃",n:"Saúde",d:"Pendências de saúde — tuas e do Gael.",v:"saude"},
   {i:"📇",n:"Contatos",d:"Base de contatos com WhatsApp de 1 clique.",v:"contatos"},
+  {i:"🗂️",n:"Projetos",d:"Listas do Google Tasks como projetos, sincronizadas com Tarefas.",v:"projetos"},
   {i:"📚",n:"Provas Camila",d:"Próximas provas + despacho de pesquisa.",v:"camila"}
 ];
 function renderAtalhos(){
@@ -1839,7 +1856,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.13.0";
+var APP_VERSION="2.14.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2879,6 +2896,93 @@ var EVMODAL=(function(){
   return {open:open, close:close, save:save, del:del, allday:allday,
           ckAdd:ckAdd, ckToggle:ckToggle, ckDel:ckDel,
           guide:guide, guideDone:guideDone, guideSkip:guideSkip, guideExit:guideExit};
+})();
+/* ================= PROJETOS: cada projeto = uma lista do Google Tasks =================
+   Sincronizado por construção com o módulo Tarefas (ambos leem GT_GROUPS). Criar tarefa
+   aqui escreve na lista → aparece nas Tarefas. Criar/renomear/excluir projeto = a lista
+   (tasklists) no Google. Sem storage nova: a própria conta Google é a fonte da verdade. */
+var PROJ=(function(){
+  async function ensure(){ if(!GT_GROUPS) await fetchTaskGroups(); return GT_GROUPS||[]; }
+  function grupo(lid){ return (GT_GROUPS||[]).filter(function(x){return x.id===lid;})[0]; }
+  function render(){
+    var box=$('projetos-out'); if(!box) return;
+    if(COWORK){ box.innerHTML='<div class="note">Projetos usam o Google Tasks, que roda no app instalado (PWA) — aqui no Cowork não aparece.</div>'; return; }
+    if(!gHasToken()){ box.innerHTML=connectPanel('teus projetos'); return; }
+    box.innerHTML='<div class="loading">Lendo teus projetos do Google Tasks…</div>';
+    ensure().then(paint).catch(function(e){
+      if(!gHasToken()||String(e&&e.message)==="__NEEDCONNECT__"){ box.innerHTML=connectPanel('teus projetos'); return; }
+      box.innerHTML='<div class="errbox"><div class="e-t">🗂️ Projetos</div><div class="e-s">'+esc(String((e&&e.message)||e))+'</div></div>';
+    });
+  }
+  function refresh(){ /* re-busca após mutação e repinta Projetos + Tarefas */
+    var box=$('projetos-out'); if(box) box.innerHTML='<div class="loading">Atualizando…</div>';
+    fetchTaskGroups().then(function(groups){ paint(groups); try{ renderGTasks(groups); }catch(e){} }).catch(function(){ render(); });
+  }
+  function paint(groups){
+    var box=$('projetos-out'); if(!box) return;
+    var today=isoLocal(new Date());
+    if(!groups.length){ box.innerHTML='<div class="empty">Nenhum projeto ainda. Toque <b>Novo projeto</b> pra criar tua primeira lista. 🗂️</div>'; return; }
+    var h='<div class="pj-grid">';
+    groups.forEach(function(g, gi){
+      var open=0, done=0, overdue=0, nextDue=null;
+      g.tarefas.forEach(function(t){
+        if(t.status==="completed"){ done++; return; }
+        open++;
+        if(t.due){ var d=String(t.due).slice(0,10); if(d<today) overdue++; if(!nextDue||d<nextDue) nextDue=d; }
+      });
+      var total=open+done, pct=total?Math.round(done*100/total):0;
+      var lid=g.id.replace(/'/g,"\\'");
+      h+='<div class="pj-card">'
+        +'<div class="pj-top"><div class="pj-name" title="Abrir nas Tarefas" onclick="PROJ.abrir(\''+lid+'\')"><i class="ti ti-folder"></i> '+esc(g.nome)+'</div>'
+        +'<div class="pj-acts"><button title="Renomear projeto" onclick="PROJ.renomear(\''+lid+'\')"><i class="ti ti-edit"></i></button>'
+        +'<button title="Excluir projeto" onclick="PROJ.excluir(\''+lid+'\')"><i class="ti ti-trash"></i></button></div></div>'
+        +'<div class="pj-bar" title="'+pct+'% concluído"><div style="width:'+pct+'%"></div></div>'
+        +'<div class="pj-meta"><span><b>'+open+'</b> aberta'+(open===1?'':'s')+'</span>'
+        +(overdue?'<span class="over"><b>'+overdue+'</b> vencida'+(overdue===1?'':'s')+'</span>':'')
+        +'<span><b>'+done+'</b>/'+total+' concluída'+(done===1?'':'s')+'</span>'
+        +(nextDue?'<span>próxima: <b>'+nextDue.slice(8,10)+'/'+nextDue.slice(5,7)+'</b></span>':'')+'</div>'
+        +'<div class="pj-add"><input id="pjadd-'+gi+'" type="text" placeholder="➕ Nova tarefa em '+esc(g.nome)+'…" onkeydown="if(event.key===\'Enter\')PROJ.addTask(\''+lid+'\','+gi+')"><button class="btn sm" onclick="PROJ.addTask(\''+lid+'\','+gi+')">adicionar</button></div>'
+        +'</div>';
+    });
+    box.innerHTML=h+'</div>';
+  }
+  function abrir(){ nav('tarefas'); setTimeout(function(){ var el=$('gtasks-out'); if(el){ try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} } },80); }
+  function addTask(lid, gi){
+    var inp=$('pjadd-'+gi); var title=(inp&&inp.value||'').trim(); if(!title) return;
+    inp.value=''; inp.focus();
+    gtWrite("POST","lists/"+encodeURIComponent(lid)+"/tasks", {title:title})
+      .then(function(){ toast("Tarefa criada ✓ (Google)"); refresh(); })
+      .catch(function(){ toast("Não criei no Google"); });
+  }
+  function novo(){
+    if(COWORK||!gHasToken()){ toast("Conecte o Google primeiro"); return; }
+    var nome=prompt("Nome do novo projeto (vira uma lista no Google Tasks):"); if(nome===null) return;
+    nome=nome.trim(); if(!nome) return;
+    toast("Criando projeto…");
+    gtWrite("POST","users/@me/lists", {title:nome})
+      .then(function(){ toast("Projeto criado ✓ (Google)"); refresh(); })
+      .catch(function(e){ toast("Não criei: "+String(e&&e.message||e).slice(0,80)); });
+  }
+  function renomear(lid){
+    var g=grupo(lid); if(!g) return;
+    var nome=prompt("Renomear projeto:", g.nome); if(nome===null) return;
+    nome=nome.trim(); if(!nome||nome===g.nome) return;
+    toast("Salvando…");
+    gtWrite("PATCH","users/@me/lists/"+encodeURIComponent(lid), {title:nome})
+      .then(function(){ toast("Renomeado ✓"); refresh(); })
+      .catch(function(e){ toast("Não salvei: "+String(e&&e.message||e).slice(0,80)); });
+  }
+  function excluir(lid){
+    var g=grupo(lid); if(!g) return;
+    var n=g.tarefas.length;
+    if(!confirm('Excluir o projeto "'+g.nome+'"?'+(n?' As '+n+' tarefa'+(n===1?'':'s')+' dele somem junto (do Google Tasks).':''))) return;
+    toast("Excluindo…");
+    gtWrite("DELETE","users/@me/lists/"+encodeURIComponent(lid))
+      .then(function(){ toast("Projeto excluído ✓"); refresh(); })
+      .catch(function(e){ toast("Não excluí (a lista padrão do Google não pode ser apagada): "+String(e&&e.message||e).slice(0,60)); });
+  }
+  function refreshIfOpen(){ var v=$('view-projetos'); if(v && v.style.display!=='none' && GT_GROUPS) paint(GT_GROUPS); }
+  return {render:render, refresh:refresh, abrir:abrir, addTask:addTask, novo:novo, renomear:renomear, excluir:excluir, refreshIfOpen:refreshIfOpen};
 })();
 SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();CONTATOS.refreshIfOpen();EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
 SB.init();
