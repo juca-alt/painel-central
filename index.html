@@ -199,6 +199,7 @@
   .ev-status{display:flex;gap:8px;margin:2px 0 12px}
   .ev-status button{flex:1;border:1px solid var(--line);background:var(--card);cursor:pointer;border-radius:9px;padding:9px;font-size:13px;font-weight:600;color:var(--muted)}
   .ev-status button.on{border-color:var(--accent);color:var(--txt);background:var(--accent-soft)}
+  .ev-strow{margin-top:3px;display:flex}
   .ck-item{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--line);font-size:13.5px}
   .ck-item.done .ck-t{text-decoration:line-through;color:var(--muted)}
   .ck-item .ck-t{flex:1;min-width:0}
@@ -948,7 +949,8 @@ function evHtml(o,mini){
   if(mini) return '<div class="ev mini'+(o.allday?' all':'')+'" style="border-left-color:'+c.col+'" title="'+esc(o.t)+'">'+(o.allday?'':hora(o.ini)+' ')+esc(o.t)+'</div>';
   var sid=(o.id||'').replace(/['"\\]/g,'');
   return '<div class="ev'+(o.allday?' all':'')+'" style="border-left-color:'+c.col+(sid?';cursor:pointer':'')+'"'+(sid?' onclick="EVMODAL.open(\''+sid+'\')"':'')+'>'+
-    '<span class="ev-t">'+(o.allday?'dia todo':hora(o.ini)+(o.fim?'–'+hora(o.fim):''))+'</span>'+esc(o.t)+ckChip(o.id)+'</div>';
+    '<span class="ev-t">'+(o.allday?'dia todo':hora(o.ini)+(o.fim?'–'+hora(o.fim):''))+'</span>'+esc(evStripStatus(o.t))+ckChip(o.id)+
+    (sid?'<div class="ev-strow">'+evStatusBtns(o.id,o.t)+'</div>':'')+'</div>';
 }
 async function loadAgendaView(){
   var r=aRange();
@@ -1399,6 +1401,29 @@ function gtToggle(listId, taskId, done){
     .then(function(){ toast(done?"Concluída ✓ (Google)":"Reaberta"); })
     .catch(function(){ toast("Não salvou no Google — recarregando"); loadGTasks(); });
 }
+/* ===== ✅/❌ na TAREFA (mesma linguagem dos eventos): ✅ = concluída (estado nativo do Google
+   Tasks); ❌ = "não feito" carimbado no título (Tasks não tem esse estado) + fica aberta. ===== */
+function gtStatusBtns(lidEsc, tidEsc, title, completed){
+  var st = completed ? '✅' : evCurStatus(title);
+  return '<span class="ev-st">'
+    +'<button class="ev-stb'+(st==='✅'?' on':'')+'" title="Feita" onclick="event.stopPropagation();gtSetStatus(\''+lidEsc+'\',\''+tidEsc+'\',\'✅\')">✅</button>'
+    +'<button class="ev-stb'+(st==='❌'?' on':'')+'" title="Não feita" onclick="event.stopPropagation();gtSetStatus(\''+lidEsc+'\',\''+tidEsc+'\',\'❌\')">❌</button>'
+    +'</span>';
+}
+function gtSetStatus(lid, tid, mark){
+  var g=GT_GROUPS&&GT_GROUPS.filter(function(x){return x.id===lid;})[0];
+  var t=g&&g.tarefas.filter(function(x){return x.id===tid;})[0]; if(!t) return;
+  var done=(t.status==='completed'), title=t.title||'', has=evCurStatus(title), base=evStripStatus(title), body;
+  if(mark==='✅'){ body = done ? {status:'needsAction', title:base} : {status:'completed', title:base}; }
+  else { body = (!done && has==='❌') ? {title:base} : {status:'needsAction', title:'❌ '+base}; }
+  /* otimista */
+  if(body.status){ t.status=body.status; if(body.status==='needsAction') delete t.completed; }
+  if('title' in body) t.title=body.title;
+  try{ renderGTasks(GT_GROUPS); }catch(e){}
+  gtWrite("PATCH","lists/"+encodeURIComponent(lid)+"/tasks/"+encodeURIComponent(tid), body)
+    .then(function(){ toast(mark==='✅'?(done?'Reaberta ✓':'Feita ✓ (Google)'):((!done&&has==='❌')?'Status limpo ✓':'Não feita ✓ (Google)')); loadGTasks(); })
+    .catch(function(){ toast('Não salvou no Google'); loadGTasks(); });
+}
 function gtCreate(listId, idx){
   var inp=document.getElementById('gtadd-'+idx); if(!inp) return;
   var title=(inp.value||"").trim(); if(!title) return;
@@ -1446,8 +1471,8 @@ function renderGTasks(groups){
     open.forEach(function(t){
       var d=gtDue(t), tid=t.id.replace(/'/g,"\\'");
       h+='<div class="rt-item">'
-        +'<span class="rt-ck" title="Concluir" onclick="gtToggle(\''+lid+'\',\''+tid+'\',true)">☐</span>'
-        +'<span class="rt-t" title="'+esc(t.title||"")+'">'+esc(t.title||"(sem título)")+'</span>'
+        +gtStatusBtns(lid,tid,t.title,false)
+        +'<span class="rt-t" title="'+esc(t.title||"")+'">'+esc(evStripStatus(t.title)||"(sem título)")+'</span>'
         +(d?'<span class="rt-x"><span class="lk">'+gtFmt(d)+'</span></span>':'')+'</div>';
     });
     /* criar tarefa nesse projeto → escreve no Google */
@@ -1459,8 +1484,8 @@ function renderGTasks(groups){
         +'<div style="display:none">';
       done.slice(0,80).forEach(function(t){
         var tid=t.id.replace(/'/g,"\\'");
-        h+='<div class="rt-item done"><span class="rt-ck on" title="Reabrir" onclick="gtToggle(\''+lid+'\',\''+tid+'\',false)">✅</span>'
-          +'<span class="rt-t" style="text-decoration:line-through;color:var(--muted)" title="'+esc(t.title||"")+'">'+esc(t.title||"")+'</span></div>';
+        h+='<div class="rt-item done">'+gtStatusBtns(lid,tid,t.title,true)
+          +'<span class="rt-t" style="text-decoration:line-through;color:var(--muted)" title="'+esc(t.title||"")+'">'+esc(evStripStatus(t.title))+'</span></div>';
       });
       h+='</div>';
     }
@@ -1908,7 +1933,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.15.0";
+var APP_VERSION="2.16.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
