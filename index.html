@@ -191,6 +191,14 @@
   /* ===== evento: chip de checklist na agenda + modal de edição/checklist guiado ===== */
   .ev-ckb{font-size:10px;background:var(--accent-soft);border-radius:8px;padding:1px 6px;margin-left:6px;color:var(--muted);white-space:nowrap}
   .ck-hl{outline:2px solid var(--accent);border-radius:10px;padding:4px}
+  /* status ✅/❌ do evento */
+  .ev-st{display:inline-flex;gap:2px;margin-left:6px;vertical-align:middle}
+  .ev-stb{border:1px solid transparent;background:transparent;cursor:pointer;font-size:13px;line-height:1;padding:2px 4px;border-radius:7px;opacity:.35}
+  .ev-stb:hover{opacity:1;background:var(--chip)}
+  .ev-stb.on{opacity:1;background:var(--accent-soft);border-color:var(--accent)}
+  .ev-status{display:flex;gap:8px;margin:2px 0 12px}
+  .ev-status button{flex:1;border:1px solid var(--line);background:var(--card);cursor:pointer;border-radius:9px;padding:9px;font-size:13px;font-weight:600;color:var(--muted)}
+  .ev-status button.on{border-color:var(--accent);color:var(--txt);background:var(--accent-soft)}
   .ck-item{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--line);font-size:13.5px}
   .ck-item.done .ck-t{text-decoration:line-through;color:var(--muted)}
   .ck-item .ck-t{flex:1;min-width:0}
@@ -969,7 +977,7 @@ function renderVDia(m){
     var c=categoriza(ev.t,ev);
     var sid=(ev.id||'').replace(/['"\\]/g,'');
     html+='<div class="row"'+(sid?' onclick="EVMODAL.open(\''+sid+'\')" style="cursor:pointer"':'')+'><div class="tm">'+(ev.allday?'dia todo':hora(ev.ini)+(ev.fim?'–'+hora(ev.fim):''))+'</div>'+
-      '<div class="nm">'+esc(ev.t)+ckChip(ev.id)+(ev.loc?'<small>'+esc(ev.loc)+'</small>':'')+'</div>'+
+      '<div class="nm">'+evStatusBtns(ev.id,ev.t)+' '+esc(evStripStatus(ev.t))+ckChip(ev.id)+(ev.loc?'<small>'+esc(ev.loc)+'</small>':'')+'</div>'+
       '<span class="chip" style="background:'+c.col+'">'+c.cat+'</span></div>';
   });
   $('agenda-out').innerHTML=html+'</div>';
@@ -1078,6 +1086,50 @@ function gcalDelete(id){
       if(!r.ok && r.status!==410) throw new Error("Calendar "+r.status);   /* 410 = já não existia */
       return null;
     });
+}
+/* ===== Status ✅/❌ do evento: carimba o símbolo no PRÓPRIO TÍTULO (Google Calendar não tem
+   estado "feito") → aparece em qualquer visão do Google Agenda. Toggle: clicar de novo limpa. ===== */
+function evStripStatus(t){ return String(t==null?'':t).replace(/^\s*(?:[✅❌]️?\s*)+/,''); }
+function evCurStatus(t){ var m=String(t==null?'':t).match(/^\s*([✅❌])/); return m?m[1]:''; }
+/* PATCH só do título (preserva data/hora); Cowork via MCP passando os horários crus do evento. */
+function gcalPatchTitle(id, nt){
+  if(COWORK){
+    var raw=EVIDX[id]||{}, allday=!!(raw.start&&raw.start.date&&!raw.start.dateTime);
+    var args={eventId:id, summary:nt, timeZone:"America/Recife"};
+    if(raw.start){
+      if(allday){ args.allDay=true; args.startTime=raw.start.date; args.endTime=(raw.end&&raw.end.date)||raw.start.date; }
+      else { args.startTime=raw.start.dateTime; args.endTime=(raw.end&&raw.end.dateTime)||raw.start.dateTime; }
+    }
+    return mcp(TOOL_CAL_UPD,args).then(unwrap).catch(function(e){
+      var s=String(e&&e.message||e);
+      throw new Error(/not.?found|unknown|unavailable|__STANDALONE__/i.test(s)?"edição indisponível aqui — usa o app instalado (PWA)":s.slice(0,120));
+    });
+  }
+  if(!gHasToken()) return Promise.reject(new Error("Conecte o Google primeiro"));
+  return fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events/"+encodeURIComponent(id),
+    {method:"PATCH", headers:{Authorization:"Bearer "+gToken,"Content-Type":"application/json"}, body:JSON.stringify({summary:nt})})
+    .then(function(r){ if(r.status===401){ gtokClear(); throw new Error("sessão expirou — toque 🔄"); } if(!r.ok) throw new Error("Calendar "+r.status); return r.json(); });
+}
+/* toggle imediato (usado pelos botões inline da agenda) */
+function evSetStatus(id, mark){
+  var raw=EVIDX[id]; if(!raw){ toast('Evento sumiu — recarrega a agenda'); return; }
+  var cur=raw.summary||'', has=evCurStatus(cur), base=evStripStatus(cur);
+  var nt=(has===mark)?base:(mark+' '+base);
+  toast('Salvando…');
+  gcalPatchTitle(id, nt).then(function(){
+    if(EVIDX[id]) EVIDX[id].summary=nt; evCache={};
+    toast(nt===base?'Status limpo ✓':(mark==='✅'?'Feito ✓ (Google)':'Não feito ✓ (Google)'));
+    loadAgendaView();
+  }).catch(function(e){ toast('Não salvei: '+String(e&&e.message||e).slice(0,80)); });
+}
+/* par de botões ✅/❌ (destaca o ativo) — reutilizado na agenda */
+function evStatusBtns(id, title){
+  if(!id) return '';
+  var st=evCurStatus(title), sid=String(id).replace(/['"\\]/g,'');
+  return '<span class="ev-st">'
+    +'<button class="ev-stb'+(st==='✅'?' on':'')+'" title="Marcar feito" onclick="event.stopPropagation();evSetStatus(\''+sid+'\',\'✅\')">✅</button>'
+    +'<button class="ev-stb'+(st==='❌'?' on':'')+'" title="Marcar não feito" onclick="event.stopPropagation();evSetStatus(\''+sid+'\',\'❌\')">❌</button>'
+    +'</span>';
 }
 
 /* ================= cutucadas (gatilhos no momento certo) ================= */
@@ -1407,7 +1459,7 @@ function renderGTasks(groups){
         +'<div style="display:none">';
       done.slice(0,80).forEach(function(t){
         var tid=t.id.replace(/'/g,"\\'");
-        h+='<div class="rt-item done"><span class="rt-ck on" title="Reabrir" onclick="gtToggle(\''+lid+'\',\''+tid+'\',false)">☑</span>'
+        h+='<div class="rt-item done"><span class="rt-ck on" title="Reabrir" onclick="gtToggle(\''+lid+'\',\''+tid+'\',false)">✅</span>'
           +'<span class="rt-t" style="text-decoration:line-through;color:var(--muted)" title="'+esc(t.title||"")+'">'+esc(t.title||"")+'</span></div>';
       });
       h+='</div>';
@@ -1856,7 +1908,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.14.0";
+var APP_VERSION="2.15.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2796,6 +2848,10 @@ var EVMODAL=(function(){
     var tit=f?f.t:(raw.summary||'');
     var effCat=f?f.cat:categoriza(raw.summary||'', {id:cur.id, rec:cur.rec}).cat;
     var h='<div class="g-fld"><label>Título *</label><input type="text" id="ev-f-t" value="'+esc(tit)+'"></div>';
+    var stT=evCurStatus(tit);
+    h+='<div class="g-fld" style="margin-bottom:4px"><label>Está feito?</label><div class="ev-status">'
+      +'<button type="button" id="ev-st-ok" class="'+(stT==='✅'?'on':'')+'" onclick="EVMODAL.status(\'✅\')">✅ Feito</button>'
+      +'<button type="button" id="ev-st-no" class="'+(stT==='❌'?'on':'')+'" onclick="EVMODAL.status(\'❌\')">❌ Não feito</button></div></div>';
     h+='<div class="g-fld g-chk"><input type="checkbox" id="ev-f-allday"'+(allday?' checked':'')+' onchange="EVMODAL.allday(this.checked)"><label for="ev-f-allday">Dia todo</label></div>';
     h+='<div style="display:flex;gap:8px;flex-wrap:wrap">'
       +'<div class="g-fld" style="flex:1;min-width:110px"><label>Data</label><input type="date" id="ev-f-dia" value="'+dia+'"></div>'
@@ -2845,6 +2901,14 @@ var EVMODAL=(function(){
   function paintCk(){ var el=$('ev-ck-sec'); if(el) el.innerHTML=ckHtml(); }
   function saveFld(){ try{ cur.fld={t:$('ev-f-t').value, allday:$('ev-f-allday').checked, dia:$('ev-f-dia').value, hi:$('ev-f-hi').value, hf:$('ev-f-hf').value, cat:$('ev-f-cat').value}; }catch(e){} }
   function allday(on){ var hi=$('ev-f-hi'), hf=$('ev-f-hf'); if(hi)hi.disabled=on; if(hf)hf.disabled=on; }
+  /* status ✅/❌: carimba/limpa o símbolo no campo Título; persiste ao Salvar */
+  function status(mark){
+    var inp=$('ev-f-t'); if(!inp) return;
+    var has=evCurStatus(inp.value), base=evStripStatus(inp.value);
+    inp.value=(has===mark)?base:(mark+' '+base);
+    var now=evCurStatus(inp.value), b1=$('ev-st-ok'), b2=$('ev-st-no');
+    if(b1) b1.className=(now==='✅'?'on':''); if(b2) b2.className=(now==='❌'?'on':'');
+  }
 
   /* checklist */
   function ckSave(list){ EVMETA.upsert(cur.id,{checklist:list}); }
@@ -2893,7 +2957,7 @@ var EVMODAL=(function(){
       .catch(function(e){ toast('Não excluí: '+String(e&&e.message||e).slice(0,90)); });
   }
 
-  return {open:open, close:close, save:save, del:del, allday:allday,
+  return {open:open, close:close, save:save, del:del, allday:allday, status:status,
           ckAdd:ckAdd, ckToggle:ckToggle, ckDel:ckDel,
           guide:guide, guideDone:guideDone, guideSkip:guideSkip, guideExit:guideExit};
 })();
