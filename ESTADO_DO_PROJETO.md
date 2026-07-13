@@ -1,11 +1,20 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-07-13 · Leia isto primeiro ao retomar. **Produção: v2.15.0.**
+**Última atualização:** 2026-07-13 · Leia isto primeiro ao retomar. **Produção: v2.16.0.**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
 ---
 
-## 🟢 RETOMAR AQUI — sessão 13/07 (b) — Status ✅/❌ de evento (NO AR v2.15.0)
+## 🟢 RETOMAR AQUI — sessão 13/07 (c) — ✅/❌ em TODAS as visões + nas tarefas (NO AR v2.16.0)
+
+**Extensão do status ✅/❌ (commit `827f85e`), a pedido do Gustavo ("faz pra tudo, tb pra tarefas"):**
+- **Agenda:** os botões ✅/❌ agora aparecem também na **visão 4 dias e Semana** (linha sob cada evento, via `evHtml`/`.ev-strow`), não só no Dia. **Mês** segue com o emoji no título (indicador) + tap no dia → visão Dia (célula pequena demais pra botões). Título é exibido **sem** o emoji (o botão sinaliza; `evStripStatus`).
+- **Tarefas:** cada tarefa trocou o checkbox pelo **par ✅/❌** (`gtStatusBtns`/`gtSetStatus`). **✅ = concluída** (estado NATIVO do Google Tasks → vai pro histórico, risca); **❌ = "não feito" carimbado no título** (Tasks não tem esse estado) e a tarefa **fica aberta**. Clicar no ativo limpa. Reusa `evStripStatus`/`evCurStatus`.
+- `APP_VERSION`→**2.16.0**, sw→**v22**. Verificado no preview: tarefas (✅ completa/❌ carimba+reabre/toggle limpa — writes corretos no Google), 4-dias mostra botões por evento, console limpo (screenshots mobile).
+
+---
+
+## 🟢 (histórico) sessão 13/07 (b) — Status ✅/❌ de evento (v2.15.0)
 
 **Frente entregue e VERIFICADA no preview + NO AR (commit `7cb499e`):** cada evento da Agenda ganhou **botão ✅/❌ pra marcar feito/não-feito**. Como o Google Calendar **não tem estado "feito"**, o símbolo é **carimbado no PRÓPRIO TÍTULO do evento** (`gcalPatchTitle` = PATCH só do `summary`, preserva data/hora) → aparece em **qualquer visão do Google Agenda** — a referência visual que o Gustavo já usa no dia a dia. Toggle: clicar de novo limpa; trocar substitui (regex não duplica). Helpers `evStripStatus`/`evCurStatus`/`evSetStatus`/`evStatusBtns`. **2 lugares:** botões inline na **visão Dia** (título mostra sem o emoji, botão destaca o ativo) + linha **"Está feito?"** no modal do evento (`EVMODAL.status`, persiste no Salvar). Standalone via PATCH REST; Cowork via MCP `update_event` passando os horários crus. Recorrente = vale na ocorrência. Bônus: **tarefas concluídas do Google Tasks agora exibem ✅** (mesma linguagem). `APP_VERSION`→**2.15.0**, sw→**v21**. Verificado: toggle ✅→❌→limpar envia só `{summary}` no PATCH; day view + modal OK (screenshots mobile); console limpo.
 
