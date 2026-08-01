@@ -23,7 +23,31 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
 
 ---
 
-## 🟢 RETOMAR AQUI — sessão 01/08 (d) — PROJETOS: metadata + abrir focando (NO AR v2.17.0)
+## 🔴 RETOMAR AQUI — sessão 01/08 (e) — CONEXÃO MCP: Claude agindo direto no Painel (v2.17.1)
+
+**Frente nova, pedida pelo Gustavo:** ter o Claude (claude.ai web/celular, Cowork, Claude Code) **agindo como assistente de verdade** — consultando e atualizando o Painel. Decisão dele: *"caminho mais resolutivo, boa base pra evoluções futuras"* + **"ler tudo, escrever com confirmação"**.
+
+**Arquitetura escolhida (e por quê):** servidor **MCP próprio** numa **Edge Function do Supabase** (`supabase/functions/mcp-painel`), transporte **Streamable HTTP** (POST único, resposta JSON simples, stateless). Auth v1 = **token fixo no header** — o claude.ai tem "Request headers" pra isso, e Claude Code/Desktop aceitam `--header`. *(OAuth é o outro caminho; fica pra depois se precisar — a camada de ferramentas não muda, só a função `autorizado()`.)*
+
+**⚠️ DUAS RESSALVAS REAIS:**
+1. **Agenda e Google Tasks NÃO passam por este MCP.** O app fala com o Google pelo navegador do Gustavo (token GIS client-side); um servidor não tem essas credenciais. O v1 alcança o que mora no Supabase. Trazer Google = 2ª onda (refresh token server-side). No claude.ai já existe conector nativo de Agenda/Gmail, então a perda prática é pequena.
+2. **A auth por header no claude.ai está em BETA de liberação gradual** — pode não aparecer na conta do Gustavo. Se não aparecer: funciona igual em Claude Code/Desktop hoje, e o claude.ai entra quando liberar (ou via OAuth).
+
+**Ferramentas (7):** leitura — `painel_resumo`, `painel_listar_projetos`, `painel_listar_contatos`, `painel_listar_inbox`; escrita — `painel_atualizar_projeto`, `painel_salvar_contato`, `painel_capturar`. **Toda escrita exige `confirmar: true`** além da aprovação que o cliente MCP já pede (duas trancas, a pedido dele).
+
+**Segurança:** a função usa a **service role** (ignora RLS) e por isso **TODA query leva `owner=eq.OWNER_UID`** grudado na URL — é a única coisa que separa os dados; no INSERT o dono vai explícito no corpo. Service role só existe no secret da função (nunca no app/repo). Token comparado em tempo constante. `verify_jwt` da plataforma **desligado** (quem autentica é o nosso token).
+
+**✅ FEITO nesta sessão:** função escrita, commitada (`413c005`) e **DEPLOYADA** em `https://mieqsiojvfiqrhectquc.supabase.co/functions/v1/mcp-painel`; `verify_jwt` desligado; smoke test bate (`GET` → 405 com meu texto; `POST` sem secret → 500 "Servidor mal configurado", ou seja o código roda). Coluna **`nome`** adicionada em `painel_projetos` (+ rodada no banco): sem ela o MCP responderia `list_id` em vez de "CRM Captação"; o app grava no upsert e ao renomear (verificado no preview).
+
+**🔴 PENDENTE — 2 campos que SÓ O GUSTAVO pode preencher** (a trava de segurança me impede de digitar credencial em formulário): Supabase → Edge Functions → **Secrets** → adicionar
+- `MCP_TOKEN` = o token gerado nesta sessão (está no chat; dá pra rotacionar quando quiser)
+- `OWNER_UID` = `f23f70d9-2859-4664-8842-bbf82762aecb`
+
+Depois disso: testar as 7 ferramentas end-to-end, registrar o servidor no Claude Code (`claude mcp add --transport http`) e tentar adicionar como conector no claude.ai.
+
+---
+
+## 🟢 (histórico) sessão 01/08 (d) — PROJETOS: metadata + abrir focando (NO AR v2.17.0)
 
 **Fila itens 1+2 entregues (commit `f993bda`):**
 - **`PJMETA` (novo IIFE, antes do `PROJ`)** — camada de metadados do projeto no Supabase (`painel_projetos`, chave `list_id` da tasklist): **status** (`ativo`/`pausado`/`concluido`), **descrição** e **link** (repo/chat/doc). Sem linha na tabela = *ativo, sem descrição* (default). Padrão idêntico ao `EVMETA`: otimista em memória + `POST ...?on_conflict=list_id` com `Prefer: resolution=merge-duplicates` quando logado; deslogado avisa 1x por toast e mantém em memória. **A fonte da verdade do projeto (nome + tarefas) continua sendo o Google Tasks** — aqui só mora o que o Google não tem.
