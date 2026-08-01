@@ -48,6 +48,12 @@ drop policy if exists painel_projetos_all on public.painel_projetos;
 create policy painel_projetos_all on public.painel_projetos
   for all using (owner = auth.uid()) with check (owner = auth.uid());
 grant select, insert, update, delete on public.painel_projetos to authenticated;
+-- Defesa em profundidade: o Supabase concede privilégios a `anon` por DEFAULT
+-- PRIVILEGES em TODA tabela nova do schema public — ou seja, o grant acima não
+-- basta pra deixar `anon` de fora. A RLS já barra (owner=auth.uid() é NULL sem
+-- login), mas aqui a intenção fica explícita: `anon` não tem NADA nesta tabela.
+-- Verificado 01/08: antes disso o anon lia `[]` (200); depois passa a 401/42501.
+revoke all on public.painel_projetos from anon;
 
 -- ----- DOWN (reversível — não rodar em prod sem querer) -----
 -- drop table if exists public.painel_projetos;

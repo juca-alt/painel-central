@@ -10,13 +10,11 @@
 Retomar Painel Central (Jucá 2.0) — sessão exclusiva. Prod v2.17.0, tudo no ar (GitHub Pages, main).
 Ler ~/Documents/painel-central/ESTADO_DO_PROJETO.md. Deploy é push direto na main (autorizado).
 Sempre `git fetch` + comparar origin/main ANTES de editar (outras sessões costumam estar à frente).
-⚠️ 1º passo: rodar `sql/painel_projetos.sql` no Supabase (metadata de projeto ainda não sincroniza sem isso).
 Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item].
 ```
 
 ## 🗂️ FILA / PENDÊNCIAS (próximas frentes)
-0. 🔴 **RODAR `sql/painel_projetos.sql`** no SQL Editor do Supabase (query NOVA) — sem isso o status/descrição/link do projeto só vive em memória até recarregar. Único passo pendente da v2.17.0.
-1. ~~**Projetos — metadata**~~ ✅ **FEITO na v2.17.0** (falta só a migration, item 0).
+1. ~~**Projetos — metadata**~~ ✅ **FEITO na v2.17.0** — migration `painel_projetos` **RODADA e VERIFICADA no Supabase em 01/08** (RLS on, 1 policy, `anon` revogado → 401/42501; `authenticated` com os 7 grants).
 2. ~~**Projetos — `PROJ.abrir`**~~ ✅ **FEITO na v2.17.0** (foca e realça a lista do projeto clicado).
 3. **Mês — status ✅/❌:** hoje o Mês só mostra o emoji no título (tap no dia → visão Dia). Opção: mini-eventos abrirem o modal no toque pra marcar direto no Mês.
 4. **WhatsApp Fase 3** (sessão paralela pausada): Edge Function `wa-send` + setup Meta Business (1ª infra server-side). Bônus antigo: botão WhatsApp na equipe de saúde do Gael (`GAEL`, campo `contato`).
@@ -32,7 +30,7 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
 - **Card do projeto:** badge de status colorido, descrição, link clicável (`target=_blank`) e botão **⚙️ detalhes** (modal reusando `gael-modal`: status/descrição/link). **Filtro por status** (pills Todos/Ativo/Pausado/Concluído, com contagem) e ordenação **ativo → pausado → concluído** (dentro do status mantém a ordem do Google). Concluído entra com opacidade menor.
 - **Excluir projeto** limpa a metadata órfã (`PJMETA.remove`); `SB.onChange` → `PROJ.onAuth()` recarrega a metadata no login/logout e repinta se a tela estiver aberta.
 - **`PROJ.abrir(lid)`** deixou de só rolar pro topo do `gtasks-out`: agora **foca e realça a lista daquele projeto** dentro de Tarefas (âncora `data-lid` no `.gt-group` + classe `.gt-hl` por ~2,6s). Tem **retry** (10× a cada 300ms) enquanto o Google Tasks ainda carrega e **fallback de scroll instantâneo** quando o `behavior:'smooth'` é ignorado pelo ambiente (foi exatamente o que aconteceu no preview — por isso o fallback existe).
-- **Migration `sql/painel_projetos.sql`** (RLS `owner=auth.uid()`, grant só `authenticated`, `text+CHECK`, trigger `set_updated_at`, idempotente). ⚠️ **AINDA NÃO RODADA** — item 0 da fila.
+- **Migration `sql/painel_projetos.sql` ✅ RODADA E VERIFICADA (01/08, SQL Editor via Chrome logado):** "Success. No rows returned"; conferido `rls_ligado=true`, 1 policy `owner=auth.uid()`, trigger `set_updated_at`, colunas `list_id/owner/status/descricao/link/created_at/updated_at`. **Achado:** o Supabase concede privilégios a `anon` por **DEFAULT PRIVILEGES** em toda tabela nova do `public` — o `grant ... to authenticated` NÃO deixa o anon de fora sozinho (anon lia `[]` 200; RLS já barrava, mas o grant existia). Adicionei `revoke all on public.painel_projetos from anon;` (rodado + no .sql): agora anon leva **401 / 42501**. Vale checar as outras `painel_*`/`gael_*` num próximo passo.
 - `APP_VERSION`→**2.17.0**, sw→**v23**. **Verificado no preview** (porta 8817, `GT_GROUPS` fake): 3 projetos com badge/descrição/link, filtros e ordenação certos; modal grava e repinta; **as 3 chamadas REST batem a migration** (`POST painel_projetos?on_conflict=list_id` com `{list_id,status,descricao,link}`, `DELETE ...?list_id=eq.X`, `GET ...?select=list_id,status,descricao,link`); `PROJ.abrir` pousa e realça a lista certa; console limpo; mobile 375px sem estouro horizontal + desktop 1280 (screenshots).
 
 ---
@@ -183,7 +181,7 @@ Implementado o submódulo **Casa › 👥 Funcionário** (que na produção era 
 | `sql/painel_casa.sql` | Migration RLS Casa (rodar no Supabase). |
 | `sql/gael_saude.sql` | Migration das 6 tabelas `gael_*` (RLS owner). **Rodar no Supabase.** |
 | `sql/gael_saude_seed.sql` | Seed da consulta 05/06/2026. **Rodar após a migration.** |
-| `sql/painel_projetos.sql` | **(01/08) Migration `painel_projetos`** — status/descrição/link por projeto (RLS owner). **🔴 RODAR no Supabase.** |
+| `sql/painel_projetos.sql` | **(01/08) Migration `painel_projetos`** — status/descrição/link por projeto (RLS owner + revoke anon). ✅ **JÁ RODADA no Supabase.** |
 | `sql/painel_inbox.sql` | **(29/06) Migration da tabela `painel_inbox`** (triagem do Inbox; RLS owner). **Rodar no Supabase quando aprovar.** |
 | `sw.js` | Service worker (cache `v3` → bumpar p/ `v4` no deploy do Inbox). |
 | `casa-debora.html` | Protótipo original (referência; já no repo). |
