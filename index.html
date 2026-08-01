@@ -399,6 +399,21 @@
   .pj-meta .over b,.pj-meta .over{color:var(--danger)}
   .pj-add{display:flex;gap:6px;margin-top:12px}
   .pj-add input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;font-size:13px;color:var(--txt);background:#fff}
+  /* metadata do projeto (painel_projetos): status, descrição, link */
+  .pj-st{font-size:11px;font-weight:700;border-radius:20px;padding:2px 9px;letter-spacing:.02em;flex-shrink:0}
+  .pj-st.ativo{background:#eaf3de;color:#173404}
+  .pj-st.pausado{background:#faeeda;color:#412402}
+  .pj-st.concluido{background:#f1efe8;color:#5f5e5a}
+  .pj-card.is-concluido{opacity:.62}
+  .pj-desc{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.45;white-space:pre-wrap}
+  .pj-link{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--accent);text-decoration:none;margin-top:7px;word-break:break-all}
+  .pj-link:hover{text-decoration:underline}
+  .pj-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .pj-filters button{border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;border-radius:20px;padding:5px 12px;font:inherit;font-size:12.5px}
+  .pj-filters button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .pj-filters .ct{opacity:.75;font-size:11px}
+  /* PROJ.abrir: realce da lista do projeto dentro do módulo Tarefas */
+  .gt-group.gt-hl{background:rgba(99,153,34,.10);border-radius:10px;box-shadow:0 0 0 2px var(--accent) inset;transition:background .4s,box-shadow .4s}
 </style>
 </head>
 <body>
@@ -583,7 +598,7 @@
     <!-- ============ PROJETOS (listas do Google Tasks como projetos) ============ -->
     <section id="view-projetos" style="display:none">
       <div class="head"><h1>🗂️ Projetos</h1></div>
-      <div class="sub">Cada projeto é uma <b>lista do Google Tasks</b>. Tarefa criada aqui já entra no módulo Tarefas e escreve no Google (bidirecional) — projeto e tarefas ficam sempre sincronizados.</div>
+      <div class="sub">Cada projeto é uma <b>lista do Google Tasks</b>. Tarefa criada aqui já entra no módulo Tarefas e escreve no Google (bidirecional) — projeto e tarefas ficam sempre sincronizados. O <b>⚙️ detalhes</b> guarda status, descrição e link (repo/chat) no teu Supabase privado.</div>
       <div class="bar">
         <div class="spacer"></div>
         <button class="btn primary" onclick="PROJ.novo()"><i class="ti ti-plus"></i> Novo projeto</button>
@@ -1467,7 +1482,7 @@ function renderGTasks(groups){
     var open=g.tarefas.filter(function(t){return t.status!=="completed";}).sort(gtSorter());
     var done=g.tarefas.filter(function(t){return t.status==="completed";});
     var lid=g.id.replace(/'/g,"\\'");
-    h+='<div style="border-top:1px solid var(--line);padding:4px 0"><div style="font-weight:600;font-size:13px;padding:9px 15px 5px">🗂️ '+esc(g.nome)+' <span class="count">'+open.length+'</span></div>';
+    h+='<div class="gt-group" data-lid="'+esc(g.id)+'" style="border-top:1px solid var(--line);padding:4px 0"><div style="font-weight:600;font-size:13px;padding:9px 15px 5px">🗂️ '+esc(g.nome)+' <span class="count">'+open.length+'</span></div>';
     open.forEach(function(t){
       var d=gtDue(t), tid=t.id.replace(/'/g,"\\'");
       h+='<div class="rt-item">'
@@ -1933,7 +1948,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.16.0";
+var APP_VERSION="2.17.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2986,11 +3001,50 @@ var EVMODAL=(function(){
           ckAdd:ckAdd, ckToggle:ckToggle, ckDel:ckDel,
           guide:guide, guideDone:guideDone, guideSkip:guideSkip, guideExit:guideExit};
 })();
+/* ================= PJMETA: metadata do projeto (Supabase painel_projetos) =================
+   O Google Tasks só carrega título + tarefas. Status (ativo/pausado/concluído), descrição
+   e link (repo/chat/doc) moram aqui, ligados pelo list_id da tasklist. Sem linha = ativo
+   sem descrição (default). Mesmo padrão do EVMETA: otimista em memória, grava quando logado. */
+var PJMETA=(function(){
+  var map={}, warned=false;
+  var STATUS=[{k:'ativo',l:'Ativo'},{k:'pausado',l:'Pausado'},{k:'concluido',l:'Concluído'}];
+  function load(){
+    if(!SB.enabled()||!SB.loggedIn()){ map={}; return Promise.resolve(); }
+    return SB.rest("GET","painel_projetos?select=list_id,status,descricao,link")
+      .then(function(r){ return r.ok?r.json():[]; })
+      .then(function(rows){ map={}; (rows||[]).forEach(function(r){ map[r.list_id]=r; }); })
+      .catch(function(){});
+  }
+  function get(lid){ return map[lid]||null; }
+  function statusOf(lid){ var m=map[lid]; return (m&&m.status)||'ativo'; }
+  function rank(lid){ var s=statusOf(lid); return s==='concluido'?2:(s==='pausado'?1:0); }
+  function label(k){ for(var i=0;i<STATUS.length;i++) if(STATUS[i].k===k) return STATUS[i].l; return k; }
+  function upsert(lid, patch){
+    var row=map[lid]||(map[lid]={list_id:lid, status:'ativo', descricao:null, link:null});
+    Object.assign(row, patch);   /* otimista: UI reflete na hora */
+    if(!SB.enabled()||!SB.loggedIn()){
+      if(!warned){ toast("Conecte (login do painel) pra salvar os detalhes do projeto"); warned=true; }
+      return Promise.resolve(false);
+    }
+    return SB.rest("POST","painel_projetos?on_conflict=list_id",
+      {list_id:lid, status:row.status, descricao:row.descricao, link:row.link},
+      {Prefer:"resolution=merge-duplicates,return=minimal"})
+      .then(function(r){ if(!r.ok) toast("Não sincronizei (rodou a migration painel_projetos?)"); return r.ok; })
+      .catch(function(){ toast("Sem rede — fica em memória até recarregar"); return false; });
+  }
+  function remove(lid){   /* projeto excluído no Google: limpa a metadata órfã */
+    delete map[lid];
+    if(!SB.enabled()||!SB.loggedIn()) return Promise.resolve(false);
+    return SB.rest("DELETE","painel_projetos?list_id=eq."+encodeURIComponent(lid)).then(function(r){return r.ok;}).catch(function(){return false;});
+  }
+  return {load:load, get:get, statusOf:statusOf, rank:rank, label:label, upsert:upsert, remove:remove, STATUS:STATUS};
+})();
 /* ================= PROJETOS: cada projeto = uma lista do Google Tasks =================
    Sincronizado por construção com o módulo Tarefas (ambos leem GT_GROUPS). Criar tarefa
    aqui escreve na lista → aparece nas Tarefas. Criar/renomear/excluir projeto = a lista
-   (tasklists) no Google. Sem storage nova: a própria conta Google é a fonte da verdade. */
+   (tasklists) no Google. Status/descrição/link vêm do PJMETA (Supabase). */
 var PROJ=(function(){
+  var filtro='todos';   /* todos | ativo | pausado | concluido */
   async function ensure(){ if(!GT_GROUPS) await fetchTaskGroups(); return GT_GROUPS||[]; }
   function grupo(lid){ return (GT_GROUPS||[]).filter(function(x){return x.id===lid;})[0]; }
   function render(){
@@ -2998,7 +3052,7 @@ var PROJ=(function(){
     if(COWORK){ box.innerHTML='<div class="note">Projetos usam o Google Tasks, que roda no app instalado (PWA) — aqui no Cowork não aparece.</div>'; return; }
     if(!gHasToken()){ box.innerHTML=connectPanel('teus projetos'); return; }
     box.innerHTML='<div class="loading">Lendo teus projetos do Google Tasks…</div>';
-    ensure().then(paint).catch(function(e){
+    Promise.all([ensure(), PJMETA.load()]).then(function(r){ paint(r[0]); }).catch(function(e){
       if(!gHasToken()||String(e&&e.message)==="__NEEDCONNECT__"){ box.innerHTML=connectPanel('teus projetos'); return; }
       box.innerHTML='<div class="errbox"><div class="e-t">🗂️ Projetos</div><div class="e-s">'+esc(String((e&&e.message)||e))+'</div></div>';
     });
@@ -3007,12 +3061,29 @@ var PROJ=(function(){
     var box=$('projetos-out'); if(box) box.innerHTML='<div class="loading">Atualizando…</div>';
     fetchTaskGroups().then(function(groups){ paint(groups); try{ renderGTasks(groups); }catch(e){} }).catch(function(){ render(); });
   }
+  function setFiltro(k){ filtro=k; if(GT_GROUPS) paint(GT_GROUPS); }
+  function filtersHtml(groups){
+    var cnt={ativo:0,pausado:0,concluido:0};
+    groups.forEach(function(g){ cnt[PJMETA.statusOf(g.id)]++; });
+    var h='<div class="pj-filters"><button class="'+(filtro==='todos'?'on':'')+'" onclick="PROJ.setFiltro(\'todos\')">Todos <span class="ct">'+groups.length+'</span></button>';
+    PJMETA.STATUS.forEach(function(s){
+      if(!cnt[s.k]&&filtro!==s.k) return;
+      h+='<button class="'+(filtro===s.k?'on':'')+'" onclick="PROJ.setFiltro(\''+s.k+'\')">'+s.l+' <span class="ct">'+cnt[s.k]+'</span></button>';
+    });
+    return h+'</div>';
+  }
   function paint(groups){
     var box=$('projetos-out'); if(!box) return;
     var today=isoLocal(new Date());
     if(!groups.length){ box.innerHTML='<div class="empty">Nenhum projeto ainda. Toque <b>Novo projeto</b> pra criar tua primeira lista. 🗂️</div>'; return; }
-    var h='<div class="pj-grid">';
-    groups.forEach(function(g, gi){
+    /* concluídos/pausados descem; dentro do mesmo status mantém a ordem do Google */
+    var ord=groups.map(function(g,i){return {g:g,i:i};}).sort(function(a,b){ return (PJMETA.rank(a.g.id)-PJMETA.rank(b.g.id))||(a.i-b.i); });
+    var vis=ord.filter(function(o){ return filtro==='todos'||PJMETA.statusOf(o.g.id)===filtro; });
+    var h=filtersHtml(groups);
+    if(!vis.length){ box.innerHTML=h+'<div class="empty">Nenhum projeto '+esc(PJMETA.label(filtro).toLowerCase())+' por aqui.</div>'; return; }
+    h+='<div class="pj-grid">';
+    vis.forEach(function(o){
+      var g=o.g, gi=o.i;
       var open=0, done=0, overdue=0, nextDue=null;
       g.tarefas.forEach(function(t){
         if(t.status==="completed"){ done++; return; }
@@ -3021,10 +3092,15 @@ var PROJ=(function(){
       });
       var total=open+done, pct=total?Math.round(done*100/total):0;
       var lid=g.id.replace(/'/g,"\\'");
-      h+='<div class="pj-card">'
+      var m=PJMETA.get(g.id)||{}, st=PJMETA.statusOf(g.id);
+      h+='<div class="pj-card is-'+st+'">'
         +'<div class="pj-top"><div class="pj-name" title="Abrir nas Tarefas" onclick="PROJ.abrir(\''+lid+'\')"><i class="ti ti-folder"></i> '+esc(g.nome)+'</div>'
-        +'<div class="pj-acts"><button title="Renomear projeto" onclick="PROJ.renomear(\''+lid+'\')"><i class="ti ti-edit"></i></button>'
+        +'<div class="pj-acts"><span class="pj-st '+st+'" title="Status do projeto">'+esc(PJMETA.label(st))+'</span>'
+        +'<button title="Detalhes do projeto (status, descrição, link)" onclick="PROJ.detalhes(\''+lid+'\')"><i class="ti ti-adjustments"></i></button>'
+        +'<button title="Renomear projeto" onclick="PROJ.renomear(\''+lid+'\')"><i class="ti ti-edit"></i></button>'
         +'<button title="Excluir projeto" onclick="PROJ.excluir(\''+lid+'\')"><i class="ti ti-trash"></i></button></div></div>'
+        +(m.descricao?'<div class="pj-desc">'+esc(m.descricao)+'</div>':'')
+        +(m.link?'<div><a class="pj-link" href="'+esc(m.link)+'" target="_blank" rel="noopener"><i class="ti ti-link"></i>'+esc(m.link)+'</a></div>':'')
         +'<div class="pj-bar" title="'+pct+'% concluído"><div style="width:'+pct+'%"></div></div>'
         +'<div class="pj-meta"><span><b>'+open+'</b> aberta'+(open===1?'':'s')+'</span>'
         +(overdue?'<span class="over"><b>'+overdue+'</b> vencida'+(overdue===1?'':'s')+'</span>':'')
@@ -3035,7 +3111,56 @@ var PROJ=(function(){
     });
     box.innerHTML=h+'</div>';
   }
-  function abrir(){ nav('tarefas'); setTimeout(function(){ var el=$('gtasks-out'); if(el){ try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} } },80); }
+  /* detalhes do projeto: status + descrição + link (grava no painel_projetos) */
+  function detalhes(lid){
+    var g=grupo(lid); if(!g) return;
+    var m=PJMETA.get(lid)||{}, st=PJMETA.statusOf(lid);
+    closeModal();
+    var bg=document.createElement('div'); bg.className='gael-modal-bg'; bg.id='pj-modal-bg';
+    bg.onclick=function(e){ if(e.target===bg) closeModal(); };
+    bg.innerHTML='<div class="gael-modal"><h3>🗂️ '+esc(g.nome)+'</h3>'
+      +'<div class="g-fld"><label>Status</label><select id="pj-f-status">'
+      + PJMETA.STATUS.map(function(s){ return '<option value="'+s.k+'"'+(st===s.k?' selected':'')+'>'+s.l+'</option>'; }).join('')
+      +'</select></div>'
+      +'<div class="g-fld"><label>Descrição / objetivo</label><textarea id="pj-f-descricao" placeholder="O que é esse projeto e onde ele quer chegar…">'+esc(m.descricao||'')+'</textarea></div>'
+      +'<div class="g-fld"><label>Link (repo, chat do Claude, doc)</label><input type="url" id="pj-f-link" value="'+esc(m.link||'')+'" placeholder="https://…"></div>'
+      +'<div class="g-foot"><div class="spacer"></div><button class="btn sm" onclick="PROJ.closeModal()">Cancelar</button>'
+      +'<button class="btn primary sm" onclick="PROJ.salvarDetalhes(\''+lid+'\')">Salvar</button></div></div>';
+    document.body.appendChild(bg);
+    var d=$('pj-f-descricao'); if(d) d.focus();
+  }
+  function closeModal(){ var m=$('pj-modal-bg'); if(m&&m.parentNode) m.parentNode.removeChild(m); }
+  function salvarDetalhes(lid){
+    var s=$('pj-f-status'), d=$('pj-f-descricao'), l=$('pj-f-link');
+    var patch={ status:(s&&s.value)||'ativo',
+                descricao:((d&&d.value)||'').trim()||null,
+                link:((l&&l.value)||'').trim()||null };
+    PJMETA.upsert(lid, patch).then(function(ok){ if(ok) toast("Detalhes salvos ✓"); });
+    closeModal();
+    if(GT_GROUPS) paint(GT_GROUPS);
+  }
+  /* abre o projeto NAS TAREFAS já focando/realçando a lista dele (não só o topo) */
+  function abrir(lid){
+    nav('tarefas');
+    var tries=0;
+    (function go(){
+      var box=$('gtasks-out');
+      var el=box&&lid ? box.querySelector('.gt-group[data-lid="'+String(lid).replace(/["\\]/g,'\\$&')+'"]') : null;
+      if(!el){
+        if(++tries<10) return setTimeout(go,300);   /* Tasks ainda carregando */
+        if(box){ try{ box.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} }
+        return;
+      }
+      try{ el.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ try{ el.scrollIntoView(); }catch(e2){} }
+      /* alguns ambientes ignoram o smooth (ou outro scroll o cancela): garante o pouso */
+      setTimeout(function(){
+        var r=el.getBoundingClientRect(), vh=window.innerHeight||document.documentElement.clientHeight;
+        if(r.top<0||r.bottom>vh){ try{ el.scrollIntoView({block:'center'}); }catch(e){} }
+      }, 420);
+      el.classList.add('gt-hl');
+      setTimeout(function(){ el.classList.remove('gt-hl'); }, 2600);
+    })();
+  }
   function addTask(lid, gi){
     var inp=$('pjadd-'+gi); var title=(inp&&inp.value||'').trim(); if(!title) return;
     inp.value=''; inp.focus();
@@ -3067,13 +3192,17 @@ var PROJ=(function(){
     if(!confirm('Excluir o projeto "'+g.nome+'"?'+(n?' As '+n+' tarefa'+(n===1?'':'s')+' dele somem junto (do Google Tasks).':''))) return;
     toast("Excluindo…");
     gtWrite("DELETE","users/@me/lists/"+encodeURIComponent(lid))
-      .then(function(){ toast("Projeto excluído ✓"); refresh(); })
+      .then(function(){ PJMETA.remove(lid); toast("Projeto excluído ✓"); refresh(); })
       .catch(function(e){ toast("Não excluí (a lista padrão do Google não pode ser apagada): "+String(e&&e.message||e).slice(0,60)); });
   }
-  function refreshIfOpen(){ var v=$('view-projetos'); if(v && v.style.display!=='none' && GT_GROUPS) paint(GT_GROUPS); }
-  return {render:render, refresh:refresh, abrir:abrir, addTask:addTask, novo:novo, renomear:renomear, excluir:excluir, refreshIfOpen:refreshIfOpen};
+  function isOpen(){ var v=$('view-projetos'); return !!(v && v.style.display!=='none'); }
+  function refreshIfOpen(){ if(isOpen() && GT_GROUPS) paint(GT_GROUPS); }
+  /* login/logout: a metadata (Supabase) muda de estado — recarrega e repinta se estiver aberto */
+  function onAuth(){ if(!COWORK) PJMETA.load().then(function(){ if(isOpen()&&GT_GROUPS) paint(GT_GROUPS); }); }
+  return {render:render, refresh:refresh, abrir:abrir, addTask:addTask, novo:novo, renomear:renomear, excluir:excluir,
+          refreshIfOpen:refreshIfOpen, onAuth:onAuth, setFiltro:setFiltro, detalhes:detalhes, salvarDetalhes:salvarDetalhes, closeModal:closeModal};
 })();
-SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();CONTATOS.refreshIfOpen();EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
+SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();CONTATOS.refreshIfOpen();PROJ.onAuth();EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
 SB.init();
 try{var _q=new URLSearchParams(location.search);if(_q.get("demo")==="1"){nav("funcionario");CASA.demo(_q.get("ver")||"admin");}}catch(e){}
 
