@@ -1,11 +1,29 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-07-13 · Leia isto primeiro ao retomar. **Produção: v2.16.0.**
+**Última atualização:** 2026-08-01 · Leia isto primeiro ao retomar. **Produção: v2.16.0.**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
 ---
 
-## 🟢 RETOMAR AQUI — sessão 13/07 (c) — ✅/❌ em TODAS as visões + nas tarefas (NO AR v2.16.0)
+## ▶️ PROMPT PRA COLAR NA PRÓXIMA SESSÃO
+```
+Retomar Painel Central (Jucá 2.0) — sessão exclusiva. Prod v2.16.0, tudo no ar (GitHub Pages, main).
+Ler ~/Documents/painel-central/ESTADO_DO_PROJETO.md. Deploy é push direto na main (autorizado).
+Sempre `git fetch` + comparar origin/main ANTES de editar (outras sessões costumam estar à frente).
+Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item].
+```
+
+## 🗂️ FILA / PENDÊNCIAS (próximas frentes)
+1. **Projetos — metadata (subir 1 degrau):** tabela Supabase `painel_projetos` p/ status (ativo/pausado/concluído), descrição e link (repo/chat) de cada projeto. Hoje o projeto só carrega o que a lista do Google Tasks tem (título + tarefas).
+2. **Projetos — `PROJ.abrir`:** hoje leva pro topo do `gtasks-out`; focar/realçar a lista específica do projeto clicado.
+3. **Mês — status ✅/❌:** hoje o Mês só mostra o emoji no título (tap no dia → visão Dia). Opção: mini-eventos abrirem o modal no toque pra marcar direto no Mês.
+4. **WhatsApp Fase 3** (sessão paralela pausada): Edge Function `wa-send` + setup Meta Business (1ª infra server-side). Bônus antigo: botão WhatsApp na equipe de saúde do Gael (`GAEL`, campo `contato`).
+5. **Sync Supabase da triagem/Inbox entre aparelhos:** falta o Gustavo logar 1x no app (magic-link `juca@segurocomjuca.com`) — local já roda.
+6. **Sheets API / reconectar Google** (pendência antiga): Bússola/Saúde/Feira/Histórico ainda leem a planilha; se der 403, ativar Google Sheets API no projeto `painel-central-499400` e reconectar.
+
+---
+
+## 🟢 RETOMAR AQUI — sessão 01/08 (c) — ✅/❌ em TODAS as visões + nas tarefas (NO AR v2.16.0)
 
 **Extensão do status ✅/❌ (commit `827f85e`), a pedido do Gustavo ("faz pra tudo, tb pra tarefas"):**
 - **Agenda:** os botões ✅/❌ agora aparecem também na **visão 4 dias e Semana** (linha sob cada evento, via `evHtml`/`.ev-strow`), não só no Dia. **Mês** segue com o emoji no título (indicador) + tap no dia → visão Dia (célula pequena demais pra botões). Título é exibido **sem** o emoji (o botão sinaliza; `evStripStatus`).
@@ -14,7 +32,7 @@
 
 ---
 
-## 🟢 (histórico) sessão 13/07 (b) — Status ✅/❌ de evento (v2.15.0)
+## 🟢 (histórico) sessão 01/08 (b) — Status ✅/❌ de evento (v2.15.0)
 
 **Frente entregue e VERIFICADA no preview + NO AR (commit `7cb499e`):** cada evento da Agenda ganhou **botão ✅/❌ pra marcar feito/não-feito**. Como o Google Calendar **não tem estado "feito"**, o símbolo é **carimbado no PRÓPRIO TÍTULO do evento** (`gcalPatchTitle` = PATCH só do `summary`, preserva data/hora) → aparece em **qualquer visão do Google Agenda** — a referência visual que o Gustavo já usa no dia a dia. Toggle: clicar de novo limpa; trocar substitui (regex não duplica). Helpers `evStripStatus`/`evCurStatus`/`evSetStatus`/`evStatusBtns`. **2 lugares:** botões inline na **visão Dia** (título mostra sem o emoji, botão destaca o ativo) + linha **"Está feito?"** no modal do evento (`EVMODAL.status`, persiste no Salvar). Standalone via PATCH REST; Cowork via MCP `update_event` passando os horários crus. Recorrente = vale na ocorrência. Bônus: **tarefas concluídas do Google Tasks agora exibem ✅** (mesma linguagem). `APP_VERSION`→**2.15.0**, sw→**v21**. Verificado: toggle ✅→❌→limpar envia só `{summary}` no PATCH; day view + modal OK (screenshots mobile); console limpo.
 
@@ -22,7 +40,7 @@
 
 ---
 
-## 🟢 (histórico) sessão 13/07 (a) — Módulo PROJETOS + Tarefas limpa + editar/excluir evento (v2.14.0)
+## 🟢 (histórico) sessão 01/08 (a) — Módulo PROJETOS + Tarefas limpa + editar/excluir evento (v2.14.0)
 
 **3 frentes entregues e VERIFICADAS no preview + NO AR (commits `a26dfb7` parte + `0f82eab`):**
 
@@ -43,7 +61,7 @@
 
 ## 🟢 (histórico) sessão 04/07 — WhatsApp Fase 1 + Fase 2 Contatos (v2.12.0 → v2.13.0)
 
-> Entre esta sessão e a de 13/07 entrou o **v2.13.0** (commit `a26dfb7`): **módulo Contatos** (`painel_contatos`, Supabase RLS owner, WhatsApp de 1 clique) = **Fase 2** do roadmap WhatsApp. Nav `Contatos`, view Table-CRUD estilo Gael, migration `sql/painel_contatos.sql`. sw chegou a v19. *(Esse commit também carregou junto a 1ª versão do editar-evento.)*
+> Entre esta sessão e a de 01/08 entrou o **v2.13.0** (commit `a26dfb7`): **módulo Contatos** (`painel_contatos`, Supabase RLS owner, WhatsApp de 1 clique) = **Fase 2** do roadmap WhatsApp. Nav `Contatos`, view Table-CRUD estilo Gael, migration `sql/painel_contatos.sql`. sw chegou a v19. *(Esse commit também carregou junto a 1ª versão do editar-evento.)*
 
 ## 🟢 RETOMAR AQUI — sessão 04/07 (WhatsApp Fase 1 = click-to-chat, NO AR v2.12.0)
 
