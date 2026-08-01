@@ -1,5 +1,5 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-08-01 · Leia isto primeiro ao retomar. **Produção: v2.16.0.**
+**Última atualização:** 2026-08-01 · Leia isto primeiro ao retomar. **Produção: v2.17.0.**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
@@ -7,15 +7,17 @@
 
 ## ▶️ PROMPT PRA COLAR NA PRÓXIMA SESSÃO
 ```
-Retomar Painel Central (Jucá 2.0) — sessão exclusiva. Prod v2.16.0, tudo no ar (GitHub Pages, main).
+Retomar Painel Central (Jucá 2.0) — sessão exclusiva. Prod v2.17.0, tudo no ar (GitHub Pages, main).
 Ler ~/Documents/painel-central/ESTADO_DO_PROJETO.md. Deploy é push direto na main (autorizado).
 Sempre `git fetch` + comparar origin/main ANTES de editar (outras sessões costumam estar à frente).
+⚠️ 1º passo: rodar `sql/painel_projetos.sql` no Supabase (metadata de projeto ainda não sincroniza sem isso).
 Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item].
 ```
 
 ## 🗂️ FILA / PENDÊNCIAS (próximas frentes)
-1. **Projetos — metadata (subir 1 degrau):** tabela Supabase `painel_projetos` p/ status (ativo/pausado/concluído), descrição e link (repo/chat) de cada projeto. Hoje o projeto só carrega o que a lista do Google Tasks tem (título + tarefas).
-2. **Projetos — `PROJ.abrir`:** hoje leva pro topo do `gtasks-out`; focar/realçar a lista específica do projeto clicado.
+0. 🔴 **RODAR `sql/painel_projetos.sql`** no SQL Editor do Supabase (query NOVA) — sem isso o status/descrição/link do projeto só vive em memória até recarregar. Único passo pendente da v2.17.0.
+1. ~~**Projetos — metadata**~~ ✅ **FEITO na v2.17.0** (falta só a migration, item 0).
+2. ~~**Projetos — `PROJ.abrir`**~~ ✅ **FEITO na v2.17.0** (foca e realça a lista do projeto clicado).
 3. **Mês — status ✅/❌:** hoje o Mês só mostra o emoji no título (tap no dia → visão Dia). Opção: mini-eventos abrirem o modal no toque pra marcar direto no Mês.
 4. **WhatsApp Fase 3** (sessão paralela pausada): Edge Function `wa-send` + setup Meta Business (1ª infra server-side). Bônus antigo: botão WhatsApp na equipe de saúde do Gael (`GAEL`, campo `contato`).
 5. **Sync Supabase da triagem/Inbox entre aparelhos:** falta o Gustavo logar 1x no app (magic-link `juca@segurocomjuca.com`) — local já roda.
@@ -23,7 +25,19 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
 
 ---
 
-## 🟢 RETOMAR AQUI — sessão 01/08 (c) — ✅/❌ em TODAS as visões + nas tarefas (NO AR v2.16.0)
+## 🟢 RETOMAR AQUI — sessão 01/08 (d) — PROJETOS: metadata + abrir focando (NO AR v2.17.0)
+
+**Fila itens 1+2 entregues (commit `f993bda`):**
+- **`PJMETA` (novo IIFE, antes do `PROJ`)** — camada de metadados do projeto no Supabase (`painel_projetos`, chave `list_id` da tasklist): **status** (`ativo`/`pausado`/`concluido`), **descrição** e **link** (repo/chat/doc). Sem linha na tabela = *ativo, sem descrição* (default). Padrão idêntico ao `EVMETA`: otimista em memória + `POST ...?on_conflict=list_id` com `Prefer: resolution=merge-duplicates` quando logado; deslogado avisa 1x por toast e mantém em memória. **A fonte da verdade do projeto (nome + tarefas) continua sendo o Google Tasks** — aqui só mora o que o Google não tem.
+- **Card do projeto:** badge de status colorido, descrição, link clicável (`target=_blank`) e botão **⚙️ detalhes** (modal reusando `gael-modal`: status/descrição/link). **Filtro por status** (pills Todos/Ativo/Pausado/Concluído, com contagem) e ordenação **ativo → pausado → concluído** (dentro do status mantém a ordem do Google). Concluído entra com opacidade menor.
+- **Excluir projeto** limpa a metadata órfã (`PJMETA.remove`); `SB.onChange` → `PROJ.onAuth()` recarrega a metadata no login/logout e repinta se a tela estiver aberta.
+- **`PROJ.abrir(lid)`** deixou de só rolar pro topo do `gtasks-out`: agora **foca e realça a lista daquele projeto** dentro de Tarefas (âncora `data-lid` no `.gt-group` + classe `.gt-hl` por ~2,6s). Tem **retry** (10× a cada 300ms) enquanto o Google Tasks ainda carrega e **fallback de scroll instantâneo** quando o `behavior:'smooth'` é ignorado pelo ambiente (foi exatamente o que aconteceu no preview — por isso o fallback existe).
+- **Migration `sql/painel_projetos.sql`** (RLS `owner=auth.uid()`, grant só `authenticated`, `text+CHECK`, trigger `set_updated_at`, idempotente). ⚠️ **AINDA NÃO RODADA** — item 0 da fila.
+- `APP_VERSION`→**2.17.0**, sw→**v23**. **Verificado no preview** (porta 8817, `GT_GROUPS` fake): 3 projetos com badge/descrição/link, filtros e ordenação certos; modal grava e repinta; **as 3 chamadas REST batem a migration** (`POST painel_projetos?on_conflict=list_id` com `{list_id,status,descricao,link}`, `DELETE ...?list_id=eq.X`, `GET ...?select=list_id,status,descricao,link`); `PROJ.abrir` pousa e realça a lista certa; console limpo; mobile 375px sem estouro horizontal + desktop 1280 (screenshots).
+
+---
+
+## 🟢 (histórico) sessão 01/08 (c) — ✅/❌ em TODAS as visões + nas tarefas (v2.16.0)
 
 **Extensão do status ✅/❌ (commit `827f85e`), a pedido do Gustavo ("faz pra tudo, tb pra tarefas"):**
 - **Agenda:** os botões ✅/❌ agora aparecem também na **visão 4 dias e Semana** (linha sob cada evento, via `evHtml`/`.ev-strow`), não só no Dia. **Mês** segue com o emoji no título (indicador) + tap no dia → visão Dia (célula pequena demais pra botões). Título é exibido **sem** o emoji (o botão sinaliza; `evStripStatus`).
@@ -169,6 +183,7 @@ Implementado o submódulo **Casa › 👥 Funcionário** (que na produção era 
 | `sql/painel_casa.sql` | Migration RLS Casa (rodar no Supabase). |
 | `sql/gael_saude.sql` | Migration das 6 tabelas `gael_*` (RLS owner). **Rodar no Supabase.** |
 | `sql/gael_saude_seed.sql` | Seed da consulta 05/06/2026. **Rodar após a migration.** |
+| `sql/painel_projetos.sql` | **(01/08) Migration `painel_projetos`** — status/descrição/link por projeto (RLS owner). **🔴 RODAR no Supabase.** |
 | `sql/painel_inbox.sql` | **(29/06) Migration da tabela `painel_inbox`** (triagem do Inbox; RLS owner). **Rodar no Supabase quando aprovar.** |
 | `sw.js` | Service worker (cache `v3` → bumpar p/ `v4` no deploy do Inbox). |
 | `casa-debora.html` | Protótipo original (referência; já no repo). |
