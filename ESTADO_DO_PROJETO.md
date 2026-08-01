@@ -39,11 +39,15 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
 
 **✅ FEITO nesta sessão:** função escrita, commitada (`413c005`) e **DEPLOYADA** em `https://mieqsiojvfiqrhectquc.supabase.co/functions/v1/mcp-painel`; `verify_jwt` desligado; smoke test bate (`GET` → 405 com meu texto; `POST` sem secret → 500 "Servidor mal configurado", ou seja o código roda). Coluna **`nome`** adicionada em `painel_projetos` (+ rodada no banco): sem ela o MCP responderia `list_id` em vez de "CRM Captação"; o app grava no upsert e ao renomear (verificado no preview).
 
-**🔴 PENDENTE — 2 campos que SÓ O GUSTAVO pode preencher** (a trava de segurança me impede de digitar credencial em formulário): Supabase → Edge Functions → **Secrets** → adicionar
-- `MCP_TOKEN` = o token gerado nesta sessão (está no chat; dá pra rotacionar quando quiser)
-- `OWNER_UID` = `f23f70d9-2859-4664-8842-bbf82762aecb`
+**✅ SECRETS CADASTRADOS (Gustavo, 01/08) + TESTE END-TO-END VERDE.** Rodado contra a função no ar:
+- `initialize` 200, ecoa o protocolo pedido (2025-06-18), `serverInfo` certo · `tools/list` = as 7 · **token errado → 401**.
+- Leituras contra dado real: `painel_resumo` (Projetos 0 · Contatos 1 · Inbox 0), `painel_listar_contatos` trouxe o contato real, `painel_listar_projetos`/`listar_inbox` vazios (esperado — tabelas novas / ele ainda não logou no app pra popular).
+- **Escrita:** sem `confirmar` → recusa com a mensagem certa e **não grava**; com `confirmar:true` → gravou e leu de volta; `painel_salvar_contato` criou e depois editou; `list_id` inventado → erro limpo mandando listar antes. **Linhas de teste apagadas** (conferido: contatos 1 / inbox 0 / projetos 0).
+- **Claude Code registrado** (`claude mcp add --scope user --transport http`, headers no `~/.claude.json`) → `claude mcp list` diz **✔ Connected**.
 
-Depois disso: testar as 7 ferramentas end-to-end, registrar o servidor no Claude Code (`claude mcp add --transport http`) e tentar adicionar como conector no claude.ai.
+**🔴 ÚNICO PENDENTE: adicionar como conector no claude.ai** (web/celular) — Personalizar → Conectores → Adicionar conector personalizado → URL `https://mieqsiojvfiqrhectquc.supabase.co/functions/v1/mcp-painel` → em **Request headers**: `Authorization` = `Bearer <MCP_TOKEN>` (com o "Bearer " e o espaço). ⚠️ Se a seção **Request headers não aparecer**, é o beta que ainda não chegou na conta → aí o caminho é OAuth (só troca a função `autorizado()`, as 7 ferramentas não mudam). *Tentei checar a tela, mas a aba do claude.ai trava com a extensão do Chrome operando nela — e colar o token é credencial, que a trava não me deixa digitar de todo jeito.*
+
+**Próximas evoluções naturais:** (a) 2ª onda com Google (refresh token server-side → agenda/tarefas no MCP); (b) ferramentas de Gael/Casa; (c) o Gustavo logar no app pra popular projetos/inbox e o MCP ter o que responder.
 
 ---
 
