@@ -29,9 +29,14 @@ $$;
 --   Sem linha na tabela = projeto "ativo, sem descrição" (default do app).
 --   PK simples em list_id: app single-user; se um dia houver 2º owner no mesmo
 --   projeto, migrar PK para (owner, list_id).
+--   nome     = SNAPSHOT do título da lista no Google Tasks. Desnormalizado de
+--     propósito: quem lê a tabela sem o Google na mão (ex.: o servidor MCP)
+--     precisa saber que projeto é esse. O app reescreve a cada upsert; se
+--     divergir, o Google Tasks é que manda.
 create table if not exists public.painel_projetos (
   list_id     text primary key,
   owner       uuid not null default auth.uid(),
+  nome        text,
   status      text not null default 'ativo'
               check (status in ('ativo','pausado','concluido')),
   descricao   text,
@@ -39,6 +44,8 @@ create table if not exists public.painel_projetos (
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
+-- v2 (01/08): coluna nome adicionada depois — mantém idempotente pra quem já rodou a v1.
+alter table public.painel_projetos add column if not exists nome text;
 create index if not exists idx_painel_projetos_owner on public.painel_projetos(owner);
 drop trigger if exists trg_painel_projetos_updated on public.painel_projetos;
 create trigger trg_painel_projetos_updated before update on public.painel_projetos

@@ -1948,7 +1948,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.17.0";
+var APP_VERSION="2.17.1";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -3010,7 +3010,7 @@ var PJMETA=(function(){
   var STATUS=[{k:'ativo',l:'Ativo'},{k:'pausado',l:'Pausado'},{k:'concluido',l:'Concluído'}];
   function load(){
     if(!SB.enabled()||!SB.loggedIn()){ map={}; return Promise.resolve(); }
-    return SB.rest("GET","painel_projetos?select=list_id,status,descricao,link")
+    return SB.rest("GET","painel_projetos?select=list_id,nome,status,descricao,link")
       .then(function(r){ return r.ok?r.json():[]; })
       .then(function(rows){ map={}; (rows||[]).forEach(function(r){ map[r.list_id]=r; }); })
       .catch(function(){});
@@ -3020,14 +3020,14 @@ var PJMETA=(function(){
   function rank(lid){ var s=statusOf(lid); return s==='concluido'?2:(s==='pausado'?1:0); }
   function label(k){ for(var i=0;i<STATUS.length;i++) if(STATUS[i].k===k) return STATUS[i].l; return k; }
   function upsert(lid, patch){
-    var row=map[lid]||(map[lid]={list_id:lid, status:'ativo', descricao:null, link:null});
+    var row=map[lid]||(map[lid]={list_id:lid, nome:null, status:'ativo', descricao:null, link:null});
     Object.assign(row, patch);   /* otimista: UI reflete na hora */
     if(!SB.enabled()||!SB.loggedIn()){
       if(!warned){ toast("Conecte (login do painel) pra salvar os detalhes do projeto"); warned=true; }
       return Promise.resolve(false);
     }
     return SB.rest("POST","painel_projetos?on_conflict=list_id",
-      {list_id:lid, status:row.status, descricao:row.descricao, link:row.link},
+      {list_id:lid, nome:row.nome, status:row.status, descricao:row.descricao, link:row.link},
       {Prefer:"resolution=merge-duplicates,return=minimal"})
       .then(function(r){ if(!r.ok) toast("Não sincronizei (rodou a migration painel_projetos?)"); return r.ok; })
       .catch(function(){ toast("Sem rede — fica em memória até recarregar"); return false; });
@@ -3131,8 +3131,9 @@ var PROJ=(function(){
   }
   function closeModal(){ var m=$('pj-modal-bg'); if(m&&m.parentNode) m.parentNode.removeChild(m); }
   function salvarDetalhes(lid){
-    var s=$('pj-f-status'), d=$('pj-f-descricao'), l=$('pj-f-link');
-    var patch={ status:(s&&s.value)||'ativo',
+    var s=$('pj-f-status'), d=$('pj-f-descricao'), l=$('pj-f-link'), g=grupo(lid);
+    var patch={ nome:(g&&g.nome)||null,   /* snapshot do nome: quem lê a tabela sem o Google (MCP) precisa dele */
+                status:(s&&s.value)||'ativo',
                 descricao:((d&&d.value)||'').trim()||null,
                 link:((l&&l.value)||'').trim()||null };
     PJMETA.upsert(lid, patch).then(function(ok){ if(ok) toast("Detalhes salvos ✓"); });
@@ -3183,7 +3184,8 @@ var PROJ=(function(){
     nome=nome.trim(); if(!nome||nome===g.nome) return;
     toast("Salvando…");
     gtWrite("PATCH","users/@me/lists/"+encodeURIComponent(lid), {title:nome})
-      .then(function(){ toast("Renomeado ✓"); refresh(); })
+      .then(function(){ if(PJMETA.get(lid)) PJMETA.upsert(lid,{nome:nome});   /* mantém o snapshot em dia */
+                        toast("Renomeado ✓"); refresh(); })
       .catch(function(e){ toast("Não salvei: "+String(e&&e.message||e).slice(0,80)); });
   }
   function excluir(lid){
