@@ -369,6 +369,197 @@ async function chamarTool(nome: string, args: any) {
   return erroTool(`ferramenta desconhecida: ${nome}`);
 }
 
+// ============================== OAuth 2.1 ==================================
+// Por que existe: o claude.ai NÃO tem (nesta conta) o campo de header fixo — ele
+// tenta OAuth e falha com "não foi possível registrar no serviço de login".
+// Então esta função também faz o papel de authorization server.
+//
+// O PULO DO GATO: a spec manda o cliente descobrir os metadados pela URL que vem
+// no header `WWW-Authenticate` do nosso 401 (RFC 9728 §5.1). Como quem escreve
+// esse header somos nós, os documentos podem morar embaixo de /functions/v1/... —
+// não precisamos da raiz do domínio, que é da Supabase e não nossa.
+//
+// SEM ESTADO: código e tokens são JSON assinado com HMAC-SHA256 (chave = MCP_TOKEN).
+// Validam-se sozinhos, então não há tabela de sessão pra criar nem pra limpar.
+const RECURSO = `${SUPABASE_URL}/functions/v1/mcp-painel`;
+const VALIDADE_CODIGO = 5 * 60;          // 5 min — só pra trocar por token
+const VALIDADE_ACESSO = 30 * 24 * 3600;  // 30 dias
+const VALIDADE_REFRESH = 365 * 24 * 3600;
+
+const enc = new TextEncoder();
+function b64url(bytes: Uint8Array): string {
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function deB64url(s: string): Uint8Array {
+  const p = s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4);
+  return Uint8Array.from(atob(p), (c) => c.charCodeAt(0));
+}
+let chaveHmac: CryptoKey | null = null;
+async function hmac(): Promise<CryptoKey> {
+  if (!chaveHmac) {
+    chaveHmac = await crypto.subtle.importKey("raw", enc.encode(MCP_TOKEN), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+  }
+  return chaveHmac;
+}
+async function assinar(dados: Record<string, unknown>, segundos: number): Promise<string> {
+  const corpo = b64url(enc.encode(JSON.stringify({ ...dados, exp: Math.floor(Date.now() / 1000) + segundos })));
+  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", await hmac(), enc.encode(corpo)));
+  return `${corpo}.${b64url(sig)}`;
+}
+async function conferir(token: string, tipo: string): Promise<any | null> {
+  const [corpo, sig] = String(token || "").split(".");
+  if (!corpo || !sig) return null;
+  const ok = await crypto.subtle.verify("HMAC", await hmac(), deB64url(sig), enc.encode(corpo));
+  if (!ok) return null;
+  let dados: any;
+  try { dados = JSON.parse(new TextDecoder().decode(deB64url(corpo))); } catch { return null; }
+  if (dados.t !== tipo) return null;                                  // não aceita code no lugar de token
+  if (!dados.exp || dados.exp < Math.floor(Date.now() / 1000)) return null;
+  if (dados.aud && dados.aud !== RECURSO) return null;                // audiência: token é só pra este servidor
+  return dados;
+}
+async function pkceConfere(verifier: string, challenge: string): Promise<boolean> {
+  if (!verifier || !challenge) return false;
+  const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(verifier)));
+  return b64url(hash) === challenge;
+}
+// Redirect só pra https ou localhost (OAuth 2.1 §1.5) — barra open redirect.
+function redirectValido(uri: string): boolean {
+  try {
+    const u = new URL(uri);
+    return u.protocol === "https:" || u.hostname === "localhost" || u.hostname === "127.0.0.1";
+  } catch { return false; }
+}
+
+function metaRecurso(): Response {
+  return httpJson({
+    resource: RECURSO,
+    authorization_servers: [RECURSO],
+    scopes_supported: ["painel"],
+    bearer_methods_supported: ["header"],
+  });
+}
+function metaServidor(): Response {
+  return httpJson({
+    issuer: RECURSO,
+    authorization_endpoint: `${RECURSO}/authorize`,
+    token_endpoint: `${RECURSO}/token`,
+    registration_endpoint: `${RECURSO}/register`,
+    response_types_supported: ["code"],
+    grant_types_supported: ["authorization_code", "refresh_token"],
+    code_challenge_methods_supported: ["S256"],
+    token_endpoint_auth_methods_supported: ["none"],
+    scopes_supported: ["painel"],
+  });
+}
+// Registro dinâmico (RFC 7591): cliente público, sem segredo. Aceitamos qualquer
+// cliente porque quem de fato autoriza é a senha na tela de consentimento.
+async function registrar(req: Request): Promise<Response> {
+  let corpo: any = {};
+  try { corpo = await req.json(); } catch { /* corpo vazio é aceitável */ }
+  const redirects: string[] = Array.isArray(corpo.redirect_uris) ? corpo.redirect_uris : [];
+  if (!redirects.length || !redirects.every(redirectValido)) {
+    return httpJson({ error: "invalid_redirect_uri", error_description: "redirect_uris precisa ser https ou localhost" }, 400);
+  }
+  return httpJson({
+    client_id: b64url(crypto.getRandomValues(new Uint8Array(18))),
+    client_id_issued_at: Math.floor(Date.now() / 1000),
+    redirect_uris: redirects,
+    token_endpoint_auth_method: "none",
+    grant_types: ["authorization_code", "refresh_token"],
+    response_types: ["code"],
+    client_name: String(corpo.client_name || "Cliente MCP"),
+  }, 201);
+}
+
+function paginaConsentimento(p: URLSearchParams, erro?: string): Response {
+  const campos = ["client_id", "redirect_uri", "state", "code_challenge", "code_challenge_method", "scope", "resource"]
+    .map((k) => `<input type="hidden" name="${k}" value="${escapaHtml(p.get(k) || "")}">`).join("");
+  const html = `<!doctype html><html lang="pt-BR"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Painel Central — liberar acesso</title>
+<style>
+ :root{color-scheme:light dark}
+ body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f7f8f6;color:#161a17;
+      font:16px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;padding:20px}
+ .cx{background:#fff;border:1px solid #dfe3dc;border-radius:12px;padding:28px;max-width:430px;width:100%;
+     box-shadow:0 8px 30px -18px rgba(22,26,23,.4)}
+ h1{font:600 21px/1.25 ui-serif,Georgia,serif;margin:0 0 6px}
+ p{color:#5c6b60;font-size:14.5px;margin:0 0 16px}
+ ul{color:#5c6b60;font-size:13.5px;margin:0 0 18px;padding-left:18px}
+ label{display:block;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:#5c6b60;margin-bottom:5px}
+ input[type=password]{width:100%;padding:10px 12px;border:1px solid #c6cdc0;border-radius:8px;font:inherit;font-size:14px;background:#fff;color:#161a17}
+ button{width:100%;margin-top:14px;padding:11px;border:0;border-radius:8px;background:#4f7a19;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+ button:hover{background:#3f6314}
+ .erro{background:#fdecea;border:1px solid #f3c4bd;color:#8c2c1d;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+ @media(prefers-color-scheme:dark){
+   body{background:#12150f;color:#eaeee5}
+   .cx{background:#191d16;border-color:#2c3226;box-shadow:none}
+   p,ul,label{color:#8f9a86} input[type=password]{background:#12150f;border-color:#3d4634;color:#eaeee5}
+   .erro{background:#2b1714;border-color:#5a2b22;color:#f0b5aa}
+ }
+</style>
+<div class="cx">
+ <h1>Liberar acesso ao Painel Central</h1>
+ <p>Um cliente Claude quer se conectar ao seu Painel. Se autorizar, ele poderá:</p>
+ <ul><li>Ler projetos, contatos e inbox</li><li>Alterar dados — sempre pedindo sua confirmação antes</li></ul>
+ ${erro ? `<div class="erro">${escapaHtml(erro)}</div>` : ""}
+ <form method="POST">
+   ${campos}
+   <label for="senha">Token do Painel</label>
+   <input id="senha" type="password" name="senha" autocomplete="off" autofocus required placeholder="pnl_…">
+   <button type="submit">Autorizar</button>
+ </form>
+</div></html>`;
+  return new Response(html, { status: 200, headers: { ...CORS, "Content-Type": "text/html; charset=utf-8" } });
+}
+function escapaHtml(s: string): string {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
+async function autorizar(req: Request, url: URL): Promise<Response> {
+  const p = req.method === "POST" ? new URLSearchParams(await req.text()) : url.searchParams;
+  const redirect = p.get("redirect_uri") || "";
+  const desafio = p.get("code_challenge") || "";
+  if (!redirectValido(redirect)) return httpJson({ error: "invalid_request", error_description: "redirect_uri inválida" }, 400);
+  if (!desafio || (p.get("code_challenge_method") || "S256") !== "S256") {
+    return httpJson({ error: "invalid_request", error_description: "PKCE S256 é obrigatório" }, 400);
+  }
+  if (req.method !== "POST") return paginaConsentimento(p);
+
+  if (!tokensBatem((p.get("senha") || "").trim(), MCP_TOKEN)) return paginaConsentimento(p, "Token não confere. Tente de novo.");
+
+  const code = await assinar({ t: "code", cc: desafio, ru: redirect, res: p.get("resource") || RECURSO }, VALIDADE_CODIGO);
+  const destino = new URL(redirect);
+  destino.searchParams.set("code", code);
+  if (p.get("state")) destino.searchParams.set("state", p.get("state")!);
+  return new Response(null, { status: 302, headers: { ...CORS, Location: destino.toString() } });
+}
+
+async function emitirTokens(req: Request): Promise<Response> {
+  const p = new URLSearchParams(await req.text());
+  const grant = p.get("grant_type");
+
+  if (grant === "refresh_token") {
+    const dados = await conferir(p.get("refresh_token") || "", "refresh");
+    if (!dados) return httpJson({ error: "invalid_grant" }, 400);
+  } else if (grant === "authorization_code") {
+    const dados = await conferir(p.get("code") || "", "code");
+    if (!dados) return httpJson({ error: "invalid_grant", error_description: "código inválido ou expirado" }, 400);
+    if (dados.ru !== (p.get("redirect_uri") || dados.ru)) return httpJson({ error: "invalid_grant", error_description: "redirect_uri não bate" }, 400);
+    if (!await pkceConfere(p.get("code_verifier") || "", dados.cc)) return httpJson({ error: "invalid_grant", error_description: "PKCE não confere" }, 400);
+  } else {
+    return httpJson({ error: "unsupported_grant_type" }, 400);
+  }
+
+  return httpJson({
+    access_token: await assinar({ t: "acesso", aud: RECURSO }, VALIDADE_ACESSO),
+    token_type: "Bearer",
+    expires_in: VALIDADE_ACESSO,
+    refresh_token: await assinar({ t: "refresh", aud: RECURSO }, VALIDADE_REFRESH),   // rotacionado a cada uso
+    scope: "painel",
+  });
+}
+
 // ------------------------------------------------------------------ JSON-RPC
 async function tratar(msg: any): Promise<Response | null> {
   const { id, method, params } = msg || {};
