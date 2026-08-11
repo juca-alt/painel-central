@@ -1,5 +1,5 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-08-01 · Leia isto primeiro ao retomar. **Produção: v2.17.0.**
+**Última atualização:** 2026-08-02 · Leia isto primeiro ao retomar. **Produção: v2.18.0.**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
@@ -7,19 +7,31 @@
 
 ## ▶️ PROMPT PRA COLAR NA PRÓXIMA SESSÃO
 ```
-Retomar Painel Central (Jucá 2.0) — sessão exclusiva. Prod v2.17.0, tudo no ar (GitHub Pages, main).
+Retomar Painel Central (Jucá 2.0) — sessão exclusiva. Prod v2.18.0, tudo no ar (GitHub Pages, main).
 Ler ~/Documents/painel-central/ESTADO_DO_PROJETO.md. Deploy é push direto na main (autorizado).
 Sempre `git fetch` + comparar origin/main ANTES de editar (outras sessões costumam estar à frente).
+MCP: leitura no claude.ai via conector oficial Supabase; escrita curada via mcp-painel no Claude Code (✔).
 Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item].
 ```
 
 ## 🗂️ FILA / PENDÊNCIAS (próximas frentes)
 1. ~~**Projetos — metadata**~~ ✅ **FEITO na v2.17.0** — migration `painel_projetos` **RODADA e VERIFICADA no Supabase em 01/08** (RLS on, 1 policy, `anon` revogado → 401/42501; `authenticated` com os 7 grants).
 2. ~~**Projetos — `PROJ.abrir`**~~ ✅ **FEITO na v2.17.0** (foca e realça a lista do projeto clicado).
-3. **Mês — status ✅/❌:** hoje o Mês só mostra o emoji no título (tap no dia → visão Dia). Opção: mini-eventos abrirem o modal no toque pra marcar direto no Mês.
+3. ~~**Mês — status ✅/❌**~~ ✅ **FEITO na v2.18.0 (02/08):** toque no mini-evento do Mês abre o modal (linha "Está feito?") sem sair da visão; toque na célula segue indo pro Dia.
 4. **WhatsApp Fase 3** (sessão paralela pausada): Edge Function `wa-send` + setup Meta Business (1ª infra server-side). Bônus antigo: botão WhatsApp na equipe de saúde do Gael (`GAEL`, campo `contato`).
-5. **Sync Supabase da triagem/Inbox entre aparelhos:** falta o Gustavo logar 1x no app (magic-link `juca@segurocomjuca.com`) — local já roda.
-6. **Sheets API / reconectar Google** (pendência antiga): Bússola/Saúde/Feira/Histórico ainda leem a planilha; se der 403, ativar Google Sheets API no projeto `painel-central-499400` e reconectar.
+5. **Sync Supabase da triagem/Inbox entre aparelhos + popular projetos:** falta o Gustavo logar 1x no app (magic-link `juca@segurocomjuca.com`) — e aí preencher o ⚙️ dos projetos (cria as linhas em `painel_projetos` com o list_id REAL do Google Tasks; nunca inserir via SQL).
+6. **Sheets API / reconectar Google** (pendência antiga): Bússola/Saúde/Feira/Histórico ainda leem a planilha; se der 403, ativar a Google Sheets API — link direto: https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=painel-central-499400 → botão ATIVAR → depois reconectar o Google no app. *(02/08: Claude tentou ativar pelo Chrome, mas o Console pediu reautenticação/passkey — só o Gustavo passa dessa tela.)*
+
+---
+
+## 🟢 RETOMAR AQUI — sessão 02/08 — fechamento autônomo da frente MCP + Mês ✅/❌ (v2.18.0)
+
+**Missão /autonomo-3 executada de ponta a ponta:**
+- 🗑️ **Contato "teste" (12/07) apagado** (autorizado) — `painel_contatos` = 0.
+- 🔒 **Hardening completado:** `revoke all ... from anon` nas **12 tabelas** `painel_*`/`gael_*` (o achado dos DEFAULT PRIVILEGES valia pra todas). Verificado: `grants_anon_restantes = 0`.
+- 📅 **v2.18.0 NO AR (`d2bdd53`):** item 3 da fila — na visão **Mês**, toque no mini-evento abre o **EVMODAL** (linha "Está feito?") via stopPropagation; célula segue indo pro Dia. Verificado no preview (porta 8818): modal abre por cima do Mês com o título certo, célula ainda navega, console limpo. sw **v25**.
+- 🔌 **Artifact do checklist atualizado** (mesma URL): banner "resolvido por outro caminho", passos guardados pra quando o beta de Request headers chegar.
+- ⛔ **Sheets API não deu:** o Cloud Console exigiu reautenticação (passkey) — credencial é só do Gustavo. Link mastigado no item 6 da fila.
 
 ---
 
