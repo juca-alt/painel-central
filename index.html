@@ -415,6 +415,38 @@
   .pj-filters .ct{opacity:.75;font-size:11px}
   /* PROJ.abrir: realce da lista do projeto dentro do módulo Tarefas */
   .gt-group.gt-hl{background:rgba(99,153,34,.10);border-radius:10px;box-shadow:0 0 0 2px var(--accent) inset;transition:background .4s,box-shadow .4s}
+  /* ===== HUB 3.0 (Dimensões → Projetos → Tarefas · Supabase é a fonte) ===== */
+  .hub-dim{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+  .hub-dimhead{display:flex;align-items:center;gap:9px;padding:12px 14px;cursor:pointer;user-select:none;min-height:44px}
+  .hub-dimhead:hover{background:var(--bg)}
+  .hub-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+  .hub-dimname{font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:7px;min-width:0}
+  .hub-dimname i{color:var(--muted)}
+  .hub-dimct{font-size:12px;color:var(--muted);margin-left:auto;flex-shrink:0}
+  .hub-chev{transition:transform .2s;color:var(--muted);flex-shrink:0}
+  .hub-dim.closed .hub-chev{transform:rotate(-90deg)}
+  .hub-dim.closed .hub-body{display:none}
+  .hub-body{border-top:1px solid var(--line);padding:4px 0 8px}
+  .hub-pj{display:flex;align-items:center;gap:9px;padding:9px 14px 9px 26px;cursor:pointer;min-height:44px}
+  .hub-pj:hover{background:var(--bg)}
+  .hub-pj.is-concluido{opacity:.62}
+  .hub-pjname{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:7px;min-width:0;flex:1}
+  .hub-pjname i{color:var(--accent);flex-shrink:0}
+  .hub-pjname span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hub-pjbar{width:64px;height:6px;background:var(--line);border-radius:20px;overflow:hidden;flex-shrink:0}
+  .hub-pjbar>div{height:100%;background:var(--accent);border-radius:20px}
+  .hub-pjct{font-size:12px;color:var(--muted);flex-shrink:0;min-width:56px;text-align:right}
+  .hub-gchip{font-size:10px;font-weight:700;border:1px solid var(--line);border-radius:5px;padding:1px 4px;color:var(--muted);flex-shrink:0}
+  .hub-newpj{padding:7px 14px 7px 26px}
+  .hub-newpj a{font-size:12.5px;color:var(--muted);cursor:pointer}
+  .hub-newpj a:hover{color:var(--accent)}
+  .hub-dimrow{display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:nowrap}
+  .hub-dimrow input[type=text]{flex:1;min-width:80px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;font-size:13px}
+  .hub-dimrow input[type=color]{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;padding:2px;background:var(--card);flex-shrink:0}
+  .hub-dimrow button{border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;border-radius:8px;padding:6px 8px;min-height:34px;flex-shrink:0}
+  .hub-dimrow button:hover{color:var(--txt)}
+  .hub-note{font-size:12.5px;color:var(--muted);line-height:1.45}
+  @media(max-width:768px){ .hub-pjbar{display:none} .hub-pj{padding-left:20px} .hub-newpj{padding-left:20px} }
 </style>
 </head>
 <body>
@@ -596,15 +628,16 @@
     <!-- ============ CONTATOS (base de contatos · WhatsApp Fase 2) ============ -->
     <section id="view-contatos" style="display:none"></section>
 
-    <!-- ============ PROJETOS (listas do Google Tasks como projetos) ============ -->
+    <!-- ============ PROJETOS 3.0 (Dimensões → Projetos → Tarefas · Supabase) ============ -->
     <section id="view-projetos" style="display:none">
       <div class="head"><h1>🗂️ Projetos</h1></div>
-      <div class="sub">Cada projeto é uma <b>lista do Google Tasks</b>. Tarefa criada aqui já entra no módulo Tarefas e escreve no Google (bidirecional) — projeto e tarefas ficam sempre sincronizados. O <b>⚙️ detalhes</b> guarda status, descrição e link (repo/chat) no teu Supabase privado.</div>
+      <div class="sub">Tuas <b>áreas da vida</b> (dimensões) agrupam os projetos, e cada projeto guarda as tarefas — tudo no teu <b>Supabase privado</b>, sincronizado entre aparelhos. Google Tasks/Agenda viram integração opcional (importar e espelhar).</div>
       <div class="bar">
+        <button class="btn" onclick="HUB.dims()"><i class="ti ti-category-2"></i> Dimensões</button>
         <div class="spacer"></div>
-        <button class="btn primary" onclick="PROJ.novo()"><i class="ti ti-plus"></i> Novo projeto</button>
+        <button class="btn primary" onclick="HUB.novoProjeto()"><i class="ti ti-plus"></i> Novo projeto</button>
       </div>
-      <div id="projetos-out"><div class="loading">Lendo teus projetos do Google Tasks…</div></div>
+      <div id="projetos-out"><div class="loading">Carregando…</div></div>
     </section>
 
     <!-- ============ CAMILA ============ -->
@@ -844,7 +877,7 @@ function nav(v){
   if(v==='funcionario'){ CASA.render(); }
   if(v==='gael'){ GAEL.render(); }
   if(v==='contatos'){ CONTATOS.render(); }
-  if(v==='projetos'){ PROJ.render(); }
+  if(v==='projetos'){ HUB.render(); }
   if(v==='config'){ renderConfig(); }
   var inCasa=(v==='feira'||v==='funcionario'); var nc=$('nav-casa');
   if(nc){ nc.classList.toggle('active', inCasa); if(inCasa){ $('casa-sub').classList.remove('collapsed'); nc.classList.remove('collapsed'); } }
@@ -1957,7 +1990,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.18.0";
+var APP_VERSION="2.19.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -3207,15 +3240,264 @@ var PROJ=(function(){
       .catch(function(e){ toast("Não excluí (a lista padrão do Google não pode ser apagada): "+String(e&&e.message||e).slice(0,60)); });
   }
   function isOpen(){ var v=$('view-projetos'); return !!(v && v.style.display!=='none'); }
-  function refreshIfOpen(){ if(isOpen() && GT_GROUPS) paint(GT_GROUPS); }
-  /* login/logout: a metadata (Supabase) muda de estado — recarrega e repinta se estiver aberto */
-  function onAuth(){ if(!COWORK) PJMETA.load().then(function(){ if(isOpen()&&GT_GROUPS) paint(GT_GROUPS); }); }
+  /* 3.0: o HUB assumiu a view Projetos — este módulo não repinta mais por cima.
+     Código mantido pra rollback barato até a F6 (aí sai junto com o PJMETA). */
+  function refreshIfOpen(){}
+  function onAuth(){}
   return {render:render, refresh:refresh, abrir:abrir, addTask:addTask, novo:novo, renomear:renomear, excluir:excluir,
           refreshIfOpen:refreshIfOpen, onAuth:onAuth, setFiltro:setFiltro, detalhes:detalhes, salvarDetalhes:salvarDetalhes, closeModal:closeModal};
 })();
-SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();CONTATOS.refreshIfOpen();PROJ.onAuth();EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
+
+/* ================= 3.0 · T3 — store Dimensões → Projetos → Tarefas =================
+   Supabase é a FONTE DA VERDADE (painel_dimensoes / painel_projetos v3 / painel_tarefas
+   — migration sql/painel_dimensoes_tarefas.sql). Padrão INBOX/PJMETA: cache local pra
+   pintura instantânea, mutação otimista em memória + REST, servidor manda no load().
+   Deslogado: leitura do cache + edição só em memória (toast único avisa). */
+var T3=(function(){
+  var CKEY="painel_t3_cache_v1";
+  var S={dims:[],projs:[],tasks:[]}; var warned=false; var dirtyCb=null; var demoMode=false;
+  try{ var c=JSON.parse(localStorage.getItem(CKEY)||"null"); if(c&&c.dims) S=c; }catch(e){}
+  function on(){ return SB.enabled() && SB.loggedIn() && !demoMode; }
+  function warn1(){ if(!warned && !demoMode){ toast("Conecte (login do painel) pra salvar — por enquanto fica só neste aparelho"); warned=true; } }
+  function fire(){ if(on()){ try{ localStorage.setItem(CKEY, JSON.stringify(S)); }catch(e){} } if(dirtyCb){ try{ dirtyCb(); }catch(e){} } }
+  function uid(){ try{ return crypto.randomUUID(); }catch(e){ return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(ch){var r=Math.random()*16|0;return (ch==='x'?r:(r&0x3|0x8)).toString(16);}); } }
+  function j(r){ if(!r.ok) throw new Error("http "+r.status); return r.json(); }
+  function byId(arr,id){ for(var i=0;i<arr.length;i++) if(arr[i].id===id) return arr[i]; return null; }
+  function load(){
+    if(!on()) return Promise.resolve(S);
+    return Promise.all([
+      SB.rest("GET","painel_dimensoes?select=*&order=posicao.asc,created_at.asc").then(j),
+      SB.rest("GET","painel_projetos?select=*&order=posicao.asc,created_at.asc").then(j),
+      SB.rest("GET","painel_tarefas?select=*&order=posicao.asc,created_at.asc").then(j)
+    ]).then(function(r){ S={dims:r[0]||[],projs:r[1]||[],tasks:r[2]||[]};
+        try{ localStorage.setItem(CKEY, JSON.stringify(S)); }catch(e){} return S; })
+     .catch(function(){ return S; });
+  }
+  /* escrita: quem chama já mexeu no S (otimista) e chamou fire(); aqui só confirma no servidor */
+  function w(method,path,body){
+    if(!on()){ warn1(); return Promise.resolve(false); }
+    return SB.rest(method,path,body,{Prefer:"return=minimal"})
+      .then(function(r){ if(!r.ok) toast("Não sincronizei ("+r.status+") — rodou a migration 3.0?"); return r.ok; })
+      .catch(function(){ toast("Sem rede — a edição fica local até recarregar"); return false; });
+  }
+  /* posição fracionária: fim = max+1024; entre A e B = média (renumeração só se colidir, F4) */
+  function posEnd(arr){ var m=0; (arr||[]).forEach(function(x){ if(x.posicao>m) m=x.posicao; }); return m+1024; }
+  function posBetween(a,b){ if(a==null&&b==null) return 1024; if(a==null) return b-1; if(b==null) return a+1024; return (a+b)/2; }
+  /* ---- dimensões ---- */
+  function dimUpsert(id, patch){
+    var row=id?byId(S.dims,id):null;
+    if(!row){ row={id:uid(), nome:"", cor:"#639922", icone:null, posicao:posEnd(S.dims)}; Object.assign(row,patch||{}); S.dims.push(row); fire();
+      return w("POST","painel_dimensoes",{id:row.id,nome:row.nome,cor:row.cor,icone:row.icone,posicao:row.posicao}).then(function(){ return row.id; }); }
+    Object.assign(row,patch||{}); fire();
+    return w("PATCH","painel_dimensoes?id=eq."+row.id, patch).then(function(){ return row.id; });
+  }
+  function dimSwap(id,dir){ /* ▲▼ no modal: troca posicao com o vizinho */
+    var ds=dimsSorted(); var i=-1; ds.forEach(function(d,k){ if(d.id===id) i=k; });
+    var o=i+dir; if(i<0||o<0||o>=ds.length) return;
+    var a=ds[i], b=ds[o], pa=a.posicao, pb=b.posicao;
+    if(pa===pb) pb=pa+(dir>0?1:-1); /* desempata posições iguais */
+    a.posicao=pb; b.posicao=pa; fire();
+    w("PATCH","painel_dimensoes?id=eq."+a.id,{posicao:a.posicao});
+    w("PATCH","painel_dimensoes?id=eq."+b.id,{posicao:b.posicao});
+  }
+  function dimDel(id){
+    S.dims=S.dims.filter(function(d){ return d.id!==id; });
+    S.projs.forEach(function(p){ if(p.dimensao_id===id) p.dimensao_id=null; }); /* espelha o on delete set null */
+    fire(); return w("DELETE","painel_dimensoes?id=eq."+id);
+  }
+  function seedDims(){
+    var seed=[["Negócios","#639922","ti-briefcase"],["Família","#d4567f","ti-heart"],["Saúde","#1f9d61","ti-stethoscope"],["Pessoal","#b97b12","ti-user"],["Dev/Apps","#4f5ed1","ti-code"]];
+    var rows=seed.map(function(s,i){ return {id:uid(),nome:s[0],cor:s[1],icone:s[2],posicao:(i+1)*1024}; });
+    rows.forEach(function(r){ S.dims.push(r); }); fire();
+    return w("POST","painel_dimensoes", rows);
+  }
+  /* ---- projetos ---- */
+  function pjUpsert(id, patch){
+    var row=id?byId(S.projs,id):null;
+    if(!row){ row={id:uid(), nome:"", dimensao_id:null, status:"ativo", descricao:null, link:null, list_id:null, posicao:posEnd(S.projs)}; Object.assign(row,patch||{}); S.projs.push(row); fire();
+      return w("POST","painel_projetos",{id:row.id,nome:row.nome,dimensao_id:row.dimensao_id,status:row.status,descricao:row.descricao,link:row.link,posicao:row.posicao}).then(function(){ return row.id; }); }
+    Object.assign(row,patch||{}); fire();
+    return w("PATCH","painel_projetos?id=eq."+row.id, patch).then(function(){ return row.id; });
+  }
+  function pjDel(id){
+    S.projs=S.projs.filter(function(p){ return p.id!==id; });
+    S.tasks=S.tasks.filter(function(t){ return t.projeto_id!==id; }); /* espelha o cascade */
+    fire(); return w("DELETE","painel_projetos?id=eq."+id);
+  }
+  /* ---- leituras derivadas ---- */
+  function dimsSorted(){ return S.dims.slice().sort(function(a,b){ return (a.posicao-b.posicao)||String(a.created_at||"").localeCompare(String(b.created_at||"")); }); }
+  function projsOf(dimId){ return S.projs.filter(function(p){ return (p.dimensao_id||null)===(dimId||null); }).sort(function(a,b){ return (a.posicao-b.posicao)||String(a.created_at||"").localeCompare(String(b.created_at||"")); }); }
+  function tasksOf(pjId){ return S.tasks.filter(function(t){ return t.projeto_id===pjId; }).sort(function(a,b){ return (a.posicao-b.posicao)||String(a.created_at||"").localeCompare(String(b.created_at||"")); }); }
+  /* ---- demo (?demo=hub): dados fake só em memória, sem rede ---- */
+  function demo(){ demoMode=true;
+    var d1=uid(),d2=uid(),p1=uid(),p2=uid(),p3=uid();
+    S={dims:[{id:d1,nome:"Negócios",cor:"#639922",icone:"ti-briefcase",posicao:1024},{id:d2,nome:"Família",cor:"#d4567f",icone:"ti-heart",posicao:2048}],
+       projs:[{id:p1,nome:"Pipe X",dimensao_id:d1,status:"ativo",descricao:"Comissões da LP",link:null,list_id:"gdemo1",posicao:1024},
+              {id:p2,nome:"CRM corretores",dimensao_id:d1,status:"pausado",descricao:null,link:null,list_id:null,posicao:2048},
+              {id:p3,nome:"Consulta Gael",dimensao_id:d2,status:"ativo",descricao:null,link:null,list_id:null,posicao:1024}],
+       tasks:[{id:uid(),projeto_id:p1,titulo:"Fechar proposta MFB",status:"aberta",prazo:"2026-08-12",posicao:1024},
+              {id:uid(),projeto_id:p1,titulo:"Revisar contrato",status:"feita",prazo:null,posicao:2048},
+              {id:uid(),projeto_id:p3,titulo:"Marcar retorno",status:"aberta",prazo:null,posicao:1024}]};
+  }
+  return {load:load, onDirty:function(cb){dirtyCb=cb;}, state:function(){return S;}, isDemo:function(){return demoMode;},
+          dimUpsert:dimUpsert, dimSwap:dimSwap, dimDel:dimDel, seedDims:seedDims,
+          pjUpsert:pjUpsert, pjDel:pjDel,
+          dimsSorted:dimsSorted, projsOf:projsOf, tasksOf:tasksOf,
+          posEnd:posEnd, posBetween:posBetween, demo:demo};
+})();
+
+/* ================= 3.0 · HUB — a view Projetos (árvore Dimensão → Projeto) =================
+   F1 = esqueleto: dimensões colapsáveis + linhas de projeto + modais (Dimensões / Projeto).
+   As TAREFAS dentro do hub chegam na F2 (por ora alimentam contadores e progresso). */
+var HUB=(function(){
+  var OKEY="painel_hub_open_v1";
+  var open={}; try{ open=JSON.parse(localStorage.getItem(OKEY)||"{}")||{}; }catch(e){}
+  var curPj=null;
+  function saveOpen(){ try{ localStorage.setItem(OKEY, JSON.stringify(open)); }catch(e){} }
+  function isOpenDim(id){ return open[id]!==false; } /* default: aberto */
+  function box(){ return $('projetos-out'); }
+  function viewOpen(){ var v=$('view-projetos'); return !!(v && v.style.display!=='none'); }
+  function stLabel(s){ return s==='pausado'?'Pausado':s==='concluido'?'Concluído':'Ativo'; }
+  function stBadge(st){ return '<span class="pj-st '+(st||'ativo')+'">'+stLabel(st)+'</span>'; }
+  function connectHtml(){
+    return '<div class="panel" style="padding:14px 16px;margin-bottom:12px"><b>🔒 Conecte pra sincronizar</b>'+
+      '<div class="hub-note" style="margin:6px 0 9px">Login do painel (magic-link). Deslogado dá pra ver o que está em cache, mas edição não salva.</div>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap"><input id="hub-sb-email" type="email" placeholder="teu email" style="flex:1;min-width:180px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;font-size:13px">'+
+      '<button class="btn sm primary" onclick="SB.signIn(document.getElementById(\'hub-sb-email\').value)">Enviar link</button></div></div>';
+  }
+  function pjRow(p){
+    var ts=T3.tasksOf(p.id); var ab=0,fe=0; ts.forEach(function(t){ if(t.status==='feita') fe++; else ab++; });
+    var tot=ts.length, pct=tot?Math.round(fe*100/tot):0;
+    return '<div class="hub-pj'+(p.status==='concluido'?' is-concluido':'')+'" onclick="HUB.detalhes(\''+p.id+'\')">'+
+      '<div class="hub-pjname"><i class="ti ti-folder"></i><span>'+esc(p.nome||'(sem nome)')+'</span>'+(p.list_id?'<span class="hub-gchip" title="vinculado ao Google Tasks">G</span>':'')+'</div>'+
+      stBadge(p.status)+
+      '<div class="hub-pjbar" title="'+pct+'% concluído"><div style="width:'+pct+'%"></div></div>'+
+      '<div class="hub-pjct">'+(ab?('<b>'+ab+'</b> abertas'):(tot?'✓ tudo':'—'))+'</div>'+
+    '</div>';
+  }
+  function dimSec(d, projs){
+    var abertas=0; projs.forEach(function(p){ T3.tasksOf(p.id).forEach(function(t){ if(t.status!=='feita') abertas++; }); });
+    var id=d?d.id:'null';
+    return '<div class="hub-dim'+(isOpenDim(id)?'':' closed')+'" data-dim="'+id+'">'+
+      '<div class="hub-dimhead" onclick="HUB.toggleDim(\''+id+'\')">'+
+        '<i class="ti ti-chevron-down hub-chev"></i>'+
+        '<span class="hub-dot" style="background:'+(d&&d.cor?esc(d.cor):'var(--muted)')+'"></span>'+
+        '<span class="hub-dimname">'+(d&&d.icone?'<i class="ti '+esc(d.icone)+'"></i>':'')+esc(d?d.nome:'Sem dimensão')+'</span>'+
+        '<span class="hub-dimct">'+projs.length+' projeto'+(projs.length===1?'':'s')+(abertas?' · '+abertas+' abertas':'')+'</span>'+
+      '</div>'+
+      '<div class="hub-body">'+ projs.map(pjRow).join('') +
+        (d?'<div class="hub-newpj"><a onclick="HUB.novoProjeto(\''+id+'\')">＋ Novo projeto em '+esc(d.nome)+'</a></div>':'')+
+      '</div></div>';
+  }
+  function paint(){
+    var b=box(); if(!b) return;
+    var dims=T3.dimsSorted(); var html='';
+    if(SB.enabled() && !SB.loggedIn() && !T3.isDemo()) html+=connectHtml();
+    if(!dims.length && !T3.state().projs.length){
+      html+='<div class="panel" style="padding:18px"><b>Comece pelas tuas áreas da vida</b>'+
+        '<div class="hub-note" style="margin:7px 0 12px">Dimensões agrupam teus projetos (e cada projeto guarda as tarefas). Dá pra partir da sugestão e ajustar tudo depois, ou criar do zero.</div>'+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" onclick="HUB.seed()">Criar dimensões sugeridas</button>'+
+        '<button class="btn" onclick="HUB.dims()">Criar do zero</button></div></div>';
+      b.innerHTML=html; return;
+    }
+    dims.forEach(function(d){ html+=dimSec(d, T3.projsOf(d.id)); });
+    var orf=T3.projsOf(null); if(orf.length) html+=dimSec(null, orf);
+    if(!T3.state().projs.length) html+='<div class="empty">Nenhum projeto ainda — toca "＋ Novo projeto" numa dimensão.</div>';
+    b.innerHTML=html;
+  }
+  function render(){
+    var b=box(); if(!b) return;
+    if(!SB.enabled()){ b.innerHTML='<div class="note">Sincronização desligada — configura o Supabase no código.</div>'; return; }
+    paint(); /* instantâneo com o cache */
+    if(SB.loggedIn()) T3.load().then(function(){ if(viewOpen()) paint(); });
+  }
+  function repaint(){ if(viewOpen()) paint(); }
+  function toggleDim(id){ open[id]=!isOpenDim(id); saveOpen(); paint(); }
+  function seed(){ T3.seedDims(); }
+  /* ---- modal Projeto (criar/editar) ---- */
+  function detalhes(id){ pjModal(id, null); }
+  function novoProjeto(dimId){ pjModal(null, (dimId&&dimId!=='null')?dimId:null); }
+  function pjModal(id, dimPreset){
+    closeModal();
+    var p=null; T3.state().projs.forEach(function(x){ if(x.id===id) p=x; });
+    curPj=id||null;
+    var ds=T3.dimsSorted();
+    var selDim='<select id="hubf-dim"><option value="">— sem dimensão —</option>'+ds.map(function(d){ return '<option value="'+d.id+'"'+((((p&&p.dimensao_id)||dimPreset)===d.id)?' selected':'')+'>'+esc(d.nome)+'</option>'; }).join('')+'</select>';
+    var selSt='<select id="hubf-st">'+['ativo','pausado','concluido'].map(function(s){ return '<option value="'+s+'"'+(((p&&p.status)||'ativo')===s?' selected':'')+'>'+stLabel(s)+'</option>'; }).join('')+'</select>';
+    var bg=document.createElement('div'); bg.className='gael-modal-bg'; bg.id='hub-pj-bg';
+    bg.onclick=function(e){ if(e.target===bg) closeModal(); };
+    bg.innerHTML='<div class="gael-modal"><h3 style="margin:0 0 10px">'+(p?'Projeto':'Novo projeto')+'</h3>'+
+      '<div class="g-fld"><label>Nome</label><input id="hubf-nome" value="'+esc(p?(p.nome||''):'')+'" placeholder="ex.: CRM corretores"></div>'+
+      '<div class="g-fld"><label>Dimensão</label>'+selDim+'</div>'+
+      '<div class="g-fld"><label>Status</label>'+selSt+'</div>'+
+      '<div class="g-fld"><label>Descrição / objetivo</label><textarea id="hubf-desc" rows="3">'+esc(p&&p.descricao?p.descricao:'')+'</textarea></div>'+
+      '<div class="g-fld"><label>Link (repo, chat, doc)</label><input id="hubf-link" value="'+esc(p&&p.link?p.link:'')+'" placeholder="https://…"></div>'+
+      (p&&p.list_id?'<div class="hub-note" style="margin-top:4px">Vinculado ao Google Tasks (lista importada).</div>':'')+
+      '<div class="g-foot">'+(p?'<button class="btn sm" style="color:var(--danger)" onclick="HUB.excluirProjeto()">Excluir</button>':'')+
+      '<div class="spacer"></div><button class="btn sm" onclick="HUB.closeModal()">Cancelar</button>'+
+      '<button class="btn sm primary" onclick="HUB.salvarProjeto()">Salvar</button></div></div>';
+    document.body.appendChild(bg);
+    setTimeout(function(){ try{ $('hubf-nome').focus(); }catch(e){} },50);
+  }
+  function salvarProjeto(){
+    var nome=($('hubf-nome').value||'').trim(); if(!nome){ toast('Dá um nome pro projeto'); return; }
+    T3.pjUpsert(curPj, {nome:nome, dimensao_id:($('hubf-dim').value||null), status:$('hubf-st').value,
+      descricao:($('hubf-desc').value||'').trim()||null, link:($('hubf-link').value||'').trim()||null});
+    closeModal();
+  }
+  function excluirProjeto(){
+    if(!curPj) return; var n=T3.tasksOf(curPj).length;
+    if(!confirm('Excluir o projeto'+(n?' e as '+n+' tarefas dele':'')+'? Não tem volta.')) return;
+    T3.pjDel(curPj); closeModal();
+  }
+  function closeModal(){ var m=$('hub-pj-bg'); if(m) m.parentNode.removeChild(m); curPj=null; }
+  /* ---- modal Dimensões (gerenciar) ---- */
+  function dims(){
+    closeDims();
+    var bg=document.createElement('div'); bg.className='gael-modal-bg'; bg.id='hub-dim-bg';
+    bg.onclick=function(e){ if(e.target===bg) closeDims(); };
+    bg.innerHTML='<div class="gael-modal"><h3 style="margin:0 0 4px">Dimensões</h3>'+
+      '<div class="hub-note" style="margin-bottom:10px">Tuas áreas da vida — nome, cor e ordem. Os projetos penduram aqui.</div>'+
+      '<div id="hub-dim-list"></div>'+
+      '<div class="g-foot"><button class="btn sm" onclick="HUB.dimAdd()">＋ Nova dimensão</button><div class="spacer"></div><button class="btn sm primary" onclick="HUB.closeDims()">Fechar</button></div></div>';
+    document.body.appendChild(bg); paintDims();
+  }
+  function paintDims(){
+    var el=$('hub-dim-list'); if(!el) return;
+    var ds=T3.dimsSorted();
+    el.innerHTML= ds.length? ds.map(function(d,i){
+      return '<div class="hub-dimrow">'+
+        '<input type="color" value="'+esc(d.cor&&/^#[0-9a-fA-F]{6}$/.test(d.cor)?d.cor:'#639922')+'" onchange="HUB.dimSet(\''+d.id+'\',\'cor\',this.value)" title="cor">'+
+        '<input type="text" value="'+esc(d.nome||'')+'" onchange="HUB.dimSet(\''+d.id+'\',\'nome\',this.value)" placeholder="nome da dimensão">'+
+        '<button title="subir"'+(i===0?' disabled style="opacity:.35"':'')+' onclick="HUB.dimSwap(\''+d.id+'\',-1)">▲</button>'+
+        '<button title="descer"'+(i===ds.length-1?' disabled style="opacity:.35"':'')+' onclick="HUB.dimSwap(\''+d.id+'\',1)">▼</button>'+
+        '<button title="excluir" onclick="HUB.dimDel(\''+d.id+'\')"><i class="ti ti-trash"></i></button>'+
+      '</div>';
+    }).join('') : '<div class="empty">Nenhuma dimensão ainda.</div>';
+  }
+  function dimAdd(){ var nm=prompt('Nome da dimensão:'); if(!nm||!nm.trim()) return; T3.dimUpsert(null,{nome:nm.trim()}); paintDims(); }
+  function dimSet(id,k,v){
+    if(k==='nome'){ v=(v||'').trim(); if(!v){ toast('Nome não pode ficar vazio'); paintDims(); return; } }
+    var patch={}; patch[k]=v; T3.dimUpsert(id,patch);
+  }
+  function dimSwap(id,dir){ T3.dimSwap(id,dir); paintDims(); }
+  function dimDel(id){
+    var n=T3.projsOf(id).length;
+    if(!confirm('Excluir a dimensão?'+(n?' Os '+n+' projeto(s) dela caem em "Sem dimensão".':''))) return;
+    T3.dimDel(id); paintDims();
+  }
+  function closeDims(){ var m=$('hub-dim-bg'); if(m) m.parentNode.removeChild(m); }
+  /* login/logout: recarrega do servidor e repinta se a view estiver aberta */
+  function onAuth(){ T3.load().then(function(){ repaint(); }); }
+  T3.onDirty(function(){ repaint(); });
+  return {render:render, repaint:repaint, toggleDim:toggleDim, seed:seed,
+          detalhes:detalhes, novoProjeto:novoProjeto, salvarProjeto:salvarProjeto, excluirProjeto:excluirProjeto, closeModal:closeModal,
+          dims:dims, dimAdd:dimAdd, dimSet:dimSet, dimSwap:dimSwap, dimDel:dimDel, closeDims:closeDims,
+          onAuth:onAuth};
+})();
+SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();CONTATOS.refreshIfOpen();HUB.onAuth();EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
 SB.init();
-try{var _q=new URLSearchParams(location.search);if(_q.get("demo")==="1"){nav("funcionario");CASA.demo(_q.get("ver")||"admin");}}catch(e){}
+try{var _q=new URLSearchParams(location.search);if(_q.get("demo")==="1"){nav("funcionario");CASA.demo(_q.get("ver")||"admin");}else if(_q.get("demo")==="hub"){T3.demo();nav("projetos");}}catch(e){}
 
 /* ================= boot ================= */
 renderCards(); gerar(); folegoRender(); renderAtalhos();

@@ -1,5 +1,5 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-08-02 · Leia isto primeiro ao retomar. **Produção: v2.18.0.**
+**Última atualização:** 2026-08-11 · Leia isto primeiro ao retomar. **Produção: v2.19.0 (Melhoria 3.0 · F1).**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
@@ -24,7 +24,39 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
 
 ---
 
-## 🟢 RETOMAR AQUI — sessão 02/08 — fechamento autônomo da frente MCP + Mês ✅/❌ (v2.18.0)
+## 🟢 RETOMAR AQUI — sessão 11/08 — MELHORIA 3.0 · F1 NO AR (v2.19.0)
+
+**Plano aprovado pelo Gustavo (10/08):** hierarquia **Dimensões → Projetos → Tarefas** com o
+**Supabase como fonte da verdade** (Google Tasks/Agenda viram integração opcional), dimensões =
+áreas da vida com CRUD pela UI, extensão Chrome fica como proposta pro final. Plano completo em
+`~/.claude/plans/planejete-uma-melhiria-3-0-swirling-sprout.md` (6 fases F1→F6, modelo SQL, riscos).
+
+**F1 ENTREGUE nesta sessão:**
+- 🗄️ **Migration `sql/painel_dimensoes_tarefas.sql` RODADA e VERIFICADA** (SQL Editor via Chrome; conector MCP é read-only):
+  `painel_dimensoes` + `painel_tarefas` novas (RLS owner, grant authenticated, revoke anon → anon leva 401),
+  `painel_projetos` evoluída — **PK promovida `list_id`→`id uuid`** (tabela tinha 0 linhas, risco zero),
+  `list_id` virou vínculo Google opcional (unique parcial), `dimensao_id` FK on delete set null, `posicao` fracionária.
+  MCP `mcp-painel` conferido depois: segue respondendo (⚠️ projetos novos sem list_id só entram no
+  `painel_atualizar_projeto` após ajuste da function — previsto na F6).
+- 🧠 **`T3`** (IIFE novo): store das 3 tabelas — cache `painel_t3_cache_v1`, mutação otimista + REST,
+  deslogado = memória + toast único; `posEnd/posBetween` (ordenação fracionária); `seedDims()`; `demo()`.
+- 🌳 **`HUB`** (IIFE novo) assumiu a `view-projetos`: árvore Dimensão→Projeto expansível (collapse persistido
+  `painel_hub_open_v1`), contadores (projetos/abertas), barra de progresso, chip **G** no projeto vinculado,
+  grupo "Sem dimensão", modal **Projeto** (nome/dimensão/status/descrição/link/excluir) e modal **Dimensões**
+  (cor/nome/▲▼/🗑/+ nova), estado vazio com **seed** (Negócios·Família·Saúde·Pessoal·Dev/Apps), painel de conexão.
+  `PROJ`/`PJMETA` legados NEUTRALIZADOS (refreshIfOpen/onAuth viram no-op; código fica pra rollback até F6);
+  cadeia `SB.onChange` agora chama `HUB.onAuth()`. Ramo demo novo: **`?demo=hub`**.
+- ✅ **Verificado no preview** (porta 8821, desktop+mobile 375, `?demo=hub` e deslogado): collapse persiste,
+  editar status repinta na hora, ▲▼ reordena, mobile sem estouro, console limpo (só ruído de SW do localhost).
+  Sintaxe via JSC. `APP_VERSION` **2.19.0**, sw **v26**.
+
+**FALTA (Gustavo):** logar 1x no app (magic-link) → clicar **"Criar dimensões sugeridas"** (seed só roda logado
+de verdade) e criar os primeiros projetos reais. **Próxima fase: F2** — tarefas CRUD dentro do hub
+(add inline, ✅/❌ nativos, prazo, modal, concluídas colapsadas) + cards do topo de Tarefas lendo o T3.
+
+---
+
+## 🟢 (histórico) sessão 02/08 — fechamento autônomo da frente MCP + Mês ✅/❌ (v2.18.0)
 
 **Missão /autonomo-3 executada de ponta a ponta:**
 - 🗑️ **Contato "teste" (12/07) apagado** (autorizado) — `painel_contatos` = 0.
