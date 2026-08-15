@@ -1,5 +1,6 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-08-11 · Leia isto primeiro ao retomar. **Produção: v2.19.0 (Melhoria 3.0 · F1).**
+**Última atualização:** 2026-08-15 · Leia isto primeiro ao retomar. **Produção: v2.19.0 (Melhoria 3.0 · F1).**
+**⏸️ v2.20.0 (UX mobile) PRONTA na branch `claude/juca-mobile-ux-qltkkj-nslxhy` — NÃO subiu na main (esperando OK do Gustavo).**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
@@ -24,7 +25,47 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
 
 ---
 
-## 🟢 RETOMAR AQUI — sessão 11/08 — MELHORIA 3.0 · F1 NO AR (v2.19.0)
+## ⏸️ RETOMAR AQUI — sessão 15/08 — UX MOBILE v2.20.0 (branch, **NÃO no ar**)
+
+**Pedido do Gustavo:** *"a UX mobile do app hoje é o desktop encolhido"* — refazer no idioma do
+**Google Agenda + Google Tasks**, tudo dentro de `@media(max-width:880px)`, **sem tocar no desktop**.
+
+**Entregue na branch `claude/juca-mobile-ux-qltkkj-nslxhy` (aguardando "pode subir"):**
+- 🧱 **Camada `MOB` (IIFE novo, no fim do script) + chrome novo no HTML** (`#mbar`, `#mtab`, `#mfab`,
+  `#msheet`, `#mmenu`) + um bloco CSS **isolado** "MOBILE UX v2.20". No desktop tudo isso é
+  `display:none` e `MOB.on()` devolve false → **a camada nem roda**.
+- 📱 **Barra de app (Google Agenda):** ☰/← + título da view + ⋯ + avatar; 56px + `env(safe-area-inset-top)`;
+  **sombra só depois que rola** (classe `.scrolled`). O **`.menu-toggle` antigo foi REMOVIDO do HTML** — a
+  sobreposição morreu na origem, não com margem: a barra é `z-index:25`, **abaixo** do overlay (30) e da
+  gaveta (35), então gaveta aberta cobre a barra como no Google. `h1` da página escondido no mobile
+  (o `#view-funcionario` mantém o dele por causa do ✏️ renomear).
+- 🔻 **Barra inferior + FAB (Google Tasks):** Hoje · Tarefas · **[+]** · Projetos · Inbox. Contadores são
+  **espelho puro** de `bdg-atr`/`bdg-inb` (MutationObserver, sem segunda contagem). FAB abre folha de
+  **nova tarefa** (título/lista/prazo) → `gtWrite POST`.
+- ☰ **Gaveta Google:** item ativo em pílula (`border-radius:0 26px 26px 0`), alvo 48px, **abre puxando da
+  borda esquerda** (arraste ao vivo) e **fecha arrastando**.
+- ✋ **Toque longo = seleção múltipla:** barra fica verde com "N selecionadas", checkbox redondo, ✅/❌
+  escondidos; lote = **concluir · +1d · +7d · excluir**.
+- 👆 **Toque simples = folha inferior de edição:** título, prazo, marcar feita (reusa `gtSetStatus`),
+  adiar 1d/7d, excluir.
+- 📅 **Adiar tarefa VENCIDA parte de HOJE** (a regra do CRM): `postponed()` usa `max(prazo, hoje)` como base,
+  senão o atraso se acumularia sobre um dia que já passou. Testado: vencida −6d + 1 dia = **amanhã**;
+  futura +3d + 1 dia = **+4d**; sem prazo + 1 dia = **amanhã**.
+- 🔢 **KPIs em 3 colunas**, `.sub` limitado a **2 linhas com toque pra expandir**, e o **voltar do Android**
+  fechando folha → menu → seleção → gaveta antes de sair (cada camada empilha 1 entrada de histórico).
+- 🔒 **Regras respeitadas:** **nenhum segundo caminho de gravação** — tudo sai por `gtWrite`/`gtSetStatus`;
+  `nav()` e `renderGTasks()` foram **envelopados** (originais intactas); `APP_VERSION` **2.20.0**, sw **v27**.
+
+**Verificado no preview (porta 8830, Chromium/Playwright, listas fake injetadas):** mobile **390px** e
+desktop **1280px** (screenshots), **console limpo**, zero overflow horizontal. Desktop conferido item a item:
+`mbar/mtab/mfab/.mob-ck` = `display:none`, `h1` visível, sidebar `position:static`, pílula da nav em 9px,
+`padding-top` do `.main` em 22px — **nada mudou**.
+
+**FALTA:** o **OK explícito do Gustavo no chat** pra merge/push na `main` (ele pediu pra não subir sem isso).
+
+---
+
+## 🟢 (histórico) sessão 11/08 — MELHORIA 3.0 · F1 NO AR (v2.19.0)
 
 **Plano aprovado pelo Gustavo (10/08):** hierarquia **Dimensões → Projetos → Tarefas** com o
 **Supabase como fonte da verdade** (Google Tasks/Agenda viram integração opcional), dimensões =

@@ -213,19 +213,17 @@
   .gd-sub{font-size:12px;color:var(--muted);margin-bottom:10px}
   .gd-big{font-size:20px;font-weight:700;line-height:1.35;margin:6px 0 4px}
   /* ===== responsivo: menu vira gaveta lateral à esquerda (abre/retrai) ===== */
-  .menu-toggle{display:none}
   .side-overlay{display:none}
   @media(max-width:880px){
-    .menu-toggle{display:flex;align-items:center;justify-content:center;position:fixed;top:10px;left:10px;z-index:40;
-      width:42px;height:42px;border-radius:10px;background:var(--accent);color:#fff;border:none;
-      font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.28)}
-    .side{position:fixed;top:0;left:0;height:100%;width:236px;z-index:35;transform:translateX(-100%);
-      transition:transform .25s ease;box-shadow:2px 0 18px rgba(0,0,0,.35)}
+    .side{position:fixed;top:0;left:0;height:100%;width:280px;max-width:82vw;z-index:35;transform:translateX(-100%);
+      transition:transform .25s cubic-bezier(.2,0,0,1);box-shadow:2px 0 18px rgba(0,0,0,.35);
+      padding-top:calc(14px + env(safe-area-inset-top))}
     body.side-open .side{transform:translateX(0)}
     .side-overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;
       opacity:0;pointer-events:none;transition:opacity .25s}
     body.side-open .side-overlay{opacity:1;pointer-events:auto}
-    .main{padding:14px;padding-top:64px;min-width:0;overflow-x:hidden}
+    .main{padding:14px;padding-top:calc(64px + env(safe-area-inset-top));min-width:0;overflow-x:hidden;
+      padding-bottom:calc(78px + env(safe-area-inset-bottom))}
     .cal-grid{gap:5px}
     .mes-cell{min-height:64px}
     /* Casa › Funcionário: tabelas largas rolam DENTRO do card (não esticam a página no celular) */
@@ -235,6 +233,114 @@
     #view-funcionario .cz-ident{grid-template-columns:1fr}
     #view-funcionario .cz-stats{grid-template-columns:1fr 1fr}
     #view-funcionario input.cz-txt{min-width:0;width:100%}
+  }
+  /* ===== MOBILE UX v2.20 — app bar (Google Agenda) + bottom bar/FAB (Google Tasks) =====
+     TUDO isolado em max-width:880px: no desktop essa camada nem existe (chrome fica display:none). */
+  .mbar,.mtab,.mfab,.msheet-bg,.mmenu-bg,.mob-ck{display:none}
+  @media(max-width:880px){
+    /* --- barra de app fixa: ☰/← + título + ⋯ + avatar --- */
+    .mbar{display:flex;align-items:center;gap:2px;position:fixed;top:0;left:0;right:0;z-index:25;
+      height:calc(56px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 6px 0;
+      background:var(--card);border-bottom:1px solid transparent;
+      transition:box-shadow .2s,background .2s,border-color .2s}
+    .mbar.scrolled{box-shadow:0 2px 6px rgba(0,0,0,.12);border-bottom-color:var(--line)}
+    .mbar .mb-ico{width:44px;height:44px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+      border:none;background:transparent;color:var(--txt);font-size:20px;line-height:1;border-radius:50%;cursor:pointer;padding:0}
+    .mbar .mb-ico:active{background:var(--chip)}
+    .mbar .mb-title{flex:1;min-width:0;font-size:19px;font-weight:600;letter-spacing:.1px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px}
+    .mbar .mb-av{width:34px;height:34px;flex:0 0 auto;margin:0 6px 0 2px;border-radius:50%;border:none;cursor:pointer;
+      background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+    /* modo seleção: a barra fica verde (Google Tasks) */
+    body.mob-sel .mbar{background:var(--accent);border-bottom-color:transparent}
+    body.mob-sel .mbar .mb-ico{color:#fff}
+    body.mob-sel .mbar .mb-title{color:#fff;font-size:17px}
+    body.mob-sel .mbar .mb-av,body.mob-sel .mbar .mb-normal{display:none}
+    .mbar .mb-selacts{display:none;align-items:center;gap:0}
+    body.mob-sel .mbar .mb-selacts{display:flex}
+    .mbar .mb-selacts .mb-ico{font-size:19px;width:40px;height:40px;color:#fff}
+    .mbar .mb-selacts .mb-ico b{font-size:12.5px;font-weight:700}
+    /* título só na barra: o h1 da página sai (Funcionário fica — o ✏️ renomear mora nele) */
+    .main .head{display:none}
+    #view-funcionario .head{display:flex}
+    /* texto de apoio: 2 linhas, toque expande */
+    .main .sub{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+    .main .sub.mob-exp{display:block;-webkit-line-clamp:none}
+    /* KPIs em 3 colunas */
+    .cards,.cards.c5{grid-template-columns:repeat(3,1fr);gap:8px}
+    .card{padding:10px 11px;border-radius:14px}
+    .card .k{font-size:10px;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .card .v{font-size:19px;margin-top:2px}
+    .card .s{font-size:10.5px;line-height:1.25}
+    /* --- gaveta no formato Google: item ativo em pílula, alvo de 48px --- */
+    .side{padding-left:0;padding-right:12px}
+    .brand{padding-left:22px}
+    .nav a{min-height:48px;padding:9px 16px 9px 22px;border-radius:0 26px 26px 0;font-size:14.5px;margin-bottom:1px}
+    .nav a.active{box-shadow:none;background:var(--side-active);font-weight:600}
+    .nav a.sub{min-height:44px;padding-left:18px}
+    .subnav{margin-left:22px}
+    .side-foot{padding-left:22px}
+    /* --- barra inferior + FAB (Google Tasks) --- */
+    .mtab{display:flex;align-items:stretch;position:fixed;left:0;right:0;bottom:0;z-index:26;
+      height:calc(58px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);
+      background:var(--card);border-top:1px solid var(--line);box-shadow:0 -1px 6px rgba(0,0,0,.06)}
+    .mtab button{flex:1;min-width:0;border:none;background:transparent;cursor:pointer;padding:6px 2px 4px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+      color:var(--muted);font-size:10.5px;font-family:inherit;position:relative}
+    .mtab button i.ti{font-size:21px}
+    .mtab button.on{color:#3b6d11}
+    .mtab button.on i.ti{background:var(--side-active);border-radius:20px;padding:2px 14px}
+    .mtab .mt-bdg{position:absolute;top:2px;right:calc(50% - 22px);min-width:16px;height:16px;line-height:16px;
+      padding:0 4px;border-radius:9px;background:var(--danger);color:#fff;font-size:9.5px;font-weight:700;display:none}
+    .mtab .mt-slot{flex:1;min-width:0}
+    .mfab{display:flex;align-items:center;justify-content:center;position:fixed;z-index:27;
+      left:50%;transform:translateX(-50%);bottom:calc(72px + env(safe-area-inset-bottom));
+      width:56px;height:56px;border-radius:18px;border:none;cursor:pointer;
+      background:var(--accent);color:#fff;font-size:26px;line-height:1;box-shadow:0 3px 10px rgba(0,0,0,.28)}
+    .mfab:active{filter:brightness(.94)}
+    body.mob-sel .mfab,body.side-open .mfab{display:none}
+    /* --- lista de tarefas: alvo maior, checkbox redondo do modo seleção --- */
+    #gtasks-out .rt-item{padding:12px 14px;font-size:14px;gap:10px;min-height:48px}
+    #gtasks-out .rt-item[data-tid]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+    #gtasks-out .rt-item .mob-ck{display:none;flex:0 0 auto;width:22px;height:22px;border-radius:50%;
+      border:2px solid var(--muted);align-items:center;justify-content:center;color:#fff;font-size:13px;line-height:1}
+    body.mob-sel #gtasks-out .rt-item[data-tid] .mob-ck{display:flex}
+    body.mob-sel #gtasks-out .rt-item[data-tid] .ev-st{display:none}
+    body.mob-sel #gtasks-out .rt-item.mob-on{background:var(--accent-soft)}
+    body.mob-sel #gtasks-out .rt-item.mob-on .mob-ck{background:var(--accent);border-color:var(--accent)}
+    .mob-press{background:var(--chip)}
+    /* --- folha inferior (bottom sheet) --- */
+    .msheet-bg{display:block;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.42);
+      opacity:0;pointer-events:none;transition:opacity .2s}
+    .msheet-bg.open{opacity:1;pointer-events:auto}
+    .msheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-radius:20px 20px 0 0;
+      padding:8px 18px calc(18px + env(safe-area-inset-bottom));transform:translateY(102%);
+      transition:transform .24s cubic-bezier(.2,0,0,1);max-height:86vh;overflow:auto}
+    .msheet-bg.open .msheet{transform:translateY(0)}
+    .msheet .ms-grab{width:34px;height:4px;border-radius:3px;background:var(--line);margin:6px auto 14px}
+    .msheet .ms-fld{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin:12px 0 5px}
+    .msheet input[type=text],.msheet input[type=date],.msheet select{width:100%;font:inherit;font-size:15px;color:var(--txt);
+      border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:var(--card)}
+    .msheet .ms-act{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:6px 2px;
+      border:none;background:transparent;color:var(--txt);font:inherit;font-size:15px;cursor:pointer;text-align:left}
+    .msheet .ms-act i.ti,.msheet .ms-act span.em{width:24px;text-align:center;font-size:20px;color:var(--muted);flex:0 0 auto}
+    .msheet .ms-act.danger,.msheet .ms-act.danger i.ti{color:var(--danger)}
+    /* cabeçalho do painel de Tarefas: o "ordenar:" desce pra 2ª linha em vez de colidir */
+    #gtasks-out .panel h3{flex-wrap:wrap;row-gap:2px}
+    #gtasks-out .panel h3>span:not(.count){flex:1 0 100%;text-align:right;float:none!important}
+    .msheet .ms-sep{height:1px;background:var(--line);margin:8px 0}
+    .msheet .ms-foot{display:flex;gap:10px;margin-top:16px}
+    .msheet .ms-foot .btn{flex:1;justify-content:center;min-height:46px;font-size:14.5px}
+    /* --- menu ⋯ --- */
+    .mmenu-bg{display:block;position:fixed;inset:0;z-index:75;background:transparent;opacity:0;pointer-events:none}
+    .mmenu-bg.open{opacity:1;pointer-events:auto}
+    .mmenu{position:absolute;top:calc(54px + env(safe-area-inset-top));right:8px;min-width:210px;background:var(--card);
+      border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,.18);padding:6px;
+      transform:scale(.96);opacity:0;transform-origin:top right;transition:.14s}
+    .mmenu-bg.open .mmenu{transform:scale(1);opacity:1}
+    .mmenu button{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:8px 12px;border:none;
+      background:transparent;color:var(--txt);font:inherit;font-size:14.5px;cursor:pointer;border-radius:9px;text-align:left}
+    .mmenu button:active{background:var(--chip)}
   }
   /* ===== Casa subnav + Histórico ===== */
   .nav a.group .chev{margin-left:auto;font-size:15px;width:auto;transition:transform .2s}
@@ -451,8 +557,7 @@
 </head>
 <body>
 <div class="app">
-  <button class="menu-toggle" id="menuToggle" onclick="toggleSide()" aria-label="Abrir menu"><i class="ti ti-menu-2"></i></button>
-  <div class="side-overlay" id="sideOverlay" onclick="toggleSide()"></div>
+  <div class="side-overlay" id="sideOverlay" onclick="MOB.closeDrawer()"></div>
   <aside class="side">
     <div class="brand"><span class="brand-dot"></span>Painel Central<small>tudo é uma coisa só</small></div>
     <nav class="nav">
@@ -670,6 +775,31 @@
     </section>
   </main>
 </div>
+
+<!-- ===== MOBILE UX v2.20 (só existe <=880px; no desktop tudo isso é display:none) ===== -->
+<header class="mbar" id="mbar">
+  <button class="mb-ico" id="mb-nav" onclick="MOB.navBtn()" aria-label="Menu"><i class="ti ti-menu-2"></i></button>
+  <div class="mb-title" id="mb-title">Hoje</div>
+  <div class="mb-selacts">
+    <button class="mb-ico" onclick="MOB.bulk('done')" title="Concluir" aria-label="Concluir"><i class="ti ti-check"></i></button>
+    <button class="mb-ico" onclick="MOB.bulk('p1')" title="Adiar 1 dia" aria-label="Adiar 1 dia"><b>+1d</b></button>
+    <button class="mb-ico" onclick="MOB.bulk('p7')" title="Adiar 7 dias" aria-label="Adiar 7 dias"><b>+7d</b></button>
+    <button class="mb-ico" onclick="MOB.bulk('del')" title="Excluir" aria-label="Excluir"><i class="ti ti-trash"></i></button>
+  </div>
+  <button class="mb-ico mb-normal" onclick="MOB.menu()" aria-label="Mais opções"><i class="ti ti-dots-vertical"></i></button>
+  <button class="mb-av" id="mb-av" onclick="MOB.go('config')" aria-label="Conta">J</button>
+</header>
+<nav class="mtab" id="mtab">
+  <button data-v="hoje" onclick="MOB.go('hoje')"><i class="ti ti-home"></i>Hoje</button>
+  <button data-v="tarefas" onclick="MOB.go('tarefas')"><i class="ti ti-checklist"></i>Tarefas<span class="mt-bdg" id="mt-bdg-atr"></span></button>
+  <div class="mt-slot"></div>
+  <button data-v="projetos" onclick="MOB.go('projetos')"><i class="ti ti-folders"></i>Projetos</button>
+  <button data-v="inbox" onclick="MOB.go('inbox')"><i class="ti ti-inbox"></i>Inbox<span class="mt-bdg" id="mt-bdg-inb"></span></button>
+</nav>
+<button class="mfab" id="mfab" onclick="MOB.fab()" aria-label="Nova tarefa">＋</button>
+<div class="msheet-bg" id="msheet-bg" onclick="if(event.target===this)MOB.closeSheet()"><div class="msheet" id="msheet"></div></div>
+<div class="mmenu-bg" id="mmenu-bg" onclick="if(event.target===this)MOB.closeMenu()"><div class="mmenu" id="mmenu"></div></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1990,7 +2120,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.19.0";
+var APP_VERSION="2.20.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -3495,7 +3625,403 @@ var HUB=(function(){
           dims:dims, dimAdd:dimAdd, dimSet:dimSet, dimSwap:dimSwap, dimDel:dimDel, closeDims:closeDims,
           onAuth:onAuth};
 })();
-SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();CONTATOS.refreshIfOpen();HUB.onAuth();EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
+/* ================= MOBILE UX v2.20 — camada só de celular (<=880px) =================
+   Regras desta camada:
+   • ENVELOPA `nav()` e `renderGTasks()` (não reescreve nenhuma das duas);
+   • toda escrita no Google continua saindo por `gtWrite` / `gtSetStatus` — não existe
+     um segundo caminho de gravação aqui;
+   • no desktop o módulo fica inerte: o chrome é `display:none` e `on()` devolve false. */
+var MOB=(function(){
+  function on(){ try{ return window.matchMedia('(max-width:880px)').matches; }catch(e){ return false; } }
+  function cl(el,sel){ return (el&&el.closest)?el.closest(sel):null; }
+  var TITLES={hoje:'Hoje',tarefas:'Tarefas',projetos:'Projetos',inbox:'Inbox',feira:'Feira',
+    funcionario:'Funcionário',saude:'Saúde',gael:'Saúde · Gael',contatos:'Contatos',
+    camila:'Provas Camila',atalhos:'Atalhos',config:'Configuração'};
+  var TABS=['hoje','tarefas','projetos','inbox'];   /* destinos da barra inferior */
+  var cur='hoje', last='hoje';
+
+  /* ---- voltar do Android: cada camada aberta vira 1 entrada no histórico, então o
+         botão físico fecha folha/menu/seleção/gaveta ANTES de sair do app. ---- */
+  var pending=0;
+  function guard(){ try{ history.pushState({mob:1},''); pending++; }catch(e){} }
+  function release(){ if(pending>0){ try{ history.back(); return; }catch(e){ pending--; } } closeTop(); }
+  function anyOpen(){ return sheetOpen()||menuOpen()||selMode()||drawerOpen(); }
+  function closeTop(){
+    if(menuOpen()) return doCloseMenu();
+    if(sheetOpen()) return doCloseSheet();
+    if(selMode()) return doExitSel();
+    if(drawerOpen()) return doCloseDrawer();
+  }
+  window.addEventListener('popstate', function(){ if(pending>0){ pending--; closeTop(); } });
+
+  /* ---- barra de app ---- */
+  function syncBar(){
+    var t=$('mb-title'); if(!t) return;
+    var n=selCount();
+    t.textContent = selMode() ? (n+' selecionada'+(n===1?'':'s')) : (TITLES[cur]||'Painel Central');
+    var b=$('mb-nav');
+    if(b){
+      var ic = selMode() ? 'ti-x' : (TABS.indexOf(cur)>=0 ? 'ti-menu-2' : 'ti-arrow-left');
+      if(b.__ic!==ic){ b.innerHTML='<i class="ti '+ic+'"></i>'; b.__ic=ic; }
+      b.setAttribute('aria-label', selMode()?'Sair da seleção':(ic==='ti-menu-2'?'Menu':'Voltar'));
+    }
+    var av=$('mb-av');
+    if(av){ var em=''; try{ em=SB.email()||''; }catch(e){} av.textContent=(em?em.charAt(0):'J').toUpperCase(); }
+  }
+  /* ☰ nos destinos da barra inferior; ← (e volta) em todas as outras telas */
+  function navBtn(){
+    if(selMode()) return exitSel();
+    if(TABS.indexOf(cur)>=0) return drawerOpen()?closeDrawer():openDrawer();
+    go(last||'hoje');
+  }
+  function syncTabs(){
+    var tb=$('mtab'); if(!tb) return;
+    Array.prototype.forEach.call(tb.querySelectorAll('button[data-v]'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-v')===cur);
+    });
+    mirror('bdg-atr','mt-bdg-atr'); mirror('bdg-inb','mt-bdg-inb');
+  }
+  /* contadores da barra inferior = espelho puro dos badges da gaveta */
+  function mirror(from,to){
+    var a=$(from), b=$(to); if(!a||!b) return;
+    var v=(a.textContent||'').trim();
+    b.textContent=v;
+    b.style.display=(v && v!=='0' && a.style.display!=='none') ? 'block' : 'none';
+  }
+  function go(v){ try{ nav(v); }catch(e){} }
+
+  /* ---- gaveta ---- */
+  function sideEl(){ return document.querySelector('.side'); }
+  function drawerOpen(){ return document.body.classList.contains('side-open'); }
+  function openDrawer(){ if(drawerOpen()) return; document.body.classList.add('side-open'); guard(); }
+  function closeDrawer(){ if(!drawerOpen()) return; release(); }
+  function doCloseDrawer(){ document.body.classList.remove('side-open'); }
+
+  /* ---- seleção múltipla (toque longo) ---- */
+  var sel={};
+  function selKeys(){ return Object.keys(sel); }
+  function selCount(){ return selKeys().length; }
+  function selMode(){ return document.body.classList.contains('mob-sel'); }
+  function enterSel(row){
+    if(!selMode()){ document.body.classList.add('mob-sel'); guard(); }
+    toggleSel(row.getAttribute('data-lid'), row.getAttribute('data-tid'), true);
+  }
+  function toggleSel(lid,tid,force){
+    var k=lid+'|'+tid;
+    if(sel[k]&&!force) delete sel[k]; else sel[k]=true;
+    paintSel();
+    if(!selCount()) exitSel();
+  }
+  function paintSel(){
+    var box=$('gtasks-out');
+    if(box) Array.prototype.forEach.call(box.querySelectorAll('.rt-item[data-tid]'), function(r){
+      r.classList.toggle('mob-on', !!sel[r.getAttribute('data-lid')+'|'+r.getAttribute('data-tid')]);
+    });
+    syncBar();
+  }
+  function exitSel(){ if(!selMode()) return; release(); }
+  function doExitSel(){ sel={}; document.body.classList.remove('mob-sel'); paintSel(); }
+
+  /* ---- tarefas: índice das linhas (lido do DOM que o renderGTasks já produz) ---- */
+  function taskOf(lid,tid){
+    var g=(typeof GT_GROUPS!=='undefined'&&GT_GROUPS)?GT_GROUPS.filter(function(x){return x.id===lid;})[0]:null;
+    return g ? g.tarefas.filter(function(t){return t.id===tid;})[0] : null;
+  }
+  function afterTasks(){
+    var box=$('gtasks-out'); if(!box) return;
+    var vivos={};
+    Array.prototype.forEach.call(box.querySelectorAll('.gt-group'), function(g){
+      var lid=g.getAttribute('data-lid')||'';
+      Array.prototype.forEach.call(g.querySelectorAll('.rt-item'), function(row){
+        var btn=row.querySelector('.ev-stb'); if(!btn) return;    /* a linha "＋ adicionar" não tem */
+        var m=/gtSetStatus\('(?:(?:\\.|[^'])*)','((?:\\.|[^'])*)'/.exec(btn.getAttribute('onclick')||'');
+        if(!m) return;
+        var tid=m[1].replace(/\\'/g,"'");
+        row.setAttribute('data-lid',lid); row.setAttribute('data-tid',tid);
+        if(!row.querySelector('.mob-ck')){
+          var ck=document.createElement('span'); ck.className='mob-ck'; ck.textContent='✓';
+          row.insertBefore(ck,row.firstChild);
+        }
+        vivos[lid+'|'+tid]=1;
+      });
+    });
+    /* tarefa que sumiu (concluída/excluída) sai da seleção */
+    selKeys().forEach(function(k){ if(!vivos[k]) delete sel[k]; });
+    if(selMode() && !selCount()) doExitSel(); else paintSel();
+  }
+  var press=null;
+  function cancelPress(){ if(!press) return; clearTimeout(press.timer); press.row.classList.remove('mob-press'); press=null; }
+  function bindTasks(){
+    var box=$('gtasks-out'); if(!box||box.__mobBound) return; box.__mobBound=true;
+    box.addEventListener('touchstart', function(e){
+      if(!on()||e.touches.length!==1) return;
+      if(cl(e.target,'.ev-stb')) return;
+      var row=cl(e.target,'.rt-item[data-tid]'); if(!row) return;
+      var t=e.touches[0];
+      press={row:row,x:t.clientX,y:t.clientY,long:false};
+      row.classList.add('mob-press');
+      press.timer=setTimeout(function(){
+        if(!press) return;
+        press.long=true; press.row.classList.remove('mob-press');
+        try{ if(navigator.vibrate) navigator.vibrate(18); }catch(x){}
+        enterSel(row);
+      }, 480);
+    }, {passive:true});
+    box.addEventListener('touchmove', function(e){
+      if(!press) return; var t=e.touches[0];
+      if(Math.abs(t.clientX-press.x)>10||Math.abs(t.clientY-press.y)>10) cancelPress();
+    }, {passive:true});
+    box.addEventListener('touchend', function(e){
+      if(!press) return;
+      var row=press.row, longo=press.long;
+      clearTimeout(press.timer); row.classList.remove('mob-press'); press=null;
+      row.__lastTouch=Date.now();
+      if(longo){ if(e.cancelable) e.preventDefault(); return; }
+      if(cl(e.target,'.ev-stb')) return;
+      if(e.cancelable) e.preventDefault();      /* mata o click fantasma */
+      tapRow(row);
+    });
+    box.addEventListener('touchcancel', cancelPress, {passive:true});
+    box.addEventListener('click', function(e){
+      if(!on()||cl(e.target,'.ev-stb')) return;
+      var row=cl(e.target,'.rt-item[data-tid]'); if(!row) return;
+      if(row.__lastTouch && Date.now()-row.__lastTouch<800) return;   /* já tratado no touchend */
+      tapRow(row);
+    });
+  }
+  function tapRow(row){
+    var lid=row.getAttribute('data-lid'), tid=row.getAttribute('data-tid');
+    if(selMode()) return toggleSel(lid,tid);
+    openSheet(lid,tid);
+  }
+
+  /* ---- prazos ---- */
+  function today0(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
+  function dueOf(t){
+    var s=(t&&t.due)?String(t.due).slice(0,10):'';
+    if(!/^\d{4}-\d\d-\d\d$/.test(s)) return null;
+    var p=s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]);
+  }
+  /* REGRA (a mesma do CRM): tarefa VENCIDA adia a partir de HOJE, nunca da data velha —
+     senão o atraso se acumula sobre um dia que já passou e "adiar 1 dia" cai no passado. */
+  function postponed(t,days){
+    var base=dueOf(t), hj=today0();
+    if(!base || base.getTime()<hj.getTime()) base=hj;
+    var d=new Date(base.getTime()); d.setDate(d.getDate()+days); return d;
+  }
+  function dueRFC(d){ return isoLocal(d)+'T00:00:00.000Z'; }
+  function ddmm(d){ return fmt2(d.getDate())+'/'+fmt2(d.getMonth()+1); }
+  /* escrita: SEMPRE por gtWrite (mesmo caminho do resto do app) */
+  function patch(lid,tid,body){ return gtWrite('PATCH','lists/'+encodeURIComponent(lid)+'/tasks/'+encodeURIComponent(tid), body); }
+  function drop(lid,tid){ return gtWrite('DELETE','lists/'+encodeURIComponent(lid)+'/tasks/'+encodeURIComponent(tid)); }
+
+  /* ---- ações em lote ---- */
+  function bulk(kind){
+    var keys=selKeys(); if(!keys.length) return;
+    var n=keys.length, s=(n>1?'s':'');
+    if(kind==='del' && !confirm('Excluir '+n+' tarefa'+s+'? Elas somem do Google Tasks.')) return;
+    var jobs=keys.map(function(k){
+      var i=k.indexOf('|'), lid=k.slice(0,i), tid=k.slice(i+1), t=taskOf(lid,tid);
+      if(kind==='del') return drop(lid,tid);
+      if(kind==='done'){
+        var body={status:'completed'};
+        if(t) body.title=evStripStatus(t.title||'');
+        return patch(lid,tid,body);
+      }
+      return patch(lid,tid,{due:dueRFC(postponed(t,kind==='p1'?1:7))});
+    });
+    var lbl = kind==='del'?('excluída'+s) : (kind==='done'?('concluída'+s) : ('adiada'+s));
+    exitSel();
+    Promise.all(jobs)
+      .then(function(){ toast(n+' '+lbl+' ✓ (Google)'); })
+      .catch(function(){ toast('Não salvou tudo no Google'); })
+      .then(function(){ try{ loadGTasks(); }catch(e){} });
+  }
+
+  /* ---- folha inferior ---- */
+  function sheetOpen(){ var b=$('msheet-bg'); return !!(b&&b.classList.contains('open')); }
+  function showSheet(html){
+    var sh=$('msheet'); sh.innerHTML=html; sh.scrollTop=0;
+    $('msheet-bg').classList.add('open'); guard();
+  }
+  function closeSheet(){ if(!sheetOpen()) return; release(); }
+  function doCloseSheet(){ $('msheet-bg').classList.remove('open'); }
+  function hint(t,days){ return '<small style="color:var(--muted);margin-left:auto;font-size:12.5px">'+ddmm(postponed(t,days))+'</small>'; }
+  function openSheet(lid,tid){
+    var t=taskOf(lid,tid);
+    if(!t){ toast('Tarefa não encontrada — recarregando'); try{ loadGTasks(); }catch(e){} return; }
+    var base=evStripStatus(t.title||''), d=dueOf(t), done=(t.status==='completed');
+    showSheet('<div class="ms-grab"></div>'
+      +'<div class="ms-fld">Tarefa</div>'
+      +'<input type="text" id="ms-tit" value="'+esc(base)+'" placeholder="Título da tarefa">'
+      +'<div class="ms-fld">Prazo</div>'
+      +'<input type="date" id="ms-due" value="'+(d?isoLocal(d):'')+'">'
+      +'<div class="ms-sep"></div>'
+      +'<button class="ms-act" onclick="MOB.sheetAct(\'done\')"><i class="ti '+(done?'ti-rotate-clockwise':'ti-circle-check')+'"></i>'+(done?'Reabrir tarefa':'Marcar como feita')+'</button>'
+      +'<button class="ms-act" onclick="MOB.sheetAct(\'p1\')"><i class="ti ti-calendar-plus"></i>Adiar 1 dia'+hint(t,1)+'</button>'
+      +'<button class="ms-act" onclick="MOB.sheetAct(\'p7\')"><i class="ti ti-calendar-week"></i>Adiar 7 dias'+hint(t,7)+'</button>'
+      +'<button class="ms-act danger" onclick="MOB.sheetAct(\'del\')"><i class="ti ti-trash"></i>Excluir tarefa</button>'
+      +'<div class="ms-foot"><button class="btn" onclick="MOB.closeSheet()">Cancelar</button>'
+      +'<button class="btn primary" onclick="MOB.sheetSave()">Salvar</button></div>');
+    var sh=$('msheet'); sh.__lid=lid; sh.__tid=tid;
+  }
+  function sheetSave(){
+    var sh=$('msheet'), lid=sh.__lid, tid=sh.__tid, t=taskOf(lid,tid);
+    if(!t) return closeSheet();
+    var novo=(($('ms-tit')||{}).value||'').trim(), nd=(($('ms-due')||{}).value||'');
+    var atual=evStripStatus(t.title||''), curD=dueOf(t), curIso=curD?isoLocal(curD):'';
+    var body={};
+    if(novo && novo!==atual){ var mk=evCurStatus(t.title||''); body.title=(mk==='❌'?'❌ ':'')+novo; }
+    if(nd!==curIso) body.due = nd ? (nd+'T00:00:00.000Z') : null;
+    closeSheet();
+    if(!Object.keys(body).length) return;
+    patch(lid,tid,body)
+      .then(function(){ toast('Tarefa salva ✓ (Google)'); })
+      .catch(function(){ toast('Não salvou no Google'); })
+      .then(function(){ try{ loadGTasks(); }catch(e){} });
+  }
+  function sheetAct(kind){
+    var sh=$('msheet'), lid=sh.__lid, tid=sh.__tid, t=taskOf(lid,tid);
+    if(!t) return closeSheet();
+    if(kind==='del' && !confirm('Excluir esta tarefa? Ela some do Google Tasks.')) return;
+    closeSheet();
+    /* concluir/reabrir reusa o caminho canônico do app (que já escreve via gtWrite) */
+    if(kind==='done'){ try{ gtSetStatus(lid,tid,'✅'); }catch(e){} return; }
+    var p = (kind==='del') ? drop(lid,tid) : patch(lid,tid,{due:dueRFC(postponed(t,kind==='p1'?1:7))});
+    var msg = (kind==='del') ? 'Excluída ✓ (Google)' : ('Adiada pra '+ddmm(postponed(t,kind==='p1'?1:7))+' ✓ (Google)');
+    p.then(function(){ toast(msg); })
+     .catch(function(){ toast('Não salvou no Google'); })
+     .then(function(){ try{ loadGTasks(); }catch(e){} });
+  }
+  /* FAB = nova tarefa (POST via gtWrite, mesmo endpoint do gtCreate) */
+  function fab(){
+    var gs=(typeof GT_GROUPS!=='undefined'&&GT_GROUPS)?GT_GROUPS:[];
+    if(!gs.length){ toast('Conecte o Google Tasks pra criar tarefas'); return; }
+    showSheet('<div class="ms-grab"></div><div class="ms-fld">Nova tarefa</div>'
+      +'<input type="text" id="ms-ntit" placeholder="O que precisa ser feito?">'
+      +'<div class="ms-fld">Lista</div><select id="ms-nlist">'
+      +gs.map(function(g){ return '<option value="'+esc(g.id)+'">'+esc(g.nome)+'</option>'; }).join('')+'</select>'
+      +'<div class="ms-fld">Prazo (opcional)</div><input type="date" id="ms-ndue">'
+      +'<div class="ms-foot"><button class="btn" onclick="MOB.closeSheet()">Cancelar</button>'
+      +'<button class="btn primary" onclick="MOB.novaSalvar()">Criar</button></div>');
+    setTimeout(function(){ try{ $('ms-ntit').focus(); }catch(e){} }, 260);
+  }
+  function novaSalvar(){
+    var tit=(($('ms-ntit')||{}).value||'').trim();
+    if(!tit){ toast('Escreve o título da tarefa'); return; }
+    var lid=(($('ms-nlist')||{}).value)||'', due=(($('ms-ndue')||{}).value)||'';
+    var body={title:tit}; if(due) body.due=due+'T00:00:00.000Z';
+    closeSheet();
+    gtWrite('POST','lists/'+encodeURIComponent(lid)+'/tasks', body)
+      .then(function(){ toast('Tarefa criada ✓ (Google)'); if(cur!=='tarefas') go('tarefas'); try{ loadGTasks(); }catch(e){} })
+      .catch(function(){ toast('Não criei no Google'); });
+  }
+
+  /* ---- menu ⋯ ---- */
+  function menuOpen(){ var b=$('mmenu-bg'); return !!(b&&b.classList.contains('open')); }
+  function menu(){
+    $('mmenu').innerHTML='<button onclick="MOB.mact(\'sync\')"><i class="ti ti-refresh"></i> Sincronizar Google</button>'
+      +'<button onclick="MOB.mact(\'tasks\')"><i class="ti ti-external-link"></i> Abrir Google Tasks</button>'
+      +'<button onclick="MOB.mact(\'update\')"><i class="ti ti-download"></i> Atualizar o app</button>'
+      +'<button onclick="MOB.mact(\'config\')"><i class="ti ti-settings"></i> Configuração</button>';
+    $('mmenu-bg').classList.add('open'); guard();
+  }
+  function closeMenu(){ if(!menuOpen()) return; release(); }
+  function doCloseMenu(){ $('mmenu-bg').classList.remove('open'); }
+  function mact(k){
+    closeMenu();
+    setTimeout(function(){
+      if(k==='sync'){ try{ syncGoogle(); }catch(e){} }
+      else if(k==='update'){ try{ forceUpdate(); }catch(e){} }
+      else if(k==='tasks'){ openLink('https://tasks.google.com'); }
+      else if(k==='config'){ go('config'); }
+    }, 60);
+  }
+
+  /* ---- gaveta: abre puxando da borda esquerda, fecha arrastando ---- */
+  var dg=null;
+  document.addEventListener('touchstart', function(e){
+    if(!on()||e.touches.length!==1||sheetOpen()||menuOpen()) return;
+    var t=e.touches[0], aberta=drawerOpen();
+    if(!aberta && t.clientX>26) return;
+    dg={x:t.clientX,y:t.clientY,open:aberta,moved:false,w:280,dx:0};
+  }, {passive:true});
+  document.addEventListener('touchmove', function(e){
+    if(!dg) return;
+    var t=e.touches[0], dx=t.clientX-dg.x, dy=t.clientY-dg.y, s=sideEl(), ov=$('sideOverlay');
+    if(!dg.moved){
+      if(Math.abs(dy)>Math.abs(dx)){ if(Math.abs(dy)>14) dg=null; return; }
+      if(Math.abs(dx)<10) return;
+      dg.moved=true; dg.w=(s&&s.offsetWidth)||280;
+      if(s) s.style.transition='none';
+      if(ov){ ov.style.transition='none'; ov.style.pointerEvents='auto'; }
+      if(!dg.open) document.body.classList.add('side-open');
+    }
+    dg.dx=dx;
+    var x = dg.open ? Math.min(0, Math.max(-dg.w, dx)) : Math.min(0, -dg.w+Math.max(0,dx));
+    if(s) s.style.transform='translateX('+x+'px)';
+    if(ov) ov.style.opacity=String(Math.max(0, Math.min(1, 1+x/dg.w)));
+  }, {passive:true});
+  document.addEventListener('touchend', function(){
+    if(!dg) return;
+    var d=dg; dg=null;
+    var s=sideEl(), ov=$('sideOverlay');
+    if(s){ s.style.transition=''; s.style.transform=''; }
+    if(ov){ ov.style.transition=''; ov.style.opacity=''; ov.style.pointerEvents=''; }
+    if(!d.moved) return;
+    var ficaAberta = d.open ? (d.dx > -d.w*0.35) : (d.dx > d.w*0.35);
+    if(ficaAberta){ if(!d.open) guard(); }
+    else if(d.open){ closeDrawer(); }
+    else { document.body.classList.remove('side-open'); }
+  });
+
+  /* ---- envelopes (não reescrevem as originais) ---- */
+  var _nav=window.nav;
+  window.nav=function(v){
+    var r=_nav.apply(this, arguments);
+    try{
+      cur=v; if(TABS.indexOf(v)>=0) last=v;
+      syncBar(); syncTabs();
+      /* nav() fecha a gaveta por conta própria → consome a entrada de histórico dela */
+      if(pending>0 && !anyOpen()){ try{ history.back(); }catch(e){} }
+    }catch(e){}
+    return r;
+  };
+  var _render=window.renderGTasks;
+  window.renderGTasks=function(groups){
+    var r=_render.apply(this, arguments);
+    try{ afterTasks(); syncTabs(); }catch(e){}
+    return r;
+  };
+
+  /* ---- boot da camada ---- */
+  window.addEventListener('scroll', function(){
+    var b=$('mbar'); if(b) b.classList.toggle('scrolled', (window.pageYOffset||document.documentElement.scrollTop||0)>4);
+  }, {passive:true});
+  window.addEventListener('resize', function(){ syncBar(); syncTabs(); });
+  /* texto de apoio: 2 linhas, toque expande */
+  document.addEventListener('click', function(e){
+    if(!on()||cl(e.target,'button,a,input,select')) return;
+    var s=cl(e.target,'.main .sub'); if(s) s.classList.toggle('mob-exp');
+  });
+  function init(){
+    bindTasks(); syncBar(); syncTabs();
+    try{
+      var mo=new MutationObserver(function(){ syncTabs(); });
+      ['bdg-atr','bdg-inb'].forEach(function(id){
+        var e=$(id); if(e) mo.observe(e,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['style']});
+      });
+    }catch(e){}
+  }
+  return {init:init, navBtn:navBtn, go:go, menu:menu, closeMenu:closeMenu, mact:mact,
+          closeDrawer:closeDrawer, fab:fab, novaSalvar:novaSalvar,
+          bulk:bulk, sheetAct:sheetAct, sheetSave:sheetSave, closeSheet:closeSheet,
+          syncBar:syncBar, syncTabs:syncTabs, afterTasks:afterTasks,
+          postponed:postponed, dueOf:dueOf};
+})();
+MOB.init();
+
+SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();CONTATOS.refreshIfOpen();HUB.onAuth();try{MOB.syncBar();}catch(e){}EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
 SB.init();
 try{var _q=new URLSearchParams(location.search);if(_q.get("demo")==="1"){nav("funcionario");CASA.demo(_q.get("ver")||"admin");}else if(_q.get("demo")==="hub"){T3.demo();nav("projetos");}}catch(e){}
 
