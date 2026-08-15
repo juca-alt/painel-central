@@ -1,6 +1,5 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-08-15 · Leia isto primeiro ao retomar. **Produção: v2.19.0 (Melhoria 3.0 · F1).**
-**⏸️ v2.20.0 (UX mobile) PRONTA na branch `claude/juca-mobile-ux-qltkkj-nslxhy` — NÃO subiu na main (esperando OK do Gustavo).**
+**Última atualização:** 2026-08-15 · Leia isto primeiro ao retomar. **Produção: v2.20.0 (UX mobile Google-like).**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
@@ -25,12 +24,12 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
 
 ---
 
-## ⏸️ RETOMAR AQUI — sessão 15/08 — UX MOBILE v2.20.0 (branch, **NÃO no ar**)
+## 🟢 RETOMAR AQUI — sessão 15/08 — UX MOBILE v2.20.0 **NO AR**
 
 **Pedido do Gustavo:** *"a UX mobile do app hoje é o desktop encolhido"* — refazer no idioma do
 **Google Agenda + Google Tasks**, tudo dentro de `@media(max-width:880px)`, **sem tocar no desktop**.
 
-**Entregue na branch `claude/juca-mobile-ux-qltkkj-nslxhy` (aguardando "pode subir"):**
+**Entregue e DEPLOYADA na `main` (OK expresso do Gustavo no chat, 15/08):**
 - 🧱 **Camada `MOB` (IIFE novo, no fim do script) + chrome novo no HTML** (`#mbar`, `#mtab`, `#mfab`,
   `#msheet`, `#mmenu`) + um bloco CSS **isolado** "MOBILE UX v2.20". No desktop tudo isso é
   `display:none` e `MOB.on()` devolve false → **a camada nem roda**.
@@ -61,7 +60,14 @@ desktop **1280px** (screenshots), **console limpo**, zero overflow horizontal. D
 `mbar/mtab/mfab/.mob-ck` = `display:none`, `h1` visível, sidebar `position:static`, pílula da nav em 9px,
 `padding-top` do `.main` em 22px — **nada mudou**.
 
-**FALTA:** o **OK explícito do Gustavo no chat** pra merge/push na `main` (ele pediu pra não subir sem isso).
+**Decisões do Gustavo nesta sessão:** o **FAB cria tarefa de qualquer tela** (escolhe a lista na folha e,
+fora de Tarefas, navega pra lá depois de criar) — confirmado, fica assim.
+
+**Ponta solta (cosmética):** **Casa › Funcionário** é a única tela que ainda mostra o `h1` no celular,
+porque o ✏️ renomear mora dentro dele. Se incomodar: mover o renomear pro ⋯ e esconder o título lá também.
+
+**Ao abrir no celular depois do deploy:** o sw foi pra **v27**, então pode precisar de um toque no
+**🔄 Atualizar** (Configuração › Versão & atualização) pra sair do cache antigo do PWA.
 
 ---
 
