@@ -1,5 +1,5 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-08-15 · Leia isto primeiro ao retomar. **Produção: v2.20.0 (UX mobile Google-like).**
+**Última atualização:** 2026-08-15 · Leia isto primeiro ao retomar. **Produção: v2.20.1 (UX mobile Google-like).**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
@@ -59,6 +59,15 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
 desktop **1280px** (screenshots), **console limpo**, zero overflow horizontal. Desktop conferido item a item:
 `mbar/mtab/mfab/.mob-ck` = `display:none`, `h1` visível, sidebar `position:static`, pílula da nav em 9px,
 `padding-top` do `.main` em 22px — **nada mudou**.
+
+**🩹 v2.20.1 (fix, mesmo dia):** o Gustavo abriu no aparelho dele (tela curta) e a **gaveta não rolava** —
+o menu passava da altura e o rodapé (Fôlego / v · atualizar) ficava sem acesso. A `.side` é `position:fixed`
+com `height:100%` e `overflow` default `visible`: o excesso vazava pra fora da tela sem jeito de alcançar.
+Corrigido com `overflow-y:auto` + `overscroll-behavior:contain` (não vaza scroll pra página de trás) +
+`height:100dvh` + `padding-bottom` com `env(safe-area-inset-bottom)` + `.side>*{flex-shrink:0}` (sem isso o
+flex column espremia o menu em vez de rolar). Testado em **430×932 / 390×700 / 360×640**: cabe sem rolagem na
+primeira, rola e chega ao rodapé nas outras; arrastar da borda ainda abre e **rolar na vertical dentro da
+gaveta não a fecha**. Desktop conferido: `position:static`, `overflow:visible` — intacto. sw **v28**.
 
 **Decisões do Gustavo nesta sessão:** o **FAB cria tarefa de qualquer tela** (escolhe a lista na folha e,
 fora de Tarefas, navega pra lá depois de criar) — confirmado, fica assim.
