@@ -212,6 +212,10 @@
   .gd-bar>div{height:100%;background:var(--accent);border-radius:6px;transition:width .25s}
   .gd-sub{font-size:12px;color:var(--muted);margin-bottom:10px}
   .gd-big{font-size:20px;font-weight:700;line-height:1.35;margin:6px 0 4px}
+  /* ===== sub-bloco dentro de uma view (ex.: Camila › Provas) ===== */
+  .blk-t{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.5px;
+    text-transform:uppercase;color:var(--muted);margin:20px 0 10px}
+  .blk-t .ln{flex:1;height:1px;background:var(--line)}
   /* ===== Meu dia ===== */
   .md-now{padding:16px 18px;border-left:4px solid var(--accent)}
   .md-now .md-k{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent)}
@@ -622,10 +626,13 @@
         <a id="nav-feira" onclick="nav('feira')"><i class="ti ti-shopping-cart"></i> Feira</a>
         <a id="nav-funcionario" onclick="nav('funcionario')"><i class="ti ti-users"></i> Funcionário</a>
       </div>
+      <a id="nav-familia" class="group" onclick="toggleFamilia()"><i class="ti ti-users-group"></i> Família <i class="ti ti-chevron-down chev"></i></a>
+      <div class="subnav" id="familia-sub">
+        <a id="nav-gael" onclick="nav('gael')"><i class="ti ti-heart"></i> Gael</a>
+        <a id="nav-camila" onclick="nav('camila')"><i class="ti ti-book"></i> Camila</a>
+      </div>
       <a id="nav-saude" onclick="nav('saude')"><i class="ti ti-leaf"></i> Saúde</a>
-      <a id="nav-gael" onclick="nav('gael')"><i class="ti ti-heart"></i> Saúde · Gael</a>
       <a id="nav-contatos" onclick="nav('contatos')"><i class="ti ti-address-book"></i> Contatos</a>
-      <a id="nav-camila" onclick="nav('camila')"><i class="ti ti-book"></i> Provas Camila</a>
       <a id="nav-atalhos" onclick="nav('atalhos')"><i class="ti ti-link"></i> Atalhos</a>
       <a id="nav-config" onclick="nav('config')"><i class="ti ti-settings"></i> Configuração</a>
     </nav>
@@ -804,10 +811,11 @@
       <div id="projetos-out"><div class="loading">Carregando…</div></div>
     </section>
 
-    <!-- ============ CAMILA ============ -->
+    <!-- ============ CAMILA (Família › Camila; Provas é o 1º sub-bloco) ============ -->
     <section id="view-camila" style="display:none">
-      <div class="head"><h1>📚 Provas Camila</h1></div>
-      <div class="sub">As provas já caem no Calendar (categoria CAMILA). Aqui é a camada de cuidado: despachar a pesquisa pro Claude.</div>
+      <div class="head"><h1>👧 Camila</h1></div>
+      <div class="sub">O que é dela mora aqui. Por enquanto: <b>Provas</b> — elas já caem no Calendar (categoria CAMILA) e esta é a camada de cuidado.</div>
+      <div class="blk-t">📚 Provas<span class="ln"></span></div>
       <div id="camila-out"><div class="loading">Procurando eventos CAMILA no Calendar…</div></div>
       <div class="panel">
         <h3>🔎 Despachar pesquisa pro Claude</h3>
@@ -1066,6 +1074,8 @@ function nav(v){
   if(v==='config'){ renderConfig(); }
   var inCasa=(v==='feira'||v==='funcionario'); var nc=$('nav-casa');
   if(nc){ nc.classList.toggle('active', inCasa); if(inCasa){ $('casa-sub').classList.remove('collapsed'); nc.classList.remove('collapsed'); } }
+  var inFam=(v==='gael'||v==='camila'); var nf=$('nav-familia');
+  if(nf){ nf.classList.toggle('active', inFam); if(inFam){ $('familia-sub').classList.remove('collapsed'); nf.classList.remove('collapsed'); } }
   document.body.classList.remove('side-open');
 }
 
@@ -2085,7 +2095,8 @@ var MODULOS=[
   {i:"🍃",n:"Saúde",d:"Pendências de saúde — tuas e do Gael.",v:"saude"},
   {i:"📇",n:"Contatos",d:"Base de contatos com WhatsApp de 1 clique.",v:"contatos"},
   {i:"🗂️",n:"Projetos",d:"Listas do Google Tasks como projetos, sincronizadas com Tarefas.",v:"projetos"},
-  {i:"📚",n:"Provas Camila",d:"Próximas provas + despacho de pesquisa.",v:"camila"}
+  {i:"❤️",n:"Gael",d:"Família › Gael — histórico vivo de saúde (consultas, exames, medicamentos).",v:"gael"},
+  {i:"👧",n:"Camila",d:"Família › Camila — provas (próximas + despacho de pesquisa).",v:"camila"}
 ];
 function renderAtalhos(){
   var html='<div class="t-sec">Módulos do painel</div><div class="tiles">';
@@ -2322,7 +2333,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.21.0";
+var APP_VERSION="2.21.1";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2341,6 +2352,10 @@ function renderVerTag(){var e=$('ver-tag');if(!e)return;var ver=(typeof APP_VERS
 /* ===== Módulo CASA: nav expansível + Histórico de compras (planilha AO VIVO) ===== */
 function toggleCasa(){
   var s=$('casa-sub'), a=$('nav-casa');
+  if(s){ s.classList.toggle('collapsed'); a.classList.toggle('collapsed'); }
+}
+function toggleFamilia(){
+  var s=$('familia-sub'), a=$('nav-familia');
   if(s){ s.classList.toggle('collapsed'); a.classList.toggle('collapsed'); }
 }
 var HIST_ID="1aiVvcmdPqFIZ3zukmKzZZzffsAOqQuKMlOqtF7aTIY4";
@@ -3141,7 +3156,7 @@ var GAEL=(function(){
   function byId(ent,id){var a=cache[ent]||[];for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i];return {};}
   function loadOne(ent){return SB.rest('GET',T[ent]+'?select=*&order='+SCHEMA[ent].order).then(function(r){return r.ok?r.json():[];}).then(function(rows){cache[ent]=rows||[];return cache[ent];}).catch(function(){cache[ent]=cache[ent]||[];});}
   function loadAll(){return Promise.all(ORDER.map(loadOne));}
-  function headHtml(){return '<div class="head"><h1><i class="ti ti-heart" style="color:var(--accent)"></i> Saúde · Gael</h1></div><div class="sub">Histórico vivo de saúde do Gael — fonte única (consultas, diagnósticos, medicamentos, exames, equipe, investigações).</div>';}
+  function headHtml(){return '<div class="head"><h1><i class="ti ti-heart" style="color:var(--accent)"></i> Gael</h1></div><div class="sub">Família › Gael. Histórico vivo de saúde — fonte única (consultas, diagnósticos, medicamentos, exames, equipe, investigações).</div>';}
   function tabsHtml(){return '<div class="g-tabs">'+ORDER.map(function(e){var s=SCHEMA[e];var n=(cache[e]||[]).length;return '<button class="g-pill'+(e===active?' on':'')+'" onclick="GAEL.sel(\''+e+'\')"><i class="ti '+s.icon+'"></i> '+esc(s.label)+' <span class="ct">'+n+'</span></button>';}).join('')+'</div>';}
   function rowHtml(ent,r){var s=SCHEMA[ent];var right='';if(s.bdg)right+=badge(s.bdg(r));if(s.chp)right+=chip(s.chp(r));var acts='<div class="g-acts"><button title="Editar" onclick="GAEL.openForm(\''+ent+'\',\''+r.id+'\')"><i class="ti ti-edit"></i></button><button title="Excluir" onclick="GAEL.del(\''+ent+'\',\''+r.id+'\')"><i class="ti ti-trash"></i></button></div>';var sec=s.sec?s.sec(r):'';return '<div class="g-row"><div style="flex:1;min-width:0"><div class="g-pri">'+s.prim(r)+'</div>'+(sec?'<div class="g-sec">'+esc(sec)+'</div>':'')+'</div><div class="g-right">'+(right?'<div>'+right+'</div>':'')+acts+'</div></div>';}
   function listHtml(ent){var s=SCHEMA[ent];var rows=cache[ent]||[];var top='<div class="bar"><div class="t-sec" style="margin:0">'+esc(s.label)+'</div><div class="spacer"></div><button class="btn primary sm" onclick="GAEL.openForm(\''+ent+'\')"><i class="ti ti-plus"></i> Adicionar</button></div>';if(!rows.length)return top+'<div class="empty">Nenhum registro ainda — use “Adicionar”.</div>';return top+'<div class="panel">'+rows.map(function(r){return rowHtml(ent,r);}).join('')+'</div>';}
@@ -3837,8 +3852,8 @@ var MOB=(function(){
   function on(){ try{ return window.matchMedia('(max-width:880px)').matches; }catch(e){ return false; } }
   function cl(el,sel){ return (el&&el.closest)?el.closest(sel):null; }
   var TITLES={meudia:'Meu dia',hoje:'Agenda',tarefas:'Tarefas',projetos:'Projetos',inbox:'Inbox',feira:'Feira',
-    funcionario:'Funcionário',saude:'Saúde',gael:'Saúde · Gael',contatos:'Contatos',
-    camila:'Provas Camila',atalhos:'Atalhos',config:'Configuração'};
+    funcionario:'Funcionário',saude:'Saúde',gael:'Gael',contatos:'Contatos',
+    camila:'Camila',atalhos:'Atalhos',config:'Configuração'};
   var TABS=['meudia','hoje','tarefas','inbox'];   /* destinos da barra inferior */
   var cur='meudia', last='meudia';
 

@@ -1,5 +1,5 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-08-16 · Leia isto primeiro ao retomar. **Produção: v2.21.0 (Meu dia + Agenda + lote de eventos).**
+**Última atualização:** 2026-08-16 · Leia isto primeiro ao retomar. **Produção: v2.21.1 (Meu dia + Agenda + Família).**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
@@ -24,7 +24,7 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
 
 ---
 
-## 🟢 RETOMAR AQUI — sessão 16/08 — MEU DIA + AGENDA + LOTE DE EVENTOS (v2.21.0, NO AR)
+## 🟢 RETOMAR AQUI — sessão 16/08 — MEU DIA + AGENDA + LOTE DE EVENTOS (v2.21.0 → v2.21.1, NO AR)
 
 **Pedido do Gustavo:** *"Hoje vira Agenda agora, pq na prática é isso"* + *"acima do Hoje bota Meu dia,
 aí fazemos um painel com foco no que eu preciso me atentar no dia"* + seleção múltipla **de eventos**
@@ -67,6 +67,13 @@ completa, lote de data e de categoria (as 8), adiar de evento vencido partindo d
 intacta, voltar do Android fechando a folha, zero overflow horizontal. **Desktop conferido:** chrome mobile
 em `display:none`, ✅/❌ ainda em emoji com raio 7px, h1 "Bom dia, Gustavo" visível, sidebar `static`.
 `APP_VERSION` **2.21.0**, sw **v29**.
+
+**🩹 v2.21.1 (mesmo dia):** **"Provas Camila" virou "Camila"** (Provas passou a ser o 1º **sub-bloco**
+dentro dela, com espaço pro que vier depois) e nasceu o grupo **Família** na gaveta, com **Gael** e
+**Camila** dentro — mesmo padrão do grupo Casa (`toggleFamilia`, colapsa/expande, reabre e fica ativo ao
+entrar numa das duas). "Saúde · Gael" virou só **Gael** (na gaveta, na barra do app e no h1 do módulo);
+a **Saúde** da planilha segue solta no topo. Atalhos ganharam as entradas Gael e Camila. Classe nova
+`.blk-t` (sub-bloco dentro de uma view). sw **v30**.
 
 **Ponta solta (cosmética, vem da v2.20):** **Casa › Funcionário** ainda mostra o `h1` no celular — o ✏️
 renomear mora dentro dele.
