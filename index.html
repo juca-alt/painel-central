@@ -212,6 +212,21 @@
   .gd-bar>div{height:100%;background:var(--accent);border-radius:6px;transition:width .25s}
   .gd-sub{font-size:12px;color:var(--muted);margin-bottom:10px}
   .gd-big{font-size:20px;font-weight:700;line-height:1.35;margin:6px 0 4px}
+  /* ===== Tarefas: cada lista (projeto) é um tópico que abre/fecha e pode ser reordenado ===== */
+  .gt-head{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+  .gt-head .count{margin-left:auto}
+  .gt-head .gt-chev{font-size:15px;color:var(--muted);transition:transform .18s;flex:0 0 auto}
+  .gt-group.closed .gt-head .gt-chev{transform:rotate(-90deg)}
+  .gt-group.closed>*:not(.gt-head){display:none}
+  .gt-head .gt-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gt-ord{display:flex;gap:1px;flex:0 0 auto}
+  .gt-ord button{border:none;background:none;color:var(--muted);cursor:pointer;font-size:13px;
+    padding:3px 5px;border-radius:6px;line-height:1}
+  .gt-ord button:hover{color:var(--accent);background:var(--accent-soft)}
+  .gt-ord button:disabled{opacity:.25;cursor:default}
+  .gt-ord button:disabled:hover{color:var(--muted);background:none}
+  .gt-all{cursor:pointer;color:var(--muted)}
+  .gt-all:hover{color:var(--accent)}
   /* ===== sub-bloco dentro de uma view (ex.: Camila › Provas) ===== */
   .blk-t{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.5px;
     text-transform:uppercase;color:var(--muted);margin:20px 0 10px}
@@ -311,12 +326,17 @@
     .mtab .mt-bdg{position:absolute;top:2px;right:calc(50% - 22px);min-width:16px;height:16px;line-height:16px;
       padding:0 4px;border-radius:9px;background:var(--danger);color:#fff;font-size:9.5px;font-weight:700;display:none}
     .mtab .mt-slot{flex:1;min-width:0}
+    /* FAB DENTRO da barra (no slot do meio): flutuando por cima ele tapava a última linha da lista */
     .mfab{display:flex;align-items:center;justify-content:center;position:fixed;z-index:27;
-      left:50%;transform:translateX(-50%);bottom:calc(72px + env(safe-area-inset-bottom));
-      width:56px;height:56px;border-radius:18px;border:none;cursor:pointer;
-      background:var(--accent);color:#fff;font-size:26px;line-height:1;box-shadow:0 3px 10px rgba(0,0,0,.28)}
+      left:50%;transform:translateX(-50%);bottom:calc(6px + env(safe-area-inset-bottom));
+      width:54px;height:46px;border-radius:15px;border:none;cursor:pointer;
+      background:var(--accent);color:#fff;font-size:24px;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.22)}
     .mfab:active{filter:brightness(.94)}
     body.mob-sel .mfab,body.side-open .mfab{display:none}
+    /* tópicos das listas: alvo grande no dedo */
+    .gt-head{min-height:50px}
+    .gt-head .gt-nm{font-size:14.5px}
+    .gt-ord button{padding:8px 7px;font-size:15px}
     /* --- ✅/❌: no celular viram botão redondo com ícone (o carimbo no Google segue emoji) --- */
     .ev-stb .g-emo{display:none}
     .ev-stb .g-ico{display:inline-flex;align-items:center;justify-content:center;font-size:17px}
@@ -2333,7 +2353,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.21.1";
+var APP_VERSION="2.22.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -3842,6 +3862,106 @@ var HUB=(function(){
           dims:dims, dimAdd:dimAdd, dimSet:dimSet, dimSwap:dimSwap, dimDel:dimDel, closeDims:closeDims,
           onAuth:onAuth};
 })();
+/* ================= GTUI: tópicos da tela Tarefas (abre/fecha + ordem das listas) =================
+   O Google Tasks não guarda ordem de LISTA nem estado de colapso — isso é preferência de tela, então
+   mora no localStorage. Também aqui: nada de reescrever `renderGTasks`; a ordem entra envelopando
+   `fetchTaskGroups` e o cabeçalho de cada grupo é decorado depois que o HTML já foi pintado. */
+var GTUI=(function(){
+  var KEY='painel_gt_ui_v1';
+  var st=load();
+  function load(){
+    try{ var o=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ o={}; }
+    if(!o.closed||typeof o.closed!=='object') o.closed={};
+    if(!Array.isArray(o.order)) o.order=[];
+    return o;
+  }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} }
+  /* ordena pelas preferências; lista nova (sem posição salva) vai pro fim, na ordem do Google */
+  function sort(groups){
+    if(!groups||!groups.length) return groups;
+    var pos={}; st.order.forEach(function(id,i){ pos[id]=i; });
+    return groups.slice().sort(function(a,b){
+      var pa=(a.id in pos)?pos[a.id]:9e6, pb=(b.id in pos)?pos[b.id]:9e6;
+      return pa-pb;
+    });
+  }
+  function ordemAtual(){
+    var gs=(typeof GT_GROUPS!=='undefined'&&GT_GROUPS)?GT_GROUPS:[];
+    return gs.map(function(g){ return g.id; });
+  }
+  function move(lid, dir){
+    var ids=ordemAtual(), i=ids.indexOf(lid), j=i+dir;
+    if(i<0||j<0||j>=ids.length) return;
+    ids.splice(j,0, ids.splice(i,1)[0]);
+    st.order=ids; save();
+    GT_GROUPS=sort(GT_GROUPS);
+    try{ renderGTasks(GT_GROUPS); }catch(e){}
+    toast('Ordem salva neste aparelho');
+  }
+  function toggle(lid){
+    if(st.closed[lid]) delete st.closed[lid]; else st.closed[lid]=1;
+    save(); paint();
+  }
+  function todos(fechar){
+    st.closed={};
+    if(fechar) ordemAtual().forEach(function(id){ st.closed[id]=1; });
+    save(); paint();
+  }
+  function paint(){
+    var box=$('gtasks-out'); if(!box) return;
+    var gs=box.querySelectorAll('.gt-group'), abertos=0;
+    Array.prototype.forEach.call(gs, function(g){
+      var fechado=!!st.closed[g.getAttribute('data-lid')];
+      g.classList.toggle('closed', fechado);
+      if(!fechado) abertos++;
+    });
+    var lk=box.querySelector('.gt-all');
+    if(lk) lk.textContent=(abertos? 'recolher tudo' : 'abrir tudo');
+  }
+  /* decora o cabeçalho que o renderGTasks já emitiu: chevron + nome + ▲▼ */
+  function decorate(){
+    var box=$('gtasks-out'); if(!box) return;
+    Array.prototype.forEach.call(box.querySelectorAll('.gt-group'), function(g, i, arr){
+      var h=g.firstElementChild;
+      if(!h||h.classList.contains('gt-head')) return;
+      var lid=g.getAttribute('data-lid')||'', esc1=lid.replace(/'/g,"\\'");
+      var cnt=h.querySelector('.count'), nome=(h.textContent||'').replace(/\s*\d+\s*$/,'').trim();
+      h.classList.add('gt-head');
+      h.style.padding='10px 15px';
+      h.innerHTML='<i class="ti ti-chevron-down gt-chev"></i>'
+        +'<span class="gt-nm">'+esc(nome)+'</span>'
+        +(cnt?'<span class="count">'+esc(cnt.textContent)+'</span>':'')
+        +'<span class="gt-ord">'
+          +'<button title="Subir" '+(i===0?'disabled':'')+' onclick="event.stopPropagation();GTUI.move(\''+esc1+'\',-1)">▲</button>'
+          +'<button title="Descer" '+(i===arr.length-1?'disabled':'')+' onclick="event.stopPropagation();GTUI.move(\''+esc1+'\',1)">▼</button>'
+        +'</span>';
+      h.setAttribute('onclick','GTUI.toggle(\''+esc1+'\')');
+    });
+    /* "recolher tudo / abrir tudo" ao lado do ordenar */
+    var sortSpan=box.querySelector('.panel h3>span:not(.count)');
+    if(sortSpan && !sortSpan.querySelector('.gt-all')){
+      sortSpan.insertAdjacentHTML('beforeend',' · <span class="gt-all" onclick="GTUI.todos()">recolher tudo</span>');
+    }
+    paint();
+  }
+  /* envelopes: ordem entra na busca, decoração entra depois da pintura */
+  var _fetch=window.fetchTaskGroups;
+  window.fetchTaskGroups=function(){
+    return _fetch.apply(this, arguments).then(function(gs){
+      var s=sort(gs); GT_GROUPS=s; return s;
+    });
+  };
+  var _render=window.renderGTasks;
+  window.renderGTasks=function(groups){
+    var r=_render.apply(this, arguments);
+    try{ decorate(); }catch(e){}
+    return r;
+  };
+  return {move:move, toggle:toggle,
+          todos:function(){ var b=$('gtasks-out'); todos(!!(b&&b.querySelector('.gt-group:not(.closed)'))); },
+          sort:sort, decorate:decorate};
+})();
+
 /* ================= MOBILE UX v2.20 — camada só de celular (<=880px) =================
    Regras desta camada:
    • ENVELOPA `nav()` e `renderGTasks()` (não reescreve nenhuma das duas);

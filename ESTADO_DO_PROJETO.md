@@ -1,5 +1,5 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-08-16 · Leia isto primeiro ao retomar. **Produção: v2.21.1 (Meu dia + Agenda + Família).**
+**Última atualização:** 2026-08-16 · Leia isto primeiro ao retomar. **Produção: v2.22.0 (Tarefas em tópicos + FAB na barra).**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
@@ -74,6 +74,23 @@ dentro dela, com espaço pro que vier depois) e nasceu o grupo **Família** na g
 entrar numa das duas). "Saúde · Gael" virou só **Gael** (na gaveta, na barra do app e no h1 do módulo);
 a **Saúde** da planilha segue solta no topo. Atalhos ganharam as entradas Gael e Camila. Classe nova
 `.blk-t` (sub-bloco dentro de uma view). sw **v30**.
+
+**🆕 v2.22.0 — Tarefas caprichada + FAB na barra:**
+- 🔘 **O FAB saiu de cima da lista:** ele flutuava sobre o conteúdo e tapava a última linha (o Gustavo
+  mandou print). Agora mora **dentro** da barra inferior, no slot do meio (54×46, `bottom: 6px +
+  safe-area`) — não cobre mais nada.
+- 📂 **Cada lista virou tópico que abre e fecha** (`GTUI`, IIFE novo): cabeçalho clicável com chevron,
+  nome, contador e **▲▼ pra reordenar**; estado de colapso e ordem ficam em `painel_gt_ui_v1`
+  (localStorage — o Google Tasks **não guarda** ordem de lista nem colapso, isso é preferência de tela,
+  então é por aparelho). Link **"recolher tudo / abrir tudo"** ao lado do "ordenar:".
+- 🧱 Mesmo padrão de sempre: **`fetchTaskGroups` envelopado** (aplica a ordem salva) e o cabeçalho
+  **decorado depois** que o `renderGTasks` já pintou — a função original segue intocada. Lista nova
+  (sem posição salva) entra no fim, na ordem do Google.
+- Vale no **desktop também** (é funcionalidade, não skin): lá o tópico e o ▲▼ aparecem igual.
+
+**Verificado:** FAB dentro da barra sem colidir com linha visível, colapso persistindo depois do
+re-render, ordem sobrevivendo a reload + novo fetch, toque longo/seleção de tarefa intactos, console
+limpo, sem overflow. sw **v31**.
 
 **Ponta solta (cosmética, vem da v2.20):** **Casa › Funcionário** ainda mostra o `h1` no celular — o ✏️
 renomear mora dentro dele.
