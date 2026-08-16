@@ -1,5 +1,5 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-08-15 · Leia isto primeiro ao retomar. **Produção: v2.20.1 (UX mobile Google-like).**
+**Última atualização:** 2026-08-16 · Leia isto primeiro ao retomar. **Produção: v2.21.0 (Meu dia + Agenda + lote de eventos).**
 
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
@@ -24,7 +24,56 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
 
 ---
 
-## 🟢 RETOMAR AQUI — sessão 15/08 — UX MOBILE v2.20.0 **NO AR**
+## 🟢 RETOMAR AQUI — sessão 16/08 — MEU DIA + AGENDA + LOTE DE EVENTOS (v2.21.0, NO AR)
+
+**Pedido do Gustavo:** *"Hoje vira Agenda agora, pq na prática é isso"* + *"acima do Hoje bota Meu dia,
+aí fazemos um painel com foco no que eu preciso me atentar no dia"* + seleção múltipla **de eventos**
+(pra editar vários de uma vez, ex. mudar categoria) + o ✅/❌ virar **botão de verdade** no app
+(o carimbo no título continua sendo o que reflete no Google Agenda) e o **adiar/mudar data no card**.
+
+**Decisões dele (perguntadas antes de codar):** Meu dia = **tela nova, 1º da barra inferior** e abertura
+do app → a barra virou **Meu dia · Agenda · [+] · Tarefas · Inbox** (Projetos saiu da barra, segue na
+gaveta). Painel do dia com **3 blocos**: agora/próximo · eventos de hoje sem ✅/❌ · tarefas vencidas + de
+hoje. (Ele deixou "ontem em aberto + inbox sem triagem" de fora.)
+
+**Entregue:**
+- 🌅 **`view-meudia` nova** (`renderMeuDia`): card **agora / a seguir** (com "começa em Xh"), faixa de
+  eventos "dia todo", painel **🎯 Falta carimbar** (eventos de hoje sem status, marcando os que já
+  passaram) e **✅ Tarefas do dia** (vencidas + de hoje, com "+1 dia" de 1 toque). Herdou o h1 da saudação,
+  a data, as cutucadas e os 5 KPIs — os ids `h-*` não mudaram, então `renderGTasks`/`INBOX` seguem
+  alimentando sem alteração.
+- 📅 **"Hoje" virou "Agenda"** na gaveta, na barra do app, na barra inferior e nos Atalhos. O **id
+  `view-hoje` ficou** de propósito: renomear id espalharia risco pelo arquivo inteiro sem ganho.
+- 🔁 **Seleção múltipla de EVENTOS** (o mesmo toque longo da tarefa): barra verde "N selecionados" e
+  **5 ações em lote** — feito ✅ · não feito ❌ · **mudar data** (adiar 1d/7d ou escolher) · **categoria**
+  (EVMETA/Supabase, que é onde ela mora) · excluir. Tarefa e evento **não se misturam** numa seleção
+  (`selKind`), e a barra de ações é montada conforme o tipo.
+- 🃏 **Folha do evento no toque simples:** título, quando/categoria, **Feito / Não feito como botão**
+  (segmento grande, verde/vermelho), adiar 1d/7d, escolher data, mudar categoria, **Editar tudo** (cai no
+  `EVMODAL` de sempre) e excluir.
+- ⭕ **✅/❌ viraram botão redondo com ícone no celular** — o botão carrega os DOIS glifos e o CSS escolhe:
+  emoji no desktop (idêntico ao que era), ícone Tabler no mobile. **O que é gravado no título do Google
+  continua sendo o emoji**, que é o que faz aparecer no Google Agenda.
+- 📆 **Regra do adiar valendo pra evento também:** `evPostpone` = `max(data do evento, hoje) + N`.
+- 🧱 **Envelopes, não reescritas:** além de `nav()`/`renderGTasks()`, agora `loadAgendaView()` (dispara o
+  decorador das linhas) e `EVMODAL.open` (no celular abre a folha; no desktop, o modal de sempre).
+  A regra de prazo saiu do MOB pra helpers globais (`gtDueDate/gtPostpone/gtDueRFC/gtAdiar`) — um caminho
+  só, usado pelo Meu dia, pela folha e pelo lote. Escrita no Google segue por `gtWrite`/`gtSetStatus`
+  (tarefa) e `gcalPatchTitle`/`gcalUpdate`/`gcalDelete` (evento — os mesmos caminhos do modal).
+
+**Verificado no preview (390px + 1280px, eventos e tarefas fake, console limpo):** barra inferior nova,
+Meu dia com os 3 blocos, "Agenda" em todos os rótulos, toque longo em evento → 5 ações, folha do evento
+completa, lote de data e de categoria (as 8), adiar de evento vencido partindo de hoje, seleção de tarefa
+intacta, voltar do Android fechando a folha, zero overflow horizontal. **Desktop conferido:** chrome mobile
+em `display:none`, ✅/❌ ainda em emoji com raio 7px, h1 "Bom dia, Gustavo" visível, sidebar `static`.
+`APP_VERSION` **2.21.0**, sw **v29**.
+
+**Ponta solta (cosmética, vem da v2.20):** **Casa › Funcionário** ainda mostra o `h1` no celular — o ✏️
+renomear mora dentro dele.
+
+---
+
+## 🟢 (histórico) sessão 15/08 — UX MOBILE v2.20.0 → v2.20.1
 
 **Pedido do Gustavo:** *"a UX mobile do app hoje é o desktop encolhido"* — refazer no idioma do
 **Google Agenda + Google Tasks**, tudo dentro de `@media(max-width:880px)`, **sem tocar no desktop**.

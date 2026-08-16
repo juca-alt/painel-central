@@ -212,6 +212,14 @@
   .gd-bar>div{height:100%;background:var(--accent);border-radius:6px;transition:width .25s}
   .gd-sub{font-size:12px;color:var(--muted);margin-bottom:10px}
   .gd-big{font-size:20px;font-weight:700;line-height:1.35;margin:6px 0 4px}
+  /* ===== Meu dia ===== */
+  .md-now{padding:16px 18px;border-left:4px solid var(--accent)}
+  .md-now .md-k{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent)}
+  .md-now .md-v{font-size:19px;font-weight:700;line-height:1.3;margin:4px 0 3px}
+  .md-now .md-s{font-size:12.5px;color:var(--muted)}
+  .md-now .md-all{margin-top:10px;padding-top:9px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+  .md-sub{font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);
+    padding:9px 15px 4px;background:#fafbfc;border-bottom:1px solid var(--line)}
   /* ===== responsivo: menu vira gaveta lateral à esquerda (abre/retrai) ===== */
   .side-overlay{display:none}
   @media(max-width:880px){
@@ -242,7 +250,7 @@
   }
   /* ===== MOBILE UX v2.20 — app bar (Google Agenda) + bottom bar/FAB (Google Tasks) =====
      TUDO isolado em max-width:880px: no desktop essa camada nem existe (chrome fica display:none). */
-  .mbar,.mtab,.mfab,.msheet-bg,.mmenu-bg,.mob-ck{display:none}
+  .mbar,.mtab,.mfab,.msheet-bg,.mmenu-bg,.mob-ck,.ev-stb .g-ico{display:none}
   @media(max-width:880px){
     /* --- barra de app fixa: ☰/← + título + ⋯ + avatar --- */
     .mbar{display:flex;align-items:center;gap:2px;position:fixed;top:0;left:0;right:0;z-index:25;
@@ -305,6 +313,14 @@
       background:var(--accent);color:#fff;font-size:26px;line-height:1;box-shadow:0 3px 10px rgba(0,0,0,.28)}
     .mfab:active{filter:brightness(.94)}
     body.mob-sel .mfab,body.side-open .mfab{display:none}
+    /* --- ✅/❌: no celular viram botão redondo com ícone (o carimbo no Google segue emoji) --- */
+    .ev-stb .g-emo{display:none}
+    .ev-stb .g-ico{display:inline-flex;align-items:center;justify-content:center;font-size:17px}
+    .ev-stb{width:34px;height:34px;padding:0;border-radius:50%;border:1.5px solid var(--line);
+      opacity:1;color:var(--muted);display:inline-flex;align-items:center;justify-content:center}
+    .ev-stb.ok.on{background:var(--ok);border-color:var(--ok);color:#fff}
+    .ev-stb.no.on{background:var(--danger);border-color:var(--danger);color:#fff}
+    .ev-st{gap:6px}
     /* --- lista de tarefas: alvo maior, checkbox redondo do modo seleção --- */
     #gtasks-out .rt-item{padding:12px 14px;font-size:14px;gap:10px;min-height:48px}
     #gtasks-out .rt-item[data-tid]{cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -315,6 +331,25 @@
     body.mob-sel #gtasks-out .rt-item.mob-on{background:var(--accent-soft)}
     body.mob-sel #gtasks-out .rt-item.mob-on .mob-ck{background:var(--accent);border-color:var(--accent)}
     .mob-press{background:var(--chip)}
+    /* --- eventos: mesmo modo seleção da tarefa (linha do Dia/Meu dia e bloco das colunas) --- */
+    #agenda-out [data-evid],#meudia-out [data-evid]{-webkit-tap-highlight-color:transparent}
+    #agenda-out [data-evid] .mob-ck,#meudia-out [data-evid] .mob-ck{display:none;flex:0 0 auto;
+      width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);
+      align-items:center;justify-content:center;color:#fff;font-size:13px;line-height:1;margin-right:8px}
+    body.mob-sel #agenda-out [data-evid] .mob-ck,body.mob-sel #meudia-out [data-evid] .mob-ck{display:inline-flex;vertical-align:middle}
+    body.mob-sel #agenda-out [data-evid] .ev-st,body.mob-sel #meudia-out [data-evid] .ev-st{display:none}
+    body.mob-sel #agenda-out [data-evid].mob-on,body.mob-sel #meudia-out [data-evid].mob-on{background:var(--accent-soft)}
+    body.mob-sel [data-evid].mob-on .mob-ck{background:var(--accent);border-color:var(--accent)}
+    #agenda-out .ev{padding:9px 10px}
+    /* linhas de evento/tarefa no Dia e no Meu dia: botão à esquerda, texto ao lado (não embaixo) */
+    #agenda-out .row,#meudia-out .row{min-height:52px;gap:8px;padding:10px 12px}
+    #agenda-out .row .nm,#meudia-out .row .nm{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    #agenda-out .row .nm>small{flex:1 0 100%;margin:0}
+    .nm-t{flex:1;min-width:0}
+    .nm-t small{display:block;color:var(--muted);font-size:11.5px}
+    #agenda-out .row .tm,#meudia-out .row .tm{width:52px;font-size:11.5px;line-height:1.25}
+    #agenda-out .row .chip,#meudia-out .row .chip{font-size:9px;padding:2px 7px;max-width:88px;
+      overflow:hidden;text-overflow:ellipsis}
     /* --- folha inferior (bottom sheet) --- */
     .msheet-bg{display:block;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.42);
       opacity:0;pointer-events:none;transition:opacity .2s}
@@ -335,6 +370,16 @@
     #gtasks-out .panel h3{flex-wrap:wrap;row-gap:2px}
     #gtasks-out .panel h3>span:not(.count){flex:1 0 100%;text-align:right;float:none!important}
     .msheet .ms-sep{height:1px;background:var(--line);margin:8px 0}
+    /* folha do evento: título + feito/não feito como botão de verdade */
+    .msheet .ms-ev-t{font-size:19px;font-weight:700;line-height:1.3;margin:2px 0 4px}
+    .msheet .ms-ev-s{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+    .msheet .ms-seg{display:flex;gap:10px}
+    .msheet .ms-seg button{flex:1;min-height:50px;border:1.5px solid var(--line);background:var(--card);
+      color:var(--muted);font:inherit;font-size:14.5px;font-weight:600;border-radius:12px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:7px}
+    .msheet .ms-seg button i.ti{font-size:19px}
+    .msheet .ms-seg button.on.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+    .msheet .ms-seg button.on.no{background:var(--danger);border-color:var(--danger);color:#fff}
     .msheet .ms-foot{display:flex;gap:10px;margin-top:16px}
     .msheet .ms-foot .btn{flex:1;justify-content:center;min-height:46px;font-size:14.5px}
     /* --- menu ⋯ --- */
@@ -567,7 +612,8 @@
   <aside class="side">
     <div class="brand"><span class="brand-dot"></span>Painel Central<small>tudo é uma coisa só</small></div>
     <nav class="nav">
-      <a id="nav-hoje" class="active" onclick="nav('hoje')"><i class="ti ti-home"></i> Hoje</a>
+      <a id="nav-meudia" class="active" onclick="nav('meudia')"><i class="ti ti-sunrise"></i> Meu dia</a>
+      <a id="nav-hoje" onclick="nav('hoje')"><i class="ti ti-calendar"></i> Agenda</a>
       <a id="nav-tarefas" onclick="nav('tarefas')"><i class="ti ti-checklist"></i> Tarefas <span class="bdg" id="bdg-atr"></span></a>
       <a id="nav-projetos" onclick="nav('projetos')"><i class="ti ti-folders"></i> Projetos</a>
       <a id="nav-inbox" onclick="nav('inbox')"><i class="ti ti-inbox"></i> Inbox Geral <span class="bdg" id="bdg-inb"></span></a>
@@ -595,9 +641,9 @@
   </aside>
 
   <main class="main">
-    <!-- ============ HOJE ============ -->
-    <section id="view-hoje">
-      <div class="head"><h1 id="saudacao">Hoje</h1></div>
+    <!-- ============ MEU DIA (painel do dia; abre o app) ============ -->
+    <section id="view-meudia">
+      <div class="head"><h1 id="saudacao">Meu dia</h1></div>
       <div class="sub" id="data-hoje"></div>
       <div id="cutucadas"></div>
       <div class="cards c5">
@@ -607,6 +653,13 @@
         <div class="card click" onclick="nav('tarefas')"><div class="k">Amanhã</div><div class="v" id="h-amn">–</div><div class="s">vencem amanhã</div></div>
         <div class="card click" onclick="nav('tarefas')"><div class="k">Essa semana</div><div class="v" id="h-sem">–</div><div class="s">até sábado</div></div>
       </div>
+      <div id="meudia-out"><div class="loading">Montando teu dia…</div></div>
+    </section>
+
+    <!-- ============ AGENDA (era "Hoje" — o id fica pra não quebrar o resto) ============ -->
+    <section id="view-hoje" style="display:none">
+      <div class="head"><h1>📅 Agenda</h1></div>
+      <div class="sub">Google Agenda ao vivo. Toque num evento pra marcar feito/não feito, mudar a data ou a categoria; toque longo seleciona vários.</div>
       <div class="bar">
         <button class="btn sm" onclick="aShift(-1)" title="anterior">‹</button>
         <button class="btn sm" onclick="aHoje()">Hoje</button>
@@ -786,20 +839,15 @@
 <header class="mbar" id="mbar">
   <button class="mb-ico" id="mb-nav" onclick="MOB.navBtn()" aria-label="Menu"><i class="ti ti-menu-2"></i></button>
   <div class="mb-title" id="mb-title">Hoje</div>
-  <div class="mb-selacts">
-    <button class="mb-ico" onclick="MOB.bulk('done')" title="Concluir" aria-label="Concluir"><i class="ti ti-check"></i></button>
-    <button class="mb-ico" onclick="MOB.bulk('p1')" title="Adiar 1 dia" aria-label="Adiar 1 dia"><b>+1d</b></button>
-    <button class="mb-ico" onclick="MOB.bulk('p7')" title="Adiar 7 dias" aria-label="Adiar 7 dias"><b>+7d</b></button>
-    <button class="mb-ico" onclick="MOB.bulk('del')" title="Excluir" aria-label="Excluir"><i class="ti ti-trash"></i></button>
-  </div>
+  <div class="mb-selacts" id="mb-selacts"></div>
   <button class="mb-ico mb-normal" onclick="MOB.menu()" aria-label="Mais opções"><i class="ti ti-dots-vertical"></i></button>
   <button class="mb-av" id="mb-av" onclick="MOB.go('config')" aria-label="Conta">J</button>
 </header>
 <nav class="mtab" id="mtab">
-  <button data-v="hoje" onclick="MOB.go('hoje')"><i class="ti ti-home"></i>Hoje</button>
-  <button data-v="tarefas" onclick="MOB.go('tarefas')"><i class="ti ti-checklist"></i>Tarefas<span class="mt-bdg" id="mt-bdg-atr"></span></button>
+  <button data-v="meudia" onclick="MOB.go('meudia')"><i class="ti ti-sunrise"></i>Meu dia</button>
+  <button data-v="hoje" onclick="MOB.go('hoje')"><i class="ti ti-calendar"></i>Agenda</button>
   <div class="mt-slot"></div>
-  <button data-v="projetos" onclick="MOB.go('projetos')"><i class="ti ti-folders"></i>Projetos</button>
+  <button data-v="tarefas" onclick="MOB.go('tarefas')"><i class="ti ti-checklist"></i>Tarefas<span class="mt-bdg" id="mt-bdg-atr"></span></button>
   <button data-v="inbox" onclick="MOB.go('inbox')"><i class="ti ti-inbox"></i>Inbox<span class="mt-bdg" id="mt-bdg-inb"></span></button>
 </nav>
 <button class="mfab" id="mfab" onclick="MOB.fab()" aria-label="Nova tarefa">＋</button>
@@ -1002,13 +1050,14 @@ function renderConfig(){
 }
 
 /* ================= navegação ================= */
-var VIEWS=["hoje","tarefas","projetos","inbox","feira","funcionario","saude","gael","contatos","camila","atalhos","config"];
+var VIEWS=["meudia","hoje","tarefas","projetos","inbox","feira","funcionario","saude","gael","contatos","camila","atalhos","config"];
 function toggleSide(){ document.body.classList.toggle('side-open'); }
 function nav(v){
   VIEWS.forEach(function(k){
     $('view-'+k).style.display = k===v?'block':'none';
     $('nav-'+k).classList.toggle('active', k===v);
   });
+  if(v==='meudia'){ try{ renderMeuDia(); }catch(e){} }
   if(v==='feira'){ renderCards(); gerar(); }
   if(v==='funcionario'){ CASA.render(); }
   if(v==='gael'){ GAEL.render(); }
@@ -1215,7 +1264,98 @@ function loadAgenda(){
   $('saudacao').textContent = (hoje.getHours()<12?"Bom dia":hoje.getHours()<18?"Boa tarde":"Boa noite")+", Gustavo";
   $('data-hoje').textContent = DIAS[hoje.getDay()]+", "+fmt2(hoje.getDate())+"/"+fmt2(hoje.getMonth()+1)+"/"+hoje.getFullYear()+" · Recife";
   renderCutucadas(hoje);
-  EVMETA.load().then(function(){ loadAgendaView(); });
+  EVMETA.load().then(function(){ loadAgendaView(); try{ renderMeuDia(); }catch(e){} });
+}
+/* ================= MEU DIA: o que precisa da tua atenção hoje =================
+   Três blocos (escolhidos pelo Gustavo): agora/próximo · eventos de hoje sem ✅/❌ ·
+   tarefas vencidas + de hoje. Não busca nada novo: reusa fetchEvents (com cache) e GT_GROUPS. */
+function mdFalta(ms){
+  var min=Math.round(ms/60000);
+  if(min<1) return 'agora';
+  if(min<60) return 'em '+min+' min';
+  var h=Math.floor(min/60), m=min%60;
+  return 'em '+h+'h'+(m?fmt2(m):'');
+}
+async function renderMeuDia(){
+  var box=$('meudia-out'); if(!box) return;
+  var evs=null, erro=null;
+  if(!COWORK && !gHasToken()) erro='__NEEDCONNECT__';
+  else{
+    try{
+      var ini=hoje0(), fim=new Date(ini); fim.setDate(fim.getDate()+1);
+      evs=await fetchEvents(ini, fim);
+    }catch(e){ erro=String((e&&e.message)||e); }
+  }
+  var now=new Date(), h='';
+
+  /* ---- 1) agora / a seguir ---- */
+  if(erro==='__NEEDCONNECT__'){
+    h+=connectPanel('Conectar pra montar teu dia');
+  }else if(erro){
+    h+='<div class="errbox"><div class="e-t">Não li a agenda de hoje</div><div class="e-s">'+esc(erro.slice(0,140))+'</div></div>';
+  }else{
+    var objs=(evs||[]).map(evObj);
+    var tim=objs.filter(function(o){ return !o.allday; })
+                .sort(function(a,b){ return new Date(a.ini)-new Date(b.ini); });
+    var atual=null, prox=null;
+    tim.forEach(function(o){
+      var i=new Date(o.ini), f=o.fim?new Date(o.fim):new Date(i.getTime()+36e5);
+      if(!atual && i<=now && now<f) atual={o:o,f:f};
+      if(!prox && i>now) prox={o:o,i:i};
+    });
+    var alld=objs.filter(function(o){ return o.allday; });
+    var nh;
+    if(atual) nh='<div class="md-k">agora</div><div class="md-v">'+esc(evStripStatus(atual.o.t))+'</div>'
+      +'<div class="md-s">'+hora(atual.o.ini)+(atual.o.fim?'–'+hora(atual.o.fim):'')+' · termina '+mdFalta(atual.f-now)+'</div>';
+    else if(prox) nh='<div class="md-k">a seguir</div><div class="md-v">'+esc(evStripStatus(prox.o.t))+'</div>'
+      +'<div class="md-s">'+hora(prox.o.ini)+(prox.o.fim?'–'+hora(prox.o.fim):'')+' · começa '+mdFalta(prox.i-now)+'</div>';
+    else nh='<div class="md-k">agenda de hoje</div><div class="md-v">'+(tim.length?'Nada mais marcado hoje ✌️':'Dia livre 🎉')+'</div>'
+      +'<div class="md-s">'+(tim.length?tim.length+' evento'+(tim.length>1?'s':'')+' já passaram':'nenhum compromisso no Google Agenda')+'</div>';
+    var foco=(atual&&atual.o)||(prox&&prox.o)||null;
+    var fid=foco?String(foco.id||'').replace(/['"\\]/g,''):'';
+    h+='<div class="panel md-now"'+(fid?' onclick="EVMODAL.open(\''+fid+'\')" style="cursor:pointer"':'')+'>'+nh
+      +(alld.length?'<div class="md-all">dia todo · '+alld.map(function(o){return esc(evStripStatus(o.t));}).join(' · ')+'</div>':'')
+      +'</div>';
+
+    /* ---- 2) eventos de hoje ainda sem ✅/❌ ---- */
+    var pend=objs.filter(function(o){ return o.id && !evCurStatus(o.t); })
+                 .sort(function(a,b){ return (a.allday?'':a.ini) < (b.allday?'':b.ini) ? -1 : 1; });
+    h+='<div class="panel"><h3>🎯 Falta carimbar<span class="count">'+pend.length+'</span></h3>';
+    if(!pend.length) h+='<div class="row"><div class="nm" style="color:var(--muted)">Tudo do dia já está marcado ✓</div></div>';
+    pend.forEach(function(o){
+      var c=categoriza(o.t,o), sid=String(o.id).replace(/['"\\]/g,'');
+      var passou=!o.allday && o.fim && new Date(o.fim)<now;
+      h+='<div class="row" onclick="EVMODAL.open(\''+sid+'\')" style="cursor:pointer">'
+        +'<div class="tm'+(passou?' late':'')+'">'+(o.allday?'dia todo':hora(o.ini))+'</div>'
+        +'<div class="nm">'+evStatusBtns(o.id,o.t)+'<span class="nm-t">'+esc(evStripStatus(o.t))+(passou?'<small>já passou — marca feito ou não feito</small>':'')+'</span></div>'
+        +'<span class="chip" style="background:'+c.col+'">'+c.cat+'</span></div>';
+    });
+    h+='</div>';
+  }
+
+  /* ---- 3) tarefas vencidas + de hoje ---- */
+  var hojeIso=isoLocal(hoje0()), venc=[], hj=[];
+  (GT_GROUPS||[]).forEach(function(g){ g.tarefas.forEach(function(t){
+    if(t.status==='completed'||!t.due) return;
+    var d=String(t.due).slice(0,10);
+    if(d<hojeIso) venc.push({g:g,t:t,d:d}); else if(d===hojeIso) hj.push({g:g,t:t,d:d});
+  }); });
+  function linhaT(x){
+    var lid=String(x.g.id).replace(/'/g,"\\'"), tid=String(x.t.id).replace(/'/g,"\\'");
+    var dd=gtDueDate(x.t);
+    return '<div class="row"><div class="tm'+(x.d<hojeIso?' late':'')+'">'+(dd?fmt2(dd.getDate())+'/'+fmt2(dd.getMonth()+1):'')+'</div>'
+      +'<div class="nm">'+gtStatusBtns(lid,tid,x.t.title,false)+'<span class="nm-t">'+esc(evStripStatus(x.t.title)||'(sem título)')+'<small>'+esc(x.g.nome)+'</small></span></div>'
+      +'<span class="lk" style="cursor:pointer;color:var(--muted);font-size:12px;white-space:nowrap" onclick="event.stopPropagation();gtAdiar(\''+lid+'\',\''+tid+'\',1)">+1 dia</span></div>';
+  }
+  var tot=venc.length+hj.length;
+  h+='<div class="panel"><h3>✅ Tarefas do dia<span class="count">'+tot+'</span></h3>';
+  if(!tot) h+='<div class="row"><div class="nm" style="color:var(--muted)">'+((GT_GROUPS&&GT_GROUPS.length)?'Nada vencido nem vencendo hoje 🎉':'Conecte o Google Tasks pra ver as tarefas do dia')+'</div></div>';
+  if(venc.length){ h+='<div class="md-sub">vencidas ('+venc.length+') — adiar parte de hoje</div>'; venc.forEach(function(x){ h+=linhaT(x); }); }
+  if(hj.length){ h+='<div class="md-sub">vencem hoje ('+hj.length+')</div>'; hj.forEach(function(x){ h+=linhaT(x); }); }
+  h+='</div>';
+
+  box.innerHTML=h;
+  try{ MOB.afterAgenda(); }catch(e){}
 }
 /* Calendar bidirecional: cria evento em linguagem natural (quickAdd) escrevendo no Google. */
 function calQuickAdd(){
@@ -1317,13 +1457,18 @@ function evSetStatus(id, mark){
     loadAgendaView();
   }).catch(function(e){ toast('Não salvei: '+String(e&&e.message||e).slice(0,80)); });
 }
-/* par de botões ✅/❌ (destaca o ativo) — reutilizado na agenda */
+/* par de botões ✅/❌ (destaca o ativo) — reutilizado na agenda.
+   O botão carrega os DOIS glifos: o emoji (desktop, como sempre foi) e um ícone Tabler que
+   só aparece no celular — o que vai carimbado no título do Google continua sendo o emoji. */
+function stGlyph(mark){
+  return '<span class="g-emo">'+mark+'</span><i class="ti '+(mark==='✅'?'ti-check':'ti-x')+' g-ico"></i>';
+}
 function evStatusBtns(id, title){
   if(!id) return '';
   var st=evCurStatus(title), sid=String(id).replace(/['"\\]/g,'');
   return '<span class="ev-st">'
-    +'<button class="ev-stb'+(st==='✅'?' on':'')+'" title="Marcar feito" onclick="event.stopPropagation();evSetStatus(\''+sid+'\',\'✅\')">✅</button>'
-    +'<button class="ev-stb'+(st==='❌'?' on':'')+'" title="Marcar não feito" onclick="event.stopPropagation();evSetStatus(\''+sid+'\',\'❌\')">❌</button>'
+    +'<button class="ev-stb ok'+(st==='✅'?' on':'')+'" title="Marcar feito" onclick="event.stopPropagation();evSetStatus(\''+sid+'\',\'✅\')">'+stGlyph('✅')+'</button>'
+    +'<button class="ev-stb no'+(st==='❌'?' on':'')+'" title="Marcar não feito" onclick="event.stopPropagation();evSetStatus(\''+sid+'\',\'❌\')">'+stGlyph('❌')+'</button>'
     +'</span>';
 }
 
@@ -1599,8 +1744,8 @@ function gtToggle(listId, taskId, done){
 function gtStatusBtns(lidEsc, tidEsc, title, completed){
   var st = completed ? '✅' : evCurStatus(title);
   return '<span class="ev-st">'
-    +'<button class="ev-stb'+(st==='✅'?' on':'')+'" title="Feita" onclick="event.stopPropagation();gtSetStatus(\''+lidEsc+'\',\''+tidEsc+'\',\'✅\')">✅</button>'
-    +'<button class="ev-stb'+(st==='❌'?' on':'')+'" title="Não feita" onclick="event.stopPropagation();gtSetStatus(\''+lidEsc+'\',\''+tidEsc+'\',\'❌\')">❌</button>'
+    +'<button class="ev-stb ok'+(st==='✅'?' on':'')+'" title="Feita" onclick="event.stopPropagation();gtSetStatus(\''+lidEsc+'\',\''+tidEsc+'\',\'✅\')">'+stGlyph('✅')+'</button>'
+    +'<button class="ev-stb no'+(st==='❌'?' on':'')+'" title="Não feita" onclick="event.stopPropagation();gtSetStatus(\''+lidEsc+'\',\''+tidEsc+'\',\'❌\')">'+stGlyph('❌')+'</button>'
     +'</span>';
 }
 function gtSetStatus(lid, tid, mark){
@@ -1626,6 +1771,56 @@ function gtCreate(listId, idx){
     .catch(function(){ toast("Não criei no Google"); loadGTasks(); });
 }
 function gtCreateKey(ev, listId, idx){ if(ev&&ev.key==="Enter"){ ev.preventDefault(); gtCreate(listId, idx); } }
+/* ===== prazo de tarefa: leitura, adiamento e gravação (um caminho só, usado pelo Meu dia,
+   pela folha do celular e pelas ações em lote). ===== */
+function hoje0(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
+function gtDueDate(t){
+  var s=(t&&t.due)?String(t.due).slice(0,10):'';
+  if(!/^\d{4}-\d\d-\d\d$/.test(s)) return null;
+  var p=s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]);
+}
+/* REGRA (a mesma do CRM): tarefa VENCIDA adia a partir de HOJE, nunca da data velha —
+   senão o atraso se acumula sobre um dia que já passou e "adiar 1 dia" cai no passado. */
+function gtPostpone(t, days){
+  var hj=hoje0(), base=gtDueDate(t);
+  if(!base || base.getTime()<hj.getTime()) base=hj;
+  var d=new Date(base.getTime()); d.setDate(d.getDate()+days); return d;
+}
+function gtDueRFC(d){ return isoLocal(d)+'T00:00:00.000Z'; }
+function gtTask(lid, tid){
+  var g=GT_GROUPS&&GT_GROUPS.filter(function(x){return x.id===lid;})[0];
+  return g ? g.tarefas.filter(function(t){return t.id===tid;})[0] : null;
+}
+function gtSetDue(lid, tid, d){
+  return gtWrite('PATCH','lists/'+encodeURIComponent(lid)+'/tasks/'+encodeURIComponent(tid), {due:gtDueRFC(d)});
+}
+function gtAdiar(lid, tid, days){
+  var t=gtTask(lid,tid); if(!t){ toast('Tarefa sumiu — recarregando'); loadGTasks(); return; }
+  var d=gtPostpone(t, days);
+  gtSetDue(lid, tid, d)
+    .then(function(){ toast('Adiada pra '+fmt2(d.getDate())+'/'+fmt2(d.getMonth()+1)+' ✓ (Google)'); })
+    .catch(function(){ toast('Não salvou no Google'); })
+    .then(function(){ loadGTasks(); try{ renderMeuDia(); }catch(e){} });
+}
+/* ===== data de EVENTO: mesma regra (evento vencido move a partir de hoje), preservando a hora ===== */
+function evDateOf(raw){
+  if(!raw||!raw.start) return null;
+  var s=raw.start.date?raw.start.date.slice(0,10):isoLocal(new Date(raw.start.dateTime));
+  var p=s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]);
+}
+function evPostpone(raw, days){
+  var hj=hoje0(), base=evDateOf(raw);
+  if(!base || base.getTime()<hj.getTime()) base=hj;
+  var d=new Date(base.getTime()); d.setDate(d.getDate()+days); return d;
+}
+/* move o evento pro dia informado (iso YYYY-MM-DD) mantendo título, duração e hora */
+function evMoveTo(id, iso){
+  var raw=EVIDX[id]; if(!raw) return Promise.reject(new Error('evento sumiu'));
+  var allday=!!(raw.start&&raw.start.date&&!raw.start.dateTime);
+  var hi=allday?'':hora(raw.start.dateTime);
+  var hf=(!allday&&raw.end&&raw.end.dateTime)?hora(raw.end.dateTime):'';
+  return gcalUpdate(id, raw.summary||'', allday, iso, hi, hf);
+}
 function renderGTasks(groups){
   var box=$('gtasks-out'); if(!box) return; box.__groups=groups;
   /* cards do topo passam a refletir o Google Tasks (fonte primária das Tarefas).
@@ -1882,7 +2077,8 @@ var ATALHOS=[
   {i:"💻",n:"GitHub (juca-alt)",d:"crm-captacao · central-financeira · my-sheet-buddy.",u:"https://github.com/juca-alt",k:"link"}
 ];
 var MODULOS=[
-  {i:"🏠",n:"Hoje",d:"Agenda viva + cutucadas + visão do dia.",v:"hoje"},
+  {i:"🌅",n:"Meu dia",d:"O que precisa da tua atenção hoje: agora/próximo, eventos sem status e tarefas do dia.",v:"meudia"},
+  {i:"📅",n:"Agenda",d:"Google Agenda ao vivo — dia, 4 dias, semana e mês.",v:"hoje"},
   {i:"✅",n:"Tarefas",d:"Google Tasks ao vivo: abertas, vencidas, Bússola.",v:"tarefas"},
   {i:"📬",n:"Inbox Geral",d:"Capturas #inbox + Dump sem triagem.",v:"inbox"},
   {i:"🛒",n:"Feira",d:"Estoque-driven: lista pronta por canal.",v:"feira"},
@@ -2126,7 +2322,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.20.1";
+var APP_VERSION="2.21.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -3640,11 +3836,11 @@ var HUB=(function(){
 var MOB=(function(){
   function on(){ try{ return window.matchMedia('(max-width:880px)').matches; }catch(e){ return false; } }
   function cl(el,sel){ return (el&&el.closest)?el.closest(sel):null; }
-  var TITLES={hoje:'Hoje',tarefas:'Tarefas',projetos:'Projetos',inbox:'Inbox',feira:'Feira',
+  var TITLES={meudia:'Meu dia',hoje:'Agenda',tarefas:'Tarefas',projetos:'Projetos',inbox:'Inbox',feira:'Feira',
     funcionario:'Funcionário',saude:'Saúde',gael:'Saúde · Gael',contatos:'Contatos',
     camila:'Provas Camila',atalhos:'Atalhos',config:'Configuração'};
-  var TABS=['hoje','tarefas','projetos','inbox'];   /* destinos da barra inferior */
-  var cur='hoje', last='hoje';
+  var TABS=['meudia','hoje','tarefas','inbox'];   /* destinos da barra inferior */
+  var cur='meudia', last='meudia';
 
   /* ---- voltar do Android: cada camada aberta vira 1 entrada no histórico, então o
          botão físico fecha folha/menu/seleção/gaveta ANTES de sair do app. ---- */
@@ -3663,8 +3859,8 @@ var MOB=(function(){
   /* ---- barra de app ---- */
   function syncBar(){
     var t=$('mb-title'); if(!t) return;
-    var n=selCount();
-    t.textContent = selMode() ? (n+' selecionada'+(n===1?'':'s')) : (TITLES[cur]||'Painel Central');
+    var n=selCount(), g=(selKind==='event'?'selecionado':'selecionada');
+    t.textContent = selMode() ? (n+' '+g+(n===1?'':'s')) : (TITLES[cur]||'Painel Central');
     var b=$('mb-nav');
     if(b){
       var ic = selMode() ? 'ti-x' : (TABS.indexOf(cur)>=0 ? 'ti-menu-2' : 'ti-arrow-left');
@@ -3703,35 +3899,62 @@ var MOB=(function(){
   function closeDrawer(){ if(!drawerOpen()) return; release(); }
   function doCloseDrawer(){ document.body.classList.remove('side-open'); }
 
-  /* ---- seleção múltipla (toque longo) ---- */
-  var sel={};
+  /* ---- seleção múltipla (toque longo) — vale pra TAREFA e pra EVENTO ----
+     selKind guarda o tipo da seleção corrente; tarefa e evento não se misturam (as ações
+     em lote são diferentes) e a barra de ações é montada conforme o tipo. */
+  var sel={}, selKind=null;
   function selKeys(){ return Object.keys(sel); }
   function selCount(){ return selKeys().length; }
   function selMode(){ return document.body.classList.contains('mob-sel'); }
-  function enterSel(row){
-    if(!selMode()){ document.body.classList.add('mob-sel'); guard(); }
-    toggleSel(row.getAttribute('data-lid'), row.getAttribute('data-tid'), true);
+  var ACTS={
+    task:[{k:'done',t:'Concluir',i:'<i class="ti ti-check"></i>'},
+          {k:'p1',t:'Adiar 1 dia',i:'<b>+1d</b>'},
+          {k:'p7',t:'Adiar 7 dias',i:'<b>+7d</b>'},
+          {k:'del',t:'Excluir',i:'<i class="ti ti-trash"></i>'}],
+    event:[{k:'ok',t:'Marcar feito',i:'<i class="ti ti-check"></i>'},
+           {k:'no',t:'Marcar não feito',i:'<i class="ti ti-x"></i>'},
+           {k:'data',t:'Mudar data',i:'<i class="ti ti-calendar"></i>'},
+           {k:'cat',t:'Categoria',i:'<i class="ti ti-tag"></i>'},
+           {k:'del',t:'Excluir',i:'<i class="ti ti-trash"></i>'}]
+  };
+  function paintActs(){
+    var box=$('mb-selacts'); if(!box) return;
+    var list=ACTS[selKind]||[];
+    box.innerHTML=list.map(function(a){
+      return '<button class="mb-ico" title="'+a.t+'" aria-label="'+a.t+'" onclick="MOB.bulk(\''+a.k+'\')">'+a.i+'</button>';
+    }).join('');
   }
-  function toggleSel(lid,tid,force){
-    var k=lid+'|'+tid;
+  function enterSel(row, kind){
+    if(selMode() && selKind!==kind) doExitSel();
+    if(!selMode()){ selKind=kind; document.body.classList.add('mob-sel'); paintActs(); guard(); }
+    toggleSel(keyOf(row), true);
+  }
+  function keyOf(row){
+    var ev=row.getAttribute('data-evid');
+    return ev ? ('e:'+ev) : ('t:'+row.getAttribute('data-lid')+'|'+row.getAttribute('data-tid'));
+  }
+  function toggleSel(k, force){
     if(sel[k]&&!force) delete sel[k]; else sel[k]=true;
     paintSel();
     if(!selCount()) exitSel();
   }
+  function selRows(){
+    return document.querySelectorAll('#gtasks-out .rt-item[data-tid], #agenda-out [data-evid], #meudia-out [data-evid]');
+  }
   function paintSel(){
-    var box=$('gtasks-out');
-    if(box) Array.prototype.forEach.call(box.querySelectorAll('.rt-item[data-tid]'), function(r){
-      r.classList.toggle('mob-on', !!sel[r.getAttribute('data-lid')+'|'+r.getAttribute('data-tid')]);
-    });
+    Array.prototype.forEach.call(selRows(), function(r){ r.classList.toggle('mob-on', !!sel[keyOf(r)]); });
     syncBar();
   }
   function exitSel(){ if(!selMode()) return; release(); }
-  function doExitSel(){ sel={}; document.body.classList.remove('mob-sel'); paintSel(); }
+  function doExitSel(){ sel={}; selKind=null; document.body.classList.remove('mob-sel'); paintSel(); }
 
-  /* ---- tarefas: índice das linhas (lido do DOM que o renderGTasks já produz) ---- */
-  function taskOf(lid,tid){
-    var g=(typeof GT_GROUPS!=='undefined'&&GT_GROUPS)?GT_GROUPS.filter(function(x){return x.id===lid;})[0]:null;
-    return g ? g.tarefas.filter(function(t){return t.id===tid;})[0] : null;
+  /* ---- índice das linhas: lido do DOM que renderGTasks / a agenda já produzem ----
+     nada de reescrever os renderizadores: as chaves saem dos onclick que eles já emitem. */
+  function taskOf(lid,tid){ return gtTask(lid,tid); }
+  function addCk(row, antes){
+    if(row.querySelector('.mob-ck')) return;
+    var ck=document.createElement('span'); ck.className='mob-ck'; ck.textContent='✓';
+    row.insertBefore(ck, antes||row.firstChild);
   }
   function afterTasks(){
     var box=$('gtasks-out'); if(!box) return;
@@ -3744,33 +3967,53 @@ var MOB=(function(){
         if(!m) return;
         var tid=m[1].replace(/\\'/g,"'");
         row.setAttribute('data-lid',lid); row.setAttribute('data-tid',tid);
-        if(!row.querySelector('.mob-ck')){
-          var ck=document.createElement('span'); ck.className='mob-ck'; ck.textContent='✓';
-          row.insertBefore(ck,row.firstChild);
-        }
-        vivos[lid+'|'+tid]=1;
+        addCk(row);
+        vivos['t:'+lid+'|'+tid]=1;
       });
     });
-    /* tarefa que sumiu (concluída/excluída) sai da seleção */
-    selKeys().forEach(function(k){ if(!vivos[k]) delete sel[k]; });
+    prune(vivos,'t:');
+  }
+  /* mesma ideia pros EVENTOS: qualquer linha/bloco com onclick EVMODAL.open vira selecionável
+     (o mini do Mês fica de fora — alvo pequeno demais; lá o toque segue abrindo a folha). */
+  function afterAgenda(){
+    var vivos={};
+    ['agenda-out','meudia-out'].forEach(function(id){
+      var box=$(id); if(!box) return;
+      Array.prototype.forEach.call(box.querySelectorAll('[onclick*="EVMODAL.open"]'), function(row){
+        if(row.classList.contains('mini')||row.classList.contains('md-now')) return;   /* mini do Mês e card "agora": só abrem */
+        var m=/EVMODAL\.open\('((?:\\.|[^'])*)'/.exec(row.getAttribute('onclick')||'');
+        if(!m) return;
+        var eid=m[1].replace(/\\'/g,"'");
+        row.setAttribute('data-evid',eid);
+        addCk(row, row.querySelector('.nm')||row.firstChild);
+        vivos['e:'+eid]=1;
+      });
+    });
+    prune(vivos,'e:');
+  }
+  /* item que sumiu da tela (concluído/excluído/mudou de dia) sai da seleção */
+  function prune(vivos, pref){
+    selKeys().forEach(function(k){ if(k.indexOf(pref)===0 && !vivos[k]) delete sel[k]; });
     if(selMode() && !selCount()) doExitSel(); else paintSel();
   }
   var press=null;
   function cancelPress(){ if(!press) return; clearTimeout(press.timer); press.row.classList.remove('mob-press'); press=null; }
-  function bindTasks(){
-    var box=$('gtasks-out'); if(!box||box.__mobBound) return; box.__mobBound=true;
+  var SELECTORS={task:'.rt-item[data-tid]', event:'[data-evid]'};
+  function bindList(boxId, kind){
+    var box=$(boxId); if(!box||box.__mobBound) return; box.__mobBound=true;
+    var SEL=SELECTORS[kind];
     box.addEventListener('touchstart', function(e){
       if(!on()||e.touches.length!==1) return;
       if(cl(e.target,'.ev-stb')) return;
-      var row=cl(e.target,'.rt-item[data-tid]'); if(!row) return;
+      var row=cl(e.target,SEL); if(!row) return;
       var t=e.touches[0];
-      press={row:row,x:t.clientX,y:t.clientY,long:false};
+      press={row:row,x:t.clientX,y:t.clientY,long:false,kind:kind};
       row.classList.add('mob-press');
       press.timer=setTimeout(function(){
         if(!press) return;
         press.long=true; press.row.classList.remove('mob-press');
         try{ if(navigator.vibrate) navigator.vibrate(18); }catch(x){}
-        enterSel(row);
+        enterSel(row, kind);
       }, 480);
     }, {passive:true});
     box.addEventListener('touchmove', function(e){
@@ -3779,55 +4022,47 @@ var MOB=(function(){
     }, {passive:true});
     box.addEventListener('touchend', function(e){
       if(!press) return;
-      var row=press.row, longo=press.long;
+      var row=press.row, longo=press.long, k=press.kind;
       clearTimeout(press.timer); row.classList.remove('mob-press'); press=null;
       row.__lastTouch=Date.now();
       if(longo){ if(e.cancelable) e.preventDefault(); return; }
       if(cl(e.target,'.ev-stb')) return;
       if(e.cancelable) e.preventDefault();      /* mata o click fantasma */
-      tapRow(row);
+      tapRow(row,k);
     });
     box.addEventListener('touchcancel', cancelPress, {passive:true});
     box.addEventListener('click', function(e){
       if(!on()||cl(e.target,'.ev-stb')) return;
-      var row=cl(e.target,'.rt-item[data-tid]'); if(!row) return;
+      var row=cl(e.target,SEL); if(!row) return;
       if(row.__lastTouch && Date.now()-row.__lastTouch<800) return;   /* já tratado no touchend */
-      tapRow(row);
-    });
+      if(selMode()){ e.preventDefault(); e.stopPropagation(); toggleSel(keyOf(row)); }
+      /* fora do modo seleção o onclick original (EVMODAL.open / folha) segue seu curso */
+    }, true);
   }
-  function tapRow(row){
-    var lid=row.getAttribute('data-lid'), tid=row.getAttribute('data-tid');
-    if(selMode()) return toggleSel(lid,tid);
-    openSheet(lid,tid);
+  function tapRow(row, kind){
+    if(selMode()) return toggleSel(keyOf(row));
+    if(kind==='event') return evSheet(row.getAttribute('data-evid'));
+    openSheet(row.getAttribute('data-lid'), row.getAttribute('data-tid'));
   }
 
-  /* ---- prazos ---- */
-  function today0(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
-  function dueOf(t){
-    var s=(t&&t.due)?String(t.due).slice(0,10):'';
-    if(!/^\d{4}-\d\d-\d\d$/.test(s)) return null;
-    var p=s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]);
-  }
-  /* REGRA (a mesma do CRM): tarefa VENCIDA adia a partir de HOJE, nunca da data velha —
-     senão o atraso se acumula sobre um dia que já passou e "adiar 1 dia" cai no passado. */
-  function postponed(t,days){
-    var base=dueOf(t), hj=today0();
-    if(!base || base.getTime()<hj.getTime()) base=hj;
-    var d=new Date(base.getTime()); d.setDate(d.getDate()+days); return d;
-  }
-  function dueRFC(d){ return isoLocal(d)+'T00:00:00.000Z'; }
+  /* ---- prazos: a regra mora nos helpers globais (gtPostpone), aqui é só atalho ---- */
+  function dueOf(t){ return gtDueDate(t); }
+  function postponed(t,days){ return gtPostpone(t,days); }
+  function dueRFC(d){ return gtDueRFC(d); }
   function ddmm(d){ return fmt2(d.getDate())+'/'+fmt2(d.getMonth()+1); }
   /* escrita: SEMPRE por gtWrite (mesmo caminho do resto do app) */
   function patch(lid,tid,body){ return gtWrite('PATCH','lists/'+encodeURIComponent(lid)+'/tasks/'+encodeURIComponent(tid), body); }
   function drop(lid,tid){ return gtWrite('DELETE','lists/'+encodeURIComponent(lid)+'/tasks/'+encodeURIComponent(tid)); }
 
-  /* ---- ações em lote ---- */
+  /* ---- ações em lote (tarefa e evento) ---- */
+  function evKeys(){ return selKeys().filter(function(k){ return k.indexOf('e:')===0; }).map(function(k){ return k.slice(2); }); }
   function bulk(kind){
+    if(selKind==='event') return bulkEv(kind);
     var keys=selKeys(); if(!keys.length) return;
     var n=keys.length, s=(n>1?'s':'');
     if(kind==='del' && !confirm('Excluir '+n+' tarefa'+s+'? Elas somem do Google Tasks.')) return;
     var jobs=keys.map(function(k){
-      var i=k.indexOf('|'), lid=k.slice(0,i), tid=k.slice(i+1), t=taskOf(lid,tid);
+      var r=k.slice(2), i=r.indexOf('|'), lid=r.slice(0,i), tid=r.slice(i+1), t=taskOf(lid,tid);
       if(kind==='del') return drop(lid,tid);
       if(kind==='done'){
         var body={status:'completed'};
@@ -3843,12 +4078,85 @@ var MOB=(function(){
       .catch(function(){ toast('Não salvou tudo no Google'); })
       .then(function(){ try{ loadGTasks(); }catch(e){} });
   }
+  /* eventos: feito/não feito e exclusão vão pro Google (gcalPatchTitle/gcalDelete, os mesmos
+     caminhos do modal); data usa evMoveTo; categoria é EVMETA/Supabase — o Google Agenda não
+     tem esse campo. */
+  function bulkEv(kind){
+    var ids=evKeys(); if(!ids.length) return;
+    var n=ids.length, s=(n>1?'s':'');
+    if(kind==='data') return sheetDataEv(ids);
+    if(kind==='cat') return sheetCatEv(ids);
+    if(kind==='del' && !confirm('Excluir '+n+' evento'+s+' do Google Agenda? Recorrente: só a ocorrência.')) return;
+    var jobs=ids.map(function(id){
+      if(kind==='del') return gcalDelete(id).then(function(){ delete EVIDX[id]; });
+      var raw=EVIDX[id]; if(!raw) return Promise.resolve();
+      var mark=(kind==='ok'?'✅':'❌'), base=evStripStatus(raw.summary||'');
+      var nt=(evCurStatus(raw.summary||'')===mark)?base:(mark+' '+base);
+      return gcalPatchTitle(id, nt).then(function(){ if(EVIDX[id]) EVIDX[id].summary=nt; });
+    });
+    var lbl = kind==='del'?('excluído'+s) : (kind==='ok'?('marcado'+s+' como feito'):('marcado'+s+' como não feito'));
+    exitSel();
+    Promise.all(jobs)
+      .then(function(){ toast(n+' evento'+s+' '+lbl+' ✓ (Google)'); })
+      .catch(function(e){ toast('Não salvou tudo: '+String((e&&e.message)||e).slice(0,60)); })
+      .then(function(){ evCache={}; refreshAgenda(); });
+  }
+  function refreshAgenda(){ try{ loadAgendaView(); }catch(e){} try{ renderMeuDia(); }catch(e){} }
+  /* folha "mudar data" — serve pro lote e pro evento único */
+  function sheetDataEv(ids){
+    var raw=EVIDX[ids[0]]||null;
+    var d1=raw?evPostpone(raw,1):null, d7=raw?evPostpone(raw,7):null, n=ids.length;
+    function tag(d){ return d?'<small style="color:var(--muted);margin-left:auto;font-size:12.5px">'+ddmm(d)+'</small>':''; }
+    showSheet('<div class="ms-grab"></div><div class="ms-fld">Mudar data · '+n+' evento'+(n>1?'s':'')+'</div>'
+      +'<button class="ms-act" onclick="MOB.evData(1)"><i class="ti ti-calendar-plus"></i>Adiar 1 dia'+tag(d1)+'</button>'
+      +'<button class="ms-act" onclick="MOB.evData(7)"><i class="ti ti-calendar-week"></i>Adiar 7 dias'+tag(d7)+'</button>'
+      +'<div class="ms-sep"></div><div class="ms-fld">Escolher a data</div>'
+      +'<input type="date" id="ms-evdate" value="'+(raw&&evDateOf(raw)?isoLocal(evDateOf(raw)):'')+'">'
+      +'<div class="ms-foot"><button class="btn" onclick="MOB.closeSheet()">Cancelar</button>'
+      +'<button class="btn primary" onclick="MOB.evData(0)">Mover</button></div>');
+    $('msheet').__ids=ids;
+  }
+  /* days>0 = adiar (vencido parte de HOJE, igual tarefa); 0 = usar a data escolhida */
+  function evData(days){
+    var ids=($('msheet').__ids)||[]; if(!ids.length) return closeSheet();
+    var iso=days?null:((($('ms-evdate')||{}).value)||'');
+    if(!days && !iso){ toast('Escolhe a data'); return; }
+    closeSheet(); exitSel();
+    var jobs=ids.map(function(id){
+      var raw=EVIDX[id]; if(!raw) return Promise.resolve();
+      return evMoveTo(id, days ? isoLocal(evPostpone(raw,days)) : iso);
+    });
+    Promise.all(jobs)
+      .then(function(){ toast(ids.length+(ids.length>1?' eventos movidos':' evento movido')+' ✓ (Google)'); })
+      .catch(function(e){ toast('Não movi tudo: '+String((e&&e.message)||e).slice(0,60)); })
+      .then(function(){ evCache={}; refreshAgenda(); });
+  }
+  /* categoria em lote (EVMETA/Supabase; recorrente grava na série, como no modal) */
+  function sheetCatEv(ids){
+    var n=ids.length;
+    showSheet('<div class="ms-grab"></div><div class="ms-fld">Categoria · '+n+' evento'+(n>1?'s':'')+'</div>'
+      +CATS.map(function(c){
+        return '<button class="ms-act" onclick="MOB.evCat(\''+String(c.cat).replace(/'/g,"\\'")+'\')">'
+          +'<span class="em" style="color:'+c.col+'">●</span>'+esc(c.cat)+'</button>';
+      }).join('')
+      +'<div class="ms-foot"><button class="btn" onclick="MOB.closeSheet()">Cancelar</button></div>');
+    $('msheet').__ids=ids;
+  }
+  function evCat(cat){
+    var ids=($('msheet').__ids)||[]; if(!ids.length) return closeSheet();
+    closeSheet(); exitSel();
+    ids.forEach(function(id){ var raw=EVIDX[id]; EVMETA.upsert((raw&&raw.recurringEventId)||id, {cat:cat}); });
+    toast(ids.length+' evento'+(ids.length>1?'s':'')+' em '+cat+' ✓');
+    refreshAgenda();
+  }
 
   /* ---- folha inferior ---- */
   function sheetOpen(){ var b=$('msheet-bg'); return !!(b&&b.classList.contains('open')); }
   function showSheet(html){
-    var sh=$('msheet'); sh.innerHTML=html; sh.scrollTop=0;
-    $('msheet-bg').classList.add('open'); guard();
+    var sh=$('msheet'); sh.innerHTML=html; sh.scrollTop=0; sh.__ids=null; sh.__lid=null; sh.__tid=null;
+    var jaAberta=sheetOpen();
+    $('msheet-bg').classList.add('open');
+    if(!jaAberta) guard();      /* trocar o conteúdo não empilha outra entrada de histórico */
   }
   function closeSheet(){ if(!sheetOpen()) return; release(); }
   function doCloseSheet(){ $('msheet-bg').classList.remove('open'); }
@@ -3899,6 +4207,55 @@ var MOB=(function(){
      .catch(function(){ toast('Não salvou no Google'); })
      .then(function(){ try{ loadGTasks(); }catch(e){} });
   }
+  /* ---- folha do EVENTO (toque simples na agenda / no Meu dia) ----
+     Feito/Não feito viram BOTÃO de verdade aqui; o que é gravado no Google continua sendo o
+     ✅/❌ carimbado no título (é o que faz aparecer no Google Agenda). "Editar tudo" cai no
+     modal completo de sempre. */
+  function evSheet(id){
+    var raw=EVIDX[id];
+    if(!raw){ toast('Evento não encontrado — recarrega a agenda'); return; }
+    var tit=raw.summary||'', st=evCurStatus(tit), base=evStripStatus(tit)||'(sem título)';
+    var allday=!!(raw.start&&raw.start.date&&!raw.start.dateTime);
+    var d=evDateOf(raw);
+    var quando=(d?ddmm(d):'')+(allday?' · dia todo':(raw.start&&raw.start.dateTime?' · '+hora(raw.start.dateTime)+((raw.end&&raw.end.dateTime)?'–'+hora(raw.end.dateTime):''):''));
+    var cat=categoriza(tit,{id:id, rec:raw.recurringEventId||''});
+    var sid=String(id).replace(/['"\\]/g,'');
+    showSheet('<div class="ms-grab"></div>'
+      +'<div class="ms-ev-t">'+esc(base)+'</div>'
+      +'<div class="ms-ev-s">'+esc(quando)+' · <span style="color:'+cat.col+'">●</span> '+esc(cat.cat)+(raw.recurringEventId?' · recorrente (vale só nesta ocorrência)':'')+'</div>'
+      +'<div class="ms-seg">'
+        +'<button class="'+(st==='✅'?'on ok':'')+'" onclick="MOB.evAct(\'ok\')"><i class="ti ti-check"></i> Feito</button>'
+        +'<button class="'+(st==='❌'?'on no':'')+'" onclick="MOB.evAct(\'no\')"><i class="ti ti-x"></i> Não feito</button>'
+      +'</div>'
+      +'<div class="ms-sep"></div>'
+      +'<button class="ms-act" onclick="MOB.evAct(\'p1\')"><i class="ti ti-calendar-plus"></i>Adiar 1 dia<small style="color:var(--muted);margin-left:auto;font-size:12.5px">'+ddmm(evPostpone(raw,1))+'</small></button>'
+      +'<button class="ms-act" onclick="MOB.evAct(\'p7\')"><i class="ti ti-calendar-week"></i>Adiar 7 dias<small style="color:var(--muted);margin-left:auto;font-size:12.5px">'+ddmm(evPostpone(raw,7))+'</small></button>'
+      +'<button class="ms-act" onclick="MOB.evAct(\'data\')"><i class="ti ti-calendar"></i>Escolher outra data</button>'
+      +'<button class="ms-act" onclick="MOB.evAct(\'cat\')"><i class="ti ti-tag"></i>Mudar categoria</button>'
+      +'<button class="ms-act" onclick="MOB.evAct(\'edit\')"><i class="ti ti-pencil"></i>Editar tudo (título, hora, checklist)</button>'
+      +'<button class="ms-act danger" onclick="MOB.evAct(\'del\')"><i class="ti ti-trash"></i>Excluir evento</button>'
+      +'<div class="ms-foot"><button class="btn" onclick="MOB.closeSheet()">Fechar</button></div>');
+    $('msheet').__ids=[sid];
+  }
+  function evAct(kind){
+    var ids=($('msheet').__ids)||[]; var id=ids[0]; if(!id) return closeSheet();
+    if(kind==='data') return sheetDataEv([id]);
+    if(kind==='cat') return sheetCatEv([id]);
+    if(kind==='edit'){ closeSheet(); setTimeout(function(){ _evOpen(id); }, 220); return; }
+    if(kind==='p1'||kind==='p7'){ $('msheet').__ids=[id]; return evData(kind==='p1'?1:7); }
+    if(kind==='del'){
+      if(!confirm('Excluir este evento do Google Agenda?')) return;
+      closeSheet();
+      gcalDelete(id).then(function(){ delete EVIDX[id]; toast('Evento excluído ✓ (Google)'); })
+        .catch(function(e){ toast('Não excluí: '+String((e&&e.message)||e).slice(0,70)); })
+        .then(function(){ evCache={}; refreshAgenda(); });
+      return;
+    }
+    closeSheet();
+    evSetStatus(id, kind==='ok'?'✅':'❌');    /* caminho canônico (gcalPatchTitle) */
+    setTimeout(function(){ try{ renderMeuDia(); }catch(e){} }, 600);
+  }
+
   /* FAB = nova tarefa (POST via gtWrite, mesmo endpoint do gtCreate) */
   function fab(){
     var gs=(typeof GT_GROUPS!=='undefined'&&GT_GROUPS)?GT_GROUPS:[];
@@ -3997,7 +4354,22 @@ var MOB=(function(){
   window.renderGTasks=function(groups){
     var r=_render.apply(this, arguments);
     try{ afterTasks(); syncTabs(); }catch(e){}
+    /* o Meu dia lê o GT_GROUPS: repinta junto quando as tarefas mudam */
+    try{ if($('view-meudia') && $('view-meudia').style.display!=='none') renderMeuDia(); }catch(e){}
     return r;
+  };
+  var _loadAg=window.loadAgendaView;
+  window.loadAgendaView=function(){
+    var r=_loadAg.apply(this, arguments);
+    try{ if(r&&r.then) r.then(function(){ try{ afterAgenda(); }catch(e){} }); else afterAgenda(); }catch(e){}
+    return r;
+  };
+  /* no celular o toque num evento abre a folha rápida; o modal completo continua a um toque
+     de distância ("Editar tudo"). No desktop nada muda. */
+  var _evOpen=EVMODAL.open;
+  EVMODAL.open=function(id){
+    if(on() && EVIDX[id]) return evSheet(id);
+    return _evOpen.apply(this, arguments);
   };
 
   /* ---- boot da camada ---- */
@@ -4011,7 +4383,8 @@ var MOB=(function(){
     var s=cl(e.target,'.main .sub'); if(s) s.classList.toggle('mob-exp');
   });
   function init(){
-    bindTasks(); syncBar(); syncTabs();
+    bindList('gtasks-out','task'); bindList('agenda-out','event'); bindList('meudia-out','event');
+    syncBar(); syncTabs();
     try{
       var mo=new MutationObserver(function(){ syncTabs(); });
       ['bdg-atr','bdg-inb'].forEach(function(id){
@@ -4022,7 +4395,8 @@ var MOB=(function(){
   return {init:init, navBtn:navBtn, go:go, menu:menu, closeMenu:closeMenu, mact:mact,
           closeDrawer:closeDrawer, fab:fab, novaSalvar:novaSalvar,
           bulk:bulk, sheetAct:sheetAct, sheetSave:sheetSave, closeSheet:closeSheet,
-          syncBar:syncBar, syncTabs:syncTabs, afterTasks:afterTasks,
+          evSheet:evSheet, evAct:evAct, evData:evData, evCat:evCat,
+          syncBar:syncBar, syncTabs:syncTabs, afterTasks:afterTasks, afterAgenda:afterAgenda,
           postponed:postponed, dueOf:dueOf};
 })();
 MOB.init();
