@@ -1,6 +1,21 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-08-16 · Leia isto primeiro ao retomar. **Produção: v2.22.0 (Tarefas em tópicos + FAB na barra).**
+**Última atualização:** 2026-08-16 · Leia isto primeiro ao retomar. **Produção: v2.23.0 (planilha aposentada; Tarefas limpa).**
 
+> 📱🖥️ **REGRA PERMANENTE (Gustavo, 16/08) — TODA mudança atende DESKTOP e MOBILE.**
+> O app tem **duas formas de uso legítimas**, não uma "principal" e uma "encolhida". Antes de dar
+> qualquer entrega por pronta:
+> 1. **Pensar as duas** — o que muda no desktop (mouse, tela larga, hover, teclado) **e** o que muda no
+>    celular (dedo, tela estreita, toque longo, safe-area, voltar do Android). Se a solução só serve a um,
+>    ela não está pronta.
+> 2. **Isolar por mídia, não por remendo** — o que é de celular vive em `@media(max-width:880px)` /
+>    na camada `MOB`; o que é de desktop fica fora dela. Nunca "empurrar com margem" o que deveria ser
+>    resolvido na origem (foi o erro do ☰ antigo).
+> 3. **Verificar nos DOIS antes de subir** — preview em **390px** e **1280px**, screenshot dos dois,
+>    console limpo e zero overflow horizontal. O relato de entrega diz explicitamente o que foi conferido
+>    em cada um.
+> 4. **Feature nova = feature nos dois** (o comportamento pode diferir; a capacidade, não). Só é
+>    exclusivo de uma plataforma quando o próprio Gustavo pedir.
+>
 > ⚙️ **REGRA DE SESSÃO (Gustavo, 29/06):** este app (Painel Central / Jucá 2.0) tem **sessão EXCLUSIVA**. Nunca misturar com outros projetos (CRM, central-financeira, LP etc.) numa mesma sessão, **salvo direcionamento expresso e explícito** do Gustavo. Ao abrir, foque só na evolução do Jucá 2.0.
 
 ---
@@ -20,7 +35,14 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
 3. ~~**Mês — status ✅/❌**~~ ✅ **FEITO na v2.18.0 (02/08):** toque no mini-evento do Mês abre o modal (linha "Está feito?") sem sair da visão; toque na célula segue indo pro Dia.
 4. **WhatsApp Fase 3** (sessão paralela pausada): Edge Function `wa-send` + setup Meta Business (1ª infra server-side). Bônus antigo: botão WhatsApp na equipe de saúde do Gael (`GAEL`, campo `contato`).
 5. **Sync Supabase da triagem/Inbox entre aparelhos + popular projetos:** falta o Gustavo logar 1x no app (magic-link `juca@segurocomjuca.com`) — e aí preencher o ⚙️ dos projetos (cria as linhas em `painel_projetos` com o list_id REAL do Google Tasks; nunca inserir via SQL).
-6. **Sheets API / reconectar Google** (pendência antiga): Bússola/Saúde/Feira/Histórico ainda leem a planilha; se der 403, ativar a Google Sheets API — link direto: https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=painel-central-499400 → botão ATIVAR → depois reconectar o Google no app. *(02/08: Claude tentou ativar pelo Chrome, mas o Console pediu reautenticação/passkey — só o Gustavo passa dessa tela.)*
+6. ~~**Sheets API / reconectar Google**~~ ❌ **MORTO na v2.23.0 (16/08)** — o Gustavo aposentou a planilha
+   no app inteiro ("nada de planilha, já estamos botando tudo no banco"). Nada mais lê Sheets. **O que
+   ficou órfão e precisa ser refeito no Supabase:** (a) **Saúde** (tua, não a do Gael); (b) **Casa ›
+   Histórico de compras**. A Bússola foi aposentada de vez.
+7. **Ordem/colapso das listas de Tarefas é por aparelho** (localStorage `painel_gt_ui_v1`) — o Google
+   Tasks não tem esse campo. Se quiser que acompanhe entre celular e desktop, vira 1 coluna no Supabase.
+8. **Casa › Funcionário** ainda mostra o `h1` no celular (o ✏️ renomear mora dentro dele) — mover o
+   renomear pro ⋯ e esconder o título.
 
 ---
 
@@ -91,6 +113,21 @@ a **Saúde** da planilha segue solta no topo. Atalhos ganharam as entradas Gael 
 **Verificado:** FAB dentro da barra sem colidir com linha visível, colapso persistindo depois do
 re-render, ordem sobrevivendo a reload + novo fetch, toque longo/seleção de tarefa intactos, console
 limpo, sem overflow. sw **v31**.
+
+**🧹 v2.23.0 — PLANILHA APOSENTADA no app inteiro (pedido do Gustavo, 16/08):**
+*"Não vamos usar nem precisa link. Mais nada dessas planilhas em todo o app, pois já estamos botando
+tudo no banco."* O Google Sheets estava 403 desde sempre (API nunca foi ativada) — na prática esses
+módulos já não funcionavam, só produziam errbox.
+- **Saiu do código:** `parseCentral`/`sheetValuesRest`/`getSheet`/`renderTarefas`/`renderDump`/
+  `renderSaude`/`dumpPend`/`isOpen`/`isLate`, `SHEET_ID`/`SHEET_URL`/`HIST_URL`, `loadCentral` (virou
+  no-op) e a leitura do Histórico de compras — **220 linhas a menos**. Nenhuma request pra
+  `sheets.googleapis.com` sai do app (verificado interceptando a rede nos dois tamanhos).
+- **Saiu da tela:** bloco **"Da Inbox"** e o texto de apoio da tela Tarefas, o **Dump da planilha** no
+  Inbox, os botões **"Abrir planilha"/"Abrir Dump na planilha"** e os atalhos **Central de Tarefas** e
+  **Sheet Feira**. Barras de botões viraram `.bar-eq` (largura total, alinhadas com os cards).
+- **Ficou com aviso honesto** (não some do menu, mas diz a verdade): **Saúde** e **Casa › Histórico** —
+  ambos vão ser refeitos em cima do Supabase.
+- A **Feira** não dependia de planilha (estoque no localStorage) e segue igual.
 
 **Ponta solta (cosmética, vem da v2.20):** **Casa › Funcionário** ainda mostra o `h1` no celular — o ✏️
 renomear mora dentro dele.

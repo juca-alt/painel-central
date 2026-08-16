@@ -2,7 +2,7 @@
 {
   "name": "Painel Central",
   "schemaVersion": 1,
-  "description": "Painel Central do Gustavo (Jucá2.0) — painel único: agenda viva do Google Calendar (8 categorias, edição de eventos + checklist guiado), Tarefas ao vivo da planilha Central de Tarefas (Backlog + Bússola + atrasadas), Inbox Geral (email #inbox + Dump da planilha), Feira estoque-driven, Saúde, Provas Camila, atalhos pré-conectados ao ecossistema (Google Tasks, Gmail, Kommo, Trello, Organizze, Gemini) e Fôlego discreto.",
+  "description": "Painel Central do Gustavo (Jucá2.0) — painel único: agenda viva do Google Calendar (8 categorias, edição de eventos + checklist guiado), Tarefas ao vivo do Google Tasks, Inbox Geral (email #inbox), Feira estoque-driven, Família (Gael e Camila), atalhos pré-conectados ao ecossistema (Google Tasks, Gmail, Kommo, Trello, Organizze, Gemini) e Fôlego discreto.",
   "mcpTools": [
     "mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__list_events",
     "mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__update_event",
@@ -333,6 +333,10 @@
       background:var(--accent);color:#fff;font-size:24px;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.22)}
     .mfab:active{filter:brightness(.94)}
     body.mob-sel .mfab,body.side-open .mfab{display:none}
+    /* barra de botões alinhada com os cards (largura total, sem sobrar canto) */
+    .bar-eq{gap:8px}
+    .bar-eq .btn{flex:1 1 0;min-width:0;justify-content:center;min-height:44px;white-space:nowrap;
+      overflow:hidden;text-overflow:ellipsis}
     /* tópicos das listas: alvo grande no dedo */
     .gt-head{min-height:50px}
     .gt-head .gt-nm{font-size:14.5px}
@@ -710,9 +714,7 @@
     <!-- ============ TAREFAS ============ -->
     <section id="view-tarefas" style="display:none">
       <div class="head"><h1>✅ Tarefas</h1></div>
-      <div class="sub">Google Tasks é a fonte única — marcar/adicionar aqui já escreve no Google (bidirecional). Organize por projeto no módulo <b>🗂️ Projetos</b>; a Bússola (prioridades de fundo) segue abaixo.</div>
-      <div class="bar">
-        <div class="spacer"></div>
+      <div class="bar bar-eq">
         <button class="btn" onclick="nav('projetos')">🗂️ Projetos</button>
         <button class="btn" onclick="openLink('https://tasks.google.com')">☑ Abrir Google Tasks</button>
       </div>
@@ -721,25 +723,19 @@
         <div class="card"><div class="k">Atrasadas</div><div class="v red" id="t-atr">–</div><div class="s">com prazo vencido</div></div>
         <div class="card"><div class="k">Concluídas</div><div class="v" id="t-done">–</div><div class="s">histórico no Google Tasks</div></div>
       </div>
-      <div id="tar-inbox"></div>
       <div id="gtasks-out"></div>
-      <div id="bussola-out"></div>
-      <div id="tarefas-out"><div class="loading">Lendo a Central de Tarefas no Drive…</div></div>
     </section>
 
     <!-- ============ INBOX GERAL ============ -->
     <section id="view-inbox" style="display:none">
       <div class="head"><h1>📬 Inbox Geral</h1></div>
-      <div class="sub">Você manda emails com <b>#inbox</b> no assunto pra juca@segurocomjuca.com; o app <b>lê tua caixa</b>, traz cada um pra cá, você tria (Tarefa/Insight/Referência) e o email é <b>marcado + arquivado</b> no Gmail automaticamente. + o Dump da planilha.</div>
-      <div class="bar">
+      <div class="sub">Você manda emails com <b>#inbox</b> no assunto pra juca@segurocomjuca.com; o app <b>lê tua caixa</b>, traz cada um pra cá, você tria (Tarefa/Insight/Referência) e o email é <b>marcado + arquivado</b> no Gmail automaticamente.</div>
+      <div class="bar bar-eq">
         <button class="btn primary" onclick="loadInbox()">🔄 Buscar #inbox agora</button>
         <button class="btn" onclick="capturar()">✍️ Escrever captura</button>
         <button class="btn" onclick="copyText('juca@segurocomjuca.com','Endereço copiado — assunto: #inbox')">📋 Copiar endereço</button>
-        <div class="spacer"></div>
-        <button class="btn" onclick="openLink(SHEET_URL)">📊 Abrir Dump na planilha</button>
       </div>
       <div id="inbox-out"><div class="loading">Buscando emails #inbox…</div></div>
-      <div id="dump-out"><div class="loading">Lendo o Dump da planilha…</div></div>
       <div id="inbox-routed"></div>
     </section>
 
@@ -796,10 +792,8 @@
             <button class="active" data-h="compra" onclick="hview('compra')">Por compra</button>
             <button data-h="item" onclick="hview('item')">Por item (preço no tempo)</button>
           </div>
-          <div class="spacer"></div>
-          <button class="btn" onclick="openLink(HIST_URL)">📊 Abrir planilha</button>
         </div>
-        <div id="hist-out"><div class="loading">Lendo o histórico de compras…</div></div>
+        <div id="hist-out"><div class="empty">O histórico de compras vinha da planilha, que foi aposentada. Vai ser refeito em cima do banco (Supabase).</div></div>
       </section>
     </section>
 
@@ -809,8 +803,8 @@
     <!-- ============ SAÚDE ============ -->
     <section id="view-saude" style="display:none">
       <div class="head"><h1>🍃 Saúde</h1></div>
-      <div class="sub">O que a Bússola e a Central de Tarefas dizem sobre saúde — tua e do Gael. Ao vivo da planilha.</div>
-      <div id="saude-out"><div class="loading">Lendo a planilha…</div></div>
+      <div class="sub">Tua saúde. O histórico do Gael mora em <b>Família › Gael</b>.</div>
+      <div id="saude-out"><div class="empty">Este módulo lia a planilha, que foi aposentada. Vai ser refeito em cima do banco (Supabase) — como já é o Família › Gael.</div></div>
     </section>
 
     <!-- ============ SAÚDE · GAEL ============ -->
@@ -932,8 +926,6 @@ var TOOL_CAL_UPD="mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__update_event";
 var TOOL_CAL_DEL="mcp__b811b9cb-39e5-493e-8f4b-381f2c0d8f5d__delete_event";
 var TOOL_DRIVE="mcp__52f54413-7c52-4d16-842e-ab7145324b3d__read_file_content";
 var TOOL_GMAIL="mcp__66384105-b7c1-4a11-b7e4-8b3258bcfadf__search_threads";
-var SHEET_ID="1Am0Z2e4qoYPpy8eUNIzpPBn_30f9Fzsl64CwS1IVx9M";
-var SHEET_URL="https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/edit";
 
 /* ===== dual-mode: ao vivo no Cowork, degrada no standalone (GitHub Pages) ===== */
 var COWORK = !!(window.cowork && typeof window.cowork.callMcpTool === "function");
@@ -1036,8 +1028,8 @@ function googleAuth(interactive){
   });
 }
 function reloadGoogle(){
-  evCache={}; sheetData=null; sheetPromise=null; histRows=null; histPromise=null;
-  loadAgenda(); loadCamila(); loadInbox(); loadCentral(); loadGTasks();
+  evCache={};
+  loadAgenda(); loadCamila(); loadInbox(); loadGTasks();
   var vh=$('view-historico'); if(vh && vh.style.display!=='none') loadHistorico();
   renderConfig();
 }
@@ -1524,195 +1516,8 @@ function despachoProva(){
 }
 
 /* ================= CENTRAL DE TAREFAS (Sheet ao vivo) ================= */
-var sheetData=null, sheetPromise=null;
-function unesc(s){ return String(s==null?"":s).replace(/\\([\\\[\]!&_#.*])/g,"$1"); }
-function catName(c){
-  c=String(c||"");
-  if(/COMERCIAL/i.test(c)) return "COMERCIAL";
-  if(/PIPELINE/i.test(c)) return "PIPELINE";
-  if(/GEST/i.test(c)) return "GESTÃO MFB";
-  if(/BACK ?OFFICE/i.test(c)) return "BACK OFFICE";
-  if(/GAEL/i.test(c)) return "GAEL+FAMÍLIA";
-  if(/PESSOAL/i.test(c)) return "PESSOAL";
-  if(/ROTINA/i.test(c)) return "ROTINA";
-  if(/LEMBRETE/i.test(c)) return "LEMBRETE";
-  if(/CAMILA/i.test(c)) return "CAMILA";
-  if(/FAMILIA/i.test(c)) return "GAEL+FAMÍLIA";
-  return "OUTROS";
-}
-var CAT_COL={ "COMERCIAL":"var(--c-comercial)","GESTÃO MFB":"var(--c-mfb)","PIPELINE":"var(--c-pipeline)",
-  "GAEL+FAMÍLIA":"var(--c-gael)","PESSOAL":"var(--c-pessoal)","ROTINA":"var(--c-rotina)",
-  "LEMBRETE":"var(--c-lembrete)","CAMILA":"var(--c-camila)","BACK OFFICE":"var(--c-bo)","OUTROS":"var(--c-rotina)" };
-function statusOf(cell){
-  cell=String(cell||"");
-  if(cell.indexOf("✅")>=0) return {k:"done", lbl:"concluída", cls:"ok"};
-  if(cell.indexOf("❌")>=0) return {k:"cancel", lbl:"cancelada", cls:"nt"};
-  if(cell.indexOf("⏳")>=0) return {k:"wait", lbl:"aguardando", cls:"wn"};
-  if(cell.indexOf("⏱")>=0) return {k:"follow", lbl:"follow-up", cls:"wn"};
-  if(cell.indexOf("❇")>=0) return {k:"doing", lbl:"em andamento", cls:"wn"};
-  if(cell.indexOf("▶")>=0) return {k:"todo", lbl:"fazer", cls:"nt"};
-  return {k:"open", lbl:"aberta", cls:"nt"};
-}
-function parseDate(s){
-  var m=String(s||"").match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
-  if(!m) return null;
-  var y=m[3]?Number(m[3]):(new Date()).getFullYear();
-  return new Date(y, Number(m[2])-1, Number(m[1]));
-}
-function parseCentral(md){
-  var lines=String(md||"").split("\n"); var tables=[]; var cur=null;
-  lines.forEach(function(ln){
-    if(/^\s*\|/.test(ln)){
-      var cells=ln.split("|").slice(1,-1).map(function(c){return c.trim();});
-      if(cells.length && cells.every(function(c){return /^:?-+:?$/.test(c);})) return;
-      if(!cur){cur=[];tables.push(cur);}
-      cur.push(cells);
-    } else cur=null;
-  });
-  var res={backlog:[],arquivo:[],dump:[],bussola:[]};
-  var seenBacklog=false;
-  tables.forEach(function(t){
-    var h=t[0]||[]; var h0=(h[0]||"").toUpperCase();
-    if(h0.indexOf("DUMP")>=0){
-      res.dump = t.slice(1).map(function(r){return unesc(r[0]||"");}).filter(function(s){return s;});
-    } else if(h0.indexOf("BUSSU")>=0){
-      t.slice(1).forEach(function(r){
-        if(!(r[4]||"").trim()) return;
-        res.bussola.push({eixo:unesc(r[0]||""),projeto:unesc(r[1]||""),categoria:unesc(r[2]||""),
-          prio:(String(r[3]||"").match(/!/g)||[]).length, tarefa:unesc(r[4]||"")});
-      });
-    } else if(h0==="ID" && (h[1]||"")==="Tarefa" && (h[2]||"")==="Projeto"){
-      var dst = seenBacklog ? res.arquivo : res.backlog; seenBacklog=true;
-      t.slice(1).forEach(function(r){
-        if(!(r[1]||"").trim()) return;
-        var st=statusOf(r[4]);
-        var dt=parseDate(r[5]);
-        dst.push({id:r[0]||"", tarefa:unesc(r[1]||""), projeto:unesc(r[2]||""), categoria:catName(r[3]),
-          status:st, prazo:dt, prazoTxt:(r[5]||"").trim(), origem:r[6]||"", obs:unesc(r[7]||"")});
-      });
-    }
-  });
-  return res;
-}
-/* ===== parser de VALUES (Sheets API) — abas cruas, não markdown =====
-   Mesmas colunas que o parseCentral entrega, pra renderTarefas/renderSaude/renderDump não mudarem:
-   Backlog/Arquivo: ID|Tarefa|Projeto|Categoria|Status|Prazo|Origem|Obs
-   Dump: 1 coluna · Bússola: Eixo|Projeto|Categoria|Prioridade(!)|Tarefa */
-function normTab(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").trim(); }
-function findHeader(rows, test){ for(var i=0;i<rows.length && i<6;i++){ if(test(rows[i]||[])) return i; } return -1; }
-function parseTaskRows(rows){
-  rows=rows||[]; var out=[];
-  var hi=findHeader(rows,function(r){ return /^id$/i.test(String(r[0]||"").trim()) && /tarefa/i.test(String(r[1]||"")); });
-  for(var i=(hi>=0?hi+1:1); i<rows.length; i++){
-    var r=rows[i]||[];
-    if(!String(r[1]||"").trim()) continue;
-    out.push({ id:String(r[0]||""), tarefa:String(r[1]||""), projeto:String(r[2]||""),
-      categoria:catName(r[3]), status:statusOf(r[4]), prazo:parseDate(r[5]),
-      prazoTxt:String(r[5]||"").trim(), origem:String(r[6]||""), obs:String(r[7]||"") });
-  }
-  return out;
-}
-function parseDumpRows(rows){
-  rows=rows||[]; var out=[];
-  var hi=findHeader(rows,function(r){ return /dump/i.test(String(r[0]||"")); });
-  for(var i=(hi>=0?hi+1:1); i<rows.length; i++){
-    var s=String((rows[i]||[])[0]||"").trim();
-    if(s) out.push(s);
-  }
-  return out;
-}
-function parseBussolaRows(rows){
-  rows=rows||[]; var out=[];
-  var hi=findHeader(rows,function(r){ return /b[uú]ss/i.test(String(r[0]||"")) || (/eixo/i.test(String(r[0]||"")) && /tarefa/i.test(String(r[4]||""))); });
-  for(var i=(hi>=0?hi+1:1); i<rows.length; i++){
-    var r=rows[i]||[];
-    if(!String(r[4]||"").trim()) continue;
-    out.push({ eixo:String(r[0]||""), projeto:String(r[1]||""), categoria:String(r[2]||""),
-      prio:(String(r[3]||"").match(/!/g)||[]).length, tarefa:String(r[4]||"") });
-  }
-  return out;
-}
-function parseCentralValues(byKey){
-  return { backlog:parseTaskRows(byKey.backlog), arquivo:parseTaskRows(byKey.arquivo),
-    dump:parseDumpRows(byKey.dump), bussola:parseBussolaRows(byKey.bussola) };
-}
-async function sheetValuesRest(){
-  if(!gToken) throw new Error("__NEEDCONNECT__");
-  var H={headers:{Authorization:"Bearer "+gToken}};
-  function chk(resp){ if(resp.status===401){ gtokClear(); throw new Error("__NEEDCONNECT__"); } if(resp.status===403){ throw new Error("Sheets 403 — verifica acesso/escopo"); } }
-  /* 1) resolve os títulos reais das abas (lida com acento/caixa e ignora a aba de sync) */
-  var mr=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+SHEET_ID+"?fields=sheets.properties.title",H);
-  chk(mr);
-  if(!mr.ok) throw new Error("Sheets API "+mr.status+(mr.status===404?" (planilha não encontrada)":""));
-  var meta=await mr.json();
-  var titles=((meta.sheets||[]).map(function(s){return (s.properties||{}).title||"";})).filter(Boolean);
-  function pick(want){ var w=normTab(want);
-    for(var i=0;i<titles.length;i++){ if(normTab(titles[i])===w) return titles[i]; }
-    for(var j=0;j<titles.length;j++){ if(normTab(titles[j]).indexOf(w)===0) return titles[j]; }
-    return null; }
-  var resolved=[["backlog","Backlog"],["arquivo","Arquivo"],["dump","Dump"],["bussola","Bússola"]]
-    .map(function(w){ return {key:w[0], title:pick(w[1])}; }).filter(function(x){ return x.title; });
-  if(!resolved.length) throw new Error("Não achei as abas Backlog/Arquivo/Dump/Bússola");
-  /* 2) batchGet dos valores das abas resolvidas (ordem preservada) */
-  var u="https://sheets.googleapis.com/v4/spreadsheets/"+SHEET_ID+"/values:batchGet?valueRenderOption=FORMATTED_VALUE&"
-    + resolved.map(function(r){ return "ranges="+encodeURIComponent(r.title); }).join("&");
-  var vr=await fetch(u,H);
-  chk(vr);
-  if(!vr.ok) throw new Error("Sheets API "+vr.status);
-  var dd=await vr.json(); var arr=dd.valueRanges||[]; var byKey={};
-  resolved.forEach(function(r,i){ byKey[r.key]=(arr[i]&&arr[i].values)||[]; });
-  return parseCentralValues(byKey);
-}
-function getSheet(){
-  if(sheetPromise) return sheetPromise;
-  var p = COWORK
-    ? mcp(TOOL_DRIVE,{fileId:SHEET_ID}).then(function(r){ var d=unwrap(r); return parseCentral(d.fileContent||d.raw||""); })
-    : sheetValuesRest();
-  sheetPromise = p.then(function(d){ sheetData=d; return d; })
-                  .catch(function(e){ sheetPromise=null; throw e; }); /* não cacheia falha: permite retry após conectar */
-  return sheetPromise;
-}
-function isOpen(t){ return t.status.k!=="done" && t.status.k!=="cancel"; }
-function isLate(t){
-  if(!isOpen(t)||!t.prazo) return false;
-  var h=new Date(); h.setHours(0,0,0,0);
-  return t.prazo<h;
-}
-function dumpPend(d){ return (d.dump||[]).filter(function(s){ return s.indexOf("✅")<0; }); }
-
-function renderTarefas(d){
-  /* Backlog da planilha APOSENTADO — Google Tasks (renderGTasks) é a fonte única de tarefas e cards.
-     Da planilha sobrevive só a Bússola (prioridades de fundo, não é backlog). */
-  if(COWORK){ /* no Cowork o Google Tasks não roda; cards caem pro dado da planilha pra não ficar vazio */
-    var abertas=d.backlog.filter(isOpen), atrasadas=abertas.filter(isLate);
-    var done=d.backlog.concat(d.arquivo).filter(function(t){return t.status.k==="done";});
-    var hoje=new Date(); hoje.setHours(0,0,0,0); var hIso=isoLocal(hoje);
-    var amn=new Date(hoje); amn.setDate(amn.getDate()+1); var aIso=isoLocal(amn);
-    var fimSem=new Date(hoje); fimSem.setDate(fimSem.getDate()+(7-fimSem.getDay())); var fIso=isoLocal(fimSem);
-    var cH=0,cA=0,cS=0;
-    abertas.forEach(function(t){ if(!t.prazo) return; var p=isoLocal(t.prazo);
-      if(p===hIso)cH++; else if(p===aIso)cA++; else if(p>aIso&&p<fIso)cS++; });
-    try{
-      $('t-ab').textContent=abertas.length; $('t-atr').textContent=atrasadas.length; $('t-done').textContent=done.length;
-      $('h-venc').textContent=atrasadas.length; $('h-hoje').textContent=cH; $('h-amn').textContent=cA; $('h-sem').textContent=cS;
-    }catch(e){}
-  }
-  /* Bússola — prioridades de fundo (único remanescente da planilha) */
-  var bs=(d.bussola||[]).slice().sort(function(a,b){return b.prio-a.prio;});
-  var bh="";
-  if(bs.length){
-    bh='<div class="panel"><h3>🧭 Bússola — prioridades de fundo<span class="count">'+bs.length+'</span></h3>';
-    bs.forEach(function(b){
-      var bang=b.prio>0?'<span class="pill low">'+("!".repeat(b.prio))+'</span>':'<span class="pill nt">—</span>';
-      bh+='<div class="row"><div class="tm">'+bang+'</div><div class="nm">'+esc(b.tarefa)+
-        '<small>'+esc(b.projeto)+(b.categoria?' · '+esc(b.categoria):'')+'</small></div></div>';
-    });
-    bh+='</div>';
-  }
-  $('bussola-out').innerHTML=bh;
-  $('tarefas-out').innerHTML="";
-  try{ INBOX.repaint(); }catch(e){}   /* espelha as tarefas roteadas no topo da tela */
-}
+/* Planilha (Sheets) APOSENTADA em 16/08 - parser/leitor da Central de Tarefas, Dump e Bussola
+   sairam daqui. Fonte das tarefas = Google Tasks; o resto vai pro Supabase. */
 /* ===== Google Tasks no módulo Tarefas: listas = PROJETOS, abertas + concluídas (histórico), ordenável.
    Leitura via tasks; escrita (marcar/criar) em gtToggle/gtCreate — bidirecional com o escopo `tasks`. ===== */
 var GTASKS_SORT="due";
@@ -1911,63 +1716,11 @@ function renderGTasks(groups){
   });
   box.innerHTML=h+'</div>';
 }
-function renderDump(d){
-  var pend=dumpPend(d);
-  INBOX.setDump(pend.map(function(s){
-    return {ext_id:"dump:"+INBOX.hash(s), fonte:"dump", titulo:s, corpo:"", capturado_iso:null};
-  }));
-}
-function renderSaude(d){
-  var bs=(d.bussola||[]).filter(function(b){ return /SA[UÚ]DE|SONHO GRANDE/i.test(b.categoria+" "+b.projeto); });
-  var minhas=bs.filter(function(b){ return /JUCA/i.test(b.categoria); });
-  var gael=bs.filter(function(b){ return !/JUCA/i.test(b.categoria); });
-  var tk=d.backlog.filter(function(t){ return isOpen(t) && /sa[uú]de|oftalmo|fono|otorrino|urolog|dentista|psic[oó]log|pediatra|videonaso|laudo|rx\b/i.test(t.tarefa+" "+t.projeto); });
-  function panel(tit, arr, mk){
-    if(!arr.length) return "";
-    var h='<div class="panel"><h3>'+tit+'<span class="count">'+arr.length+'</span></h3>';
-    arr.forEach(function(x){ h+=mk(x); });
-    return h+'</div>';
-  }
-  var html="";
-  html+=panel("🧔 Jucá — check-up pendente", minhas, function(b){
-    return '<div class="row"><div class="tm">'+(b.prio?'<span class="pill low">'+"!".repeat(b.prio)+'</span>':'')+'</div><div class="nm">'+esc(b.tarefa)+'</div></div>';
-  });
-  html+=panel("👦 Gael", gael, function(b){
-    return '<div class="row"><div class="tm">'+(b.prio?'<span class="pill low">'+"!".repeat(b.prio)+'</span>':'')+'</div><div class="nm">'+esc(b.tarefa)+'<small>'+esc(b.categoria)+'</small></div></div>';
-  });
-  html+=panel("📋 Tarefas de saúde em aberto", tk, function(t){
-    var late=isLate(t);
-    return '<div class="row"><div class="tm'+(late?' late':'')+'">'+esc(t.prazoTxt||"")+'</div><div class="nm">'+esc(t.tarefa)+(t.obs?'<small>'+esc(t.obs)+'</small>':'')+'</div><span class="pill '+(late?'low':t.status.cls)+'">'+(late?'atrasada':t.status.lbl)+'</span></div>';
-  });
-  if(!html) html='<div class="empty">Nada de saúde pendente na planilha. 🎉</div>';
-  $('saude-out').innerHTML=html;
-}
-async function loadCentral(){
-  try{
-    var d=await getSheet();
-    renderTarefas(d);
-    renderDump(d);
-    renderSaude(d);
-    /* cards do Hoje/badges agora vêm do Google Tasks (renderGTasks) e do INBOX (repaint) */
-  }catch(e){
-    if(!COWORK && (!gToken || String(e&&e.message)==="__NEEDCONNECT__")){
-      var cp=connectPanel('Conectar pra ver Tarefas e Saúde ao vivo');
-      $('tarefas-out').innerHTML=cp; $('bussola-out').innerHTML=""; $('dump-out').innerHTML=""; $('saude-out').innerHTML=cp;
-      return;
-    }
-    if(!COWORK){
-      var se='<div class="errbox"><div class="e-t">Não consegui ler a planilha (Sheets API)</div>'+
-        '<div class="e-s">'+esc(String(e.message||e).slice(0,180))+'. Se o erro for 403, ativa a <b>Google Sheets API</b> no projeto painel-central-499400 e reconecta. <button class="btn sm" style="margin-left:6px" onclick="openLink(SHEET_URL)">📊 Abrir planilha</button></div></div>';
-      $('tarefas-out').innerHTML=se; $('bussola-out').innerHTML=""; $('dump-out').innerHTML=""; $('saude-out').innerHTML=se;
-      return;
-    }
-    var msg='<div class="errbox"><div class="e-t">Não consegui ler a Central de Tarefas no Drive</div>'+
-      '<div class="e-s">'+esc(String(e.message||e).slice(0,180))+' — verifica o conector do Google Drive e recarrega.</div></div>';
-    $('tarefas-out').innerHTML=msg;
-    $('dump-out').innerHTML="";
-    $('saude-out').innerHTML=msg;
-  }
-}
+/* A planilha (Central de Tarefas / Dump / Bússola / Saúde) foi APOSENTADA a pedido do Gustavo
+   (16/08): "nada de planilha em todo o app — já estamos botando tudo no banco". Google Tasks é a
+   fonte das tarefas e o Supabase é o banco; nada aqui lê Sheets. `renderTarefas`/`renderSaude`/
+   `renderDump` e `getSheet` saíram junto. */
+function loadCentral(){ /* aposentado — sem planilha */ }
 
 /* ================= INBOX: captura ================= */
 function capturar(){
@@ -2065,7 +1818,7 @@ async function loadInbox(){
     if(!COWORK && (!gToken || String(e&&e.message)==="__NEEDCONNECT__")){ $('inbox-out').innerHTML=connectPanel('Conectar pra ver o #inbox'); return; }
     if(!COWORK){ $('inbox-out').innerHTML=liveStub('Email #inbox', '<button class="btn sm" onclick="capturar()">✉️ Capturar por email</button>'); return; }
     $('inbox-out').innerHTML='<div class="errbox"><div class="e-t">✉️ Email #inbox — Gmail desconectado</div>'+
-      '<div class="e-s">Reconecta em <b>Configurações → Conectores → Gmail</b> e me avisa no chat que eu religo este módulo. Enquanto isso, o Dump da planilha abaixo segue funcionando como inbox.</div></div>';
+      '<div class="e-s">Reconecta em <b>Configurações → Conectores → Gmail</b> e me avisa no chat que eu religo este módulo. </div></div>';
   }
 }
 
@@ -2096,8 +1849,6 @@ var ATALHOS=[
   {i:"📅",n:"Google Agenda",d:"Tua agenda viva — também aparece no módulo Hoje.",u:"https://calendar.google.com",k:"live"},
   {i:"☑️",n:"Google Tasks",d:"Tarefas rápidas do Google. Sem conector ainda — 1 clique e abre.",u:"https://tasks.google.com",k:"link"},
   {i:"✉️",n:"Gmail",d:"Email + captura #inbox.",u:"https://mail.google.com",k:"link"},
-  {i:"📊",n:"Central de Tarefas",d:"A planilha-mãe: Backlog, Dump, Bússola. Lida ao vivo nos módulos.",u:SHEET_URL,k:"live"},
-  {i:"🛒",n:"Sheet Feira (Casa)",d:"Catálogo de estoque que alimenta o módulo Feira.",u:"https://docs.google.com/spreadsheets/d/1c2abcnjNSAjPm92QPJzegzr9j06m20py0TZ0ppGWves/edit",k:"link"},
   {i:"📁",n:"Pasta Jucá2.0 (Drive)",d:"Docs do projeto, handoffs e snapshots.",u:"https://drive.google.com/drive/folders/1OZLnCM9ANDH0cWGp0oZ4RNKnmbW21VqR",k:"link"},
   {i:"💸",n:"Central Financeira",d:"Teu PWA no GitHub Pages (Supabase + Organizze).",u:"https://juca-alt.github.io/central-financeira/",k:"link"},
   {i:"🤝",n:"Kommo CRM",d:"Pipeline de captação de LPs.",u:"https://www.kommo.com",k:"link"},
@@ -2353,7 +2104,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.22.0";
+var APP_VERSION="2.23.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2379,7 +2130,6 @@ function toggleFamilia(){
   if(s){ s.classList.toggle('collapsed'); a.classList.toggle('collapsed'); }
 }
 var HIST_ID="1aiVvcmdPqFIZ3zukmKzZZzffsAOqQuKMlOqtF7aTIY4";
-var HIST_URL="https://docs.google.com/spreadsheets/d/"+HIST_ID+"/edit";
 var histRows=null, histPromise=null, hCur='compra';
 function hbrl(n){ return (Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 function hqy(n){ n=Number(n)||0; return Number.isInteger(n)?String(n):n.toLocaleString('pt-BR',{maximumFractionDigits:3}); }
@@ -2435,13 +2185,7 @@ function getHist(){
   histPromise = p.then(function(d){ histRows=d; return d; }).catch(function(e){ histPromise=null; throw e; });
   return histPromise;
 }
-function loadHistorico(){
-  $('hist-out').innerHTML='<div class="loading">Lendo o histórico de compras…</div>';
-  getHist().then(function(){ hview(hCur); }).catch(function(e){
-    if(!COWORK && (!gToken || String(e&&e.message)==="__NEEDCONNECT__")){ $('hist-out').innerHTML=connectPanel('Conectar pra ver o histórico de compras'); return; }
-    $('hist-out').innerHTML='<div class="errbox"><div class="e-t">Não consegui ler o histórico de compras</div><div class="e-s">'+esc(String(e.message||e).slice(0,170))+'. <button class="btn sm" style="margin-left:6px" onclick="openLink(HIST_URL)">📊 Abrir planilha</button></div></div>';
-  });
-}
+function loadHistorico(){ /* histórico vinha da planilha, aposentada — a view já mostra o aviso */ }
 function hview(v){
   hCur=v;
   document.querySelectorAll('#hseg button').forEach(function(b){ b.classList.toggle('active', b.dataset.h===v); });
@@ -2726,8 +2470,7 @@ var INBOX=(function(){
       var t=url?('<a href="#" onclick="openLink(\''+esc(s)+'\');return false">'+esc(s.slice(0,90))+(s.length>90?'…':'')+'</a>'):esc(s);
       h+='<div class="mail"><div class="m-s">'+t+'</div>'+ actBar(c.ext_id) +'</div>';
     });
-    var dq=dumpCaps.length;
-    $('dump-out').innerHTML=h+'</div>'+(dq?'':'<div class="note">Itens vêm da aba DUMP da planilha. Triagem aqui não apaga a linha lá — só some daqui.</div>');
+    var el=$('dump-out'); if(el) el.innerHTML=h+'</div>';   /* Dump da planilha aposentado: elemento não existe mais */
   }
   function paintRouted(){
     var h="";
@@ -4548,9 +4291,9 @@ try{ renderConfig(); }catch(e){}
    (prompt vazio, sem popup) e repuxa tudo; senão roda os loaders com o token guardado. */
 if(!COWORK && !gToken && localStorage.getItem(GCONN_KEY)){
   googleAuth(false).then(function(){ reloadGoogle(); })
-    .catch(function(){ loadAgenda(); loadInbox(); loadCamila(); loadCentral(); loadGTasks(); });
+    .catch(function(){ loadAgenda(); loadInbox(); loadCamila(); loadGTasks(); });
 } else {
-  loadAgenda(); loadInbox(); loadCamila(); loadCentral(); loadGTasks();
+  loadAgenda(); loadInbox(); loadCamila(); loadGTasks();
 }
 
 /* standalone (GitHub Pages): nota discreta + service worker p/ PWA */
