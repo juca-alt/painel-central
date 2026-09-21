@@ -1,5 +1,5 @@
 # 📌 ESTADO DO PROJETO — Painel Central
-**Última atualização:** 2026-08-16 · Leia isto primeiro ao retomar. **Produção: v2.23.0 (planilha aposentada; Tarefas limpa).**
+**Última atualização:** 2026-09-21 · Leia isto primeiro ao retomar. **Produção: v2.23.0 · branch `claude/adega-juca-implementation-65i0bs` = v2.24.0 (Adega Jucá) aguardando merge/deploy.**
 
 > 📱🖥️ **REGRA PERMANENTE (Gustavo, 16/08) — TODA mudança atende DESKTOP e MOBILE.**
 > O app tem **duas formas de uso legítimas**, não uma "principal" e uma "encolhida". Antes de dar
@@ -43,6 +43,39 @@ Quero dar sequência na FILA/PENDÊNCIAS abaixo — começar por: [ESCOLHER item
    Tasks não tem esse campo. Se quiser que acompanhe entre celular e desktop, vira 1 coluna no Supabase.
 8. **Casa › Funcionário** ainda mostra o `h1` no celular (o ✏️ renomear mora dentro dele) — mover o
    renomear pro ⋯ e esconder o título.
+
+---
+
+## 🟢 RETOMAR AQUI — sessão 21/09 — 🍷 ADEGA JUCÁ (v2.24.0, branch, item #2 do Backlog Notion)
+
+**Pedido:** item #2 do "🛠️ Backlog de Melhorias do App (pro Code)" no Notion — portar a base Notion
+"🍷 Adega Jucá" (skill Sommelier Jucá) pra uma tabela no Supabase do Painel e criar a aba **Adega**
+(dimensão Pessoal). Central Financeira **fora de escopo** (só deixei `custo_medio` pronto pra ponte).
+
+**Entregue:**
+- 🗄️ **`sql/painel_adega.sql`** — tabela `painel_adega` com os **10 campos do Notion** (vinho, produtor,
+  uva, safra, nota ★1–5, harmonizacoes, custo_medio, ocasiao, repetir, notas) + `data` + `notion_url`
+  (chave da migração). RLS por dono, grant só `authenticated`, `anon` revogado, CHECKs em nota/ocasião/
+  repetir. **Idempotente** (if not exists / drop if exists / `on conflict (notion_url) do nothing`).
+  **Seed dos 2 vinhos** do Notion (Cousiño-Macul Don Luis SB 2025 · Casas del Toqui Semillon Barrel
+  Series) com dono resolvido pelo email `juca@segurocomjuca.com` em `auth.users` — **se o usuário ainda
+  não existir, o seed não insere e não quebra: rodar de novo depois do 1º login.**
+- 🍷 **Aba Adega** (`view-adega`, IIFE `ADEGA`, mesmo motor do Gael/Contatos: `SB.rest` direto no
+  PostgREST, modal `gael-modal` reusado): 4 KPIs (vinhos · **gasto médio dos últimos 5 com custo** ·
+  gasto total · nota média), filtros por **Ocasião** e por **Repetir?** (combináveis, com contador),
+  lista ordenada por data desc mostrando ★, produtor/uva/safra, harmonizações, custo, badges; criar/
+  editar/excluir. Entrou na gaveta (abaixo de Saúde), no `VIEWS`/`nav()`, nos títulos do MOB e nos
+  Atalhos. `SB.onChange` repinta ao logar.
+- 🧪 **Testes (`tests/run.sh`, tudo verde):** `syntax.mjs` (node --check dos scripts + sw.js) ·
+  `adega.unit.mjs` (agregação, estrelas, leitura do form, filtros) · `adega.e2e.mjs` (Chromium local,
+  Supabase stubado, **390px e 1280px**: lista, filtros, KPI, POST correto, sem overflow, console limpo)
+  · `sql_idempotencia.sh` (sobe Postgres descartável, roda a migration **2×**, confere 2 vinhos, RLS,
+  anon sem leitura, CHECKs). Precisa de `playwright` global (`/opt/node22`) e do binário do Postgres.
+- `APP_VERSION` **2.24.0**, sw **v33**.
+
+**⚠️ PENDÊNCIA (Gustavo, 2 passos):** (1) colar `sql/painel_adega.sql` no SQL Editor do Supabase e
+Run (se ainda não logou no app, logar 1× e rodar de novo pra entrar o seed); (2) merge da branch na
+`main` = deploy. Depois disso, o Notion "🍷 Adega Jucá" vira histórico — a fonte passa a ser o Painel.
 
 ---
 

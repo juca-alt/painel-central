@@ -557,6 +557,29 @@
   #view-contatos .ct-wa{border:none;background:#25d366;color:#fff;cursor:pointer;font-size:14px;padding:6px 9px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;font-weight:600;white-space:nowrap}
   #view-contatos .ct-wa:hover{background:#1ebe5a}
   #view-contatos .ct-search{flex:1;min-width:150px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;color:var(--txt);background:#fff}
+  /* Adega — reusa o motor visual do Gael, escopado à sua view */
+  #view-adega .g-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px;align-items:center}
+  #view-adega .g-tabs .g-lbl{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-right:2px}
+  #view-adega .g-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;font-size:13px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}
+  #view-adega .g-pill:hover{border-color:var(--accent)}
+  #view-adega .g-pill .ct{font-size:11px;background:var(--chip);color:var(--muted);padding:0 6px;border-radius:20px}
+  #view-adega .g-pill.on{background:var(--accent-soft);color:#173404;border-color:transparent}
+  #view-adega .g-pill.on .ct{background:#c0dd97;color:#173404}
+  #view-adega .g-row{display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-bottom:1px solid var(--line)}
+  #view-adega .g-row:last-child{border-bottom:none}
+  #view-adega .g-pri{font-size:14px;color:var(--txt);font-weight:600}
+  #view-adega .g-sec{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+  #view-adega .g-right{margin-left:auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;text-align:right}
+  #view-adega .g-acts{display:flex;gap:4px}
+  #view-adega .g-acts button{border:none;background:none;color:var(--muted);cursor:pointer;font-size:15px;padding:3px 4px;border-radius:6px}
+  #view-adega .g-acts button:hover{color:var(--accent);background:var(--accent-soft)}
+  #view-adega .g-bdg{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;white-space:nowrap;margin-left:4px}
+  #view-adega .ad-stars{color:#b8860b;font-size:13px;letter-spacing:1px;white-space:nowrap}
+  #view-adega .ad-cost{font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap}
+  #view-adega .ad-harm{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+  #view-adega .ad-harm b{color:var(--txt);font-weight:600}
+  #view-adega .ad-kpi .v{font-size:22px}
+  @media(max-width:880px){ #view-adega .g-right{flex-direction:row;align-items:center} }
   .gael-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto}
   .gael-modal{background:var(--card);border-radius:14px;width:100%;max-width:520px;padding:18px 20px}
   .gael-modal h3{margin:0 0 14px;font-size:16px}
@@ -656,6 +679,7 @@
         <a id="nav-camila" onclick="nav('camila')"><i class="ti ti-book"></i> Camila</a>
       </div>
       <a id="nav-saude" onclick="nav('saude')"><i class="ti ti-leaf"></i> Saúde</a>
+      <a id="nav-adega" onclick="nav('adega')"><i class="ti ti-glass-full"></i> Adega</a>
       <a id="nav-contatos" onclick="nav('contatos')"><i class="ti ti-address-book"></i> Contatos</a>
       <a id="nav-atalhos" onclick="nav('atalhos')"><i class="ti ti-link"></i> Atalhos</a>
       <a id="nav-config" onclick="nav('config')"><i class="ti ti-settings"></i> Configuração</a>
@@ -809,6 +833,9 @@
 
     <!-- ============ SAÚDE · GAEL ============ -->
     <section id="view-gael" style="display:none"></section>
+
+    <!-- ============ ADEGA JUCÁ (Pessoal · vinhos · Supabase painel_adega) ============ -->
+    <section id="view-adega" style="display:none"></section>
 
     <!-- ============ CONTATOS (base de contatos · WhatsApp Fase 2) ============ -->
     <section id="view-contatos" style="display:none"></section>
@@ -1070,7 +1097,7 @@ function renderConfig(){
 }
 
 /* ================= navegação ================= */
-var VIEWS=["meudia","hoje","tarefas","projetos","inbox","feira","funcionario","saude","gael","contatos","camila","atalhos","config"];
+var VIEWS=["meudia","hoje","tarefas","projetos","inbox","feira","funcionario","saude","adega","gael","contatos","camila","atalhos","config"];
 function toggleSide(){ document.body.classList.toggle('side-open'); }
 function nav(v){
   VIEWS.forEach(function(k){
@@ -1081,6 +1108,7 @@ function nav(v){
   if(v==='feira'){ renderCards(); gerar(); }
   if(v==='funcionario'){ CASA.render(); }
   if(v==='gael'){ GAEL.render(); }
+  if(v==='adega'){ ADEGA.render(); }
   if(v==='contatos'){ CONTATOS.render(); }
   if(v==='projetos'){ HUB.render(); }
   if(v==='config'){ renderConfig(); }
@@ -1864,6 +1892,7 @@ var MODULOS=[
   {i:"📬",n:"Inbox Geral",d:"Capturas #inbox + Dump sem triagem.",v:"inbox"},
   {i:"🛒",n:"Feira",d:"Estoque-driven: lista pronta por canal.",v:"feira"},
   {i:"🍃",n:"Saúde",d:"Pendências de saúde — tuas e do Gael.",v:"saude"},
+  {i:"🍷",n:"Adega",d:"Pessoal › vinhos que tomei: nota, harmonizações, custo, ocasião e se repito.",v:"adega"},
   {i:"📇",n:"Contatos",d:"Base de contatos com WhatsApp de 1 clique.",v:"contatos"},
   {i:"🗂️",n:"Projetos",d:"Listas do Google Tasks como projetos, sincronizadas com Tarefas.",v:"projetos"},
   {i:"❤️",n:"Gael",d:"Família › Gael — histórico vivo de saúde (consultas, exames, medicamentos).",v:"gael"},
@@ -2104,7 +2133,7 @@ function download(name,content,type){
 }
 
 /* ===== Versão + atualização (PWA) ===== */
-var APP_VERSION="2.23.0";
+var APP_VERSION="2.24.0";
 var APP_CHANNEL="";
 function forceUpdate(){
   toast("Atualizando…");
@@ -2936,6 +2965,111 @@ var GAEL=(function(){
   return {render:render,refreshIfOpen:refreshIfOpen,sel:sel,openForm:openForm,save:save,del:del,closeModal:closeModal};
 })();
 
+/* ================= ADEGA JUCÁ: histórico de vinhos (Supabase · painel_adega) =================
+   Dimensão Pessoal. Porta a base Notion "🍷 Adega Jucá" (skill Sommelier Jucá) pro banco.
+   Mesmo motor do Gael/Contatos: SB.rest direto no PostgREST, RLS por dono, modal reusado.
+   Central Financeira NÃO entra aqui (fora do escopo do ticket #2) — `custo_medio` já fica
+   agregado (gasto médio dos últimos 5) pensando na ponte futura. */
+var ADEGA=(function(){
+  var T='painel_adega';
+  var rows=[], loaded=false, fOc='todos', fRep='todos';
+  var OCAS=['Dia a dia','Especial/Camila','Presente','Jantar fora'];
+  var REPS=['Sim','Não','Talvez'];
+  var OCOL={'Dia a dia':['#f1efe8','#2c2c2a'],'Especial/Camila':['#fbe4ee','#5a1237'],'Presente':['#eeedfe','#26215c'],'Jantar fora':['#faeeda','#412402']};
+  var RCOL={'Sim':['#eaf3de','#173404'],'Não':['#fcebeb','#501313'],'Talvez':['#faeeda','#412402']};
+  var FIELDS=[
+    {k:'vinho',        l:'Vinho', req:true},
+    {k:'produtor',     l:'Produtor / Origem'},
+    {k:'uva',          l:'Uva / Tipo'},
+    {k:'safra',        l:'Safra'},
+    {k:'nota',         l:'Nota Jucá (★)', t:'sel', opts:['','1','2','3','4','5']},
+    {k:'harmonizacoes',l:'Harmonizações', t:'ta'},
+    {k:'custo_medio',  l:'Custo médio (R$)', t:'num'},
+    {k:'ocasiao',      l:'Ocasião', t:'sel', opts:[''].concat(OCAS)},
+    {k:'repetir',      l:'Repetir?', t:'sel', opts:[''].concat(REPS)},
+    {k:'notas',        l:'Correlatos / Notas', t:'ta'},
+    {k:'data',         l:'Data', t:'date'}
+  ];
+  function stars(n){n=Number(n)||0;if(!n)return '';var s='';for(var i=1;i<=5;i++)s+=(i<=n?'★':'☆');return s;}
+  function fdate(s){if(!s)return'';var m=String(s).slice(0,10).split('-');return m.length===3?m[2]+'/'+m[1]+'/'+m[0]:String(s);}
+  function bdg(v,map){if(!v)return'';var c=map[v]||['#f1efe8','#5f5e5a'];return '<span class="g-bdg" style="background:'+c[0]+';color:'+c[1]+'">'+esc(v)+'</span>';}
+  function isOpen(){var h=$('view-adega');return !!(h&&h.style.display!=='none');}
+  function byId(id){for(var i=0;i<rows.length;i++)if(rows[i].id===id)return rows[i];return {};}
+  function sortRows(a){return a.slice().sort(function(x,y){var dx=x.data||'',dy=y.data||'';if(dx!==dy)return dx>dy?-1:1;return (y.created_at||'')>(x.created_at||'')?1:-1;});}
+  function load(){return SB.rest('GET',T+'?select=*&order=data.desc.nullslast,created_at.desc').then(function(r){return r.ok?r.json():[];}).then(function(d){rows=sortRows(d||[]);loaded=true;return rows;}).catch(function(){rows=rows||[];});}
+  function filtered(){return rows.filter(function(r){return (fOc==='todos'||r.ocasiao===fOc)&&(fRep==='todos'||r.repetir===fRep);});}
+  /* agregação de custo: pura, testável — recebe a lista já ordenada (mais recente 1º) */
+  function agg(list,n){
+    var com=list.filter(function(r){return r.custo_medio!=null&&!isNaN(Number(r.custo_medio));});
+    var ult=com.slice(0,n||5);
+    var soma=ult.reduce(function(a,r){return a+Number(r.custo_medio);},0);
+    var tot=com.reduce(function(a,r){return a+Number(r.custo_medio);},0);
+    var notas=list.filter(function(r){return r.nota;});
+    var mn=notas.length?notas.reduce(function(a,r){return a+Number(r.nota);},0)/notas.length:0;
+    return {n:list.length, ultN:ult.length, medioUlt:ult.length?soma/ult.length:0, total:tot, comCusto:com.length, notaMedia:mn, repetir:list.filter(function(r){return r.repetir==='Sim';}).length};
+  }
+  function headHtml(){return '<div class="head"><h1><i class="ti ti-glass-full" style="color:var(--accent)"></i> Adega</h1></div><div class="sub">Pessoal › vinhos que tomei — nota, harmonizações, custo, ocasião e se repito. Veio da base Notion “🍷 Adega Jucá”; agora a fonte é o teu <b>Supabase privado</b>.</div>';}
+  function kpiHtml(){
+    var a=agg(rows,5);
+    return '<div class="cards c4 ad-kpi">'
+      +'<div class="card"><div class="k">Vinhos</div><div class="v" id="ad-k-n">'+a.n+'</div><div class="s">registrados</div></div>'
+      +'<div class="card"><div class="k">Gasto médio</div><div class="v" id="ad-k-medio">'+(a.ultN?hbrl(a.medioUlt):'–')+'</div><div class="s">últimos '+a.ultN+' com custo</div></div>'
+      +'<div class="card"><div class="k">Gasto total</div><div class="v" id="ad-k-total">'+(a.comCusto?hbrl(a.total):'–')+'</div><div class="s">'+a.comCusto+' com custo informado</div></div>'
+      +'<div class="card"><div class="k">Nota média</div><div class="v" id="ad-k-nota">'+(a.notaMedia?a.notaMedia.toFixed(1)+' ★':'–')+'</div><div class="s">'+a.repetir+' pra repetir</div></div>'
+      +'</div>';
+  }
+  function pill(grp,val,lbl,n,on){return '<button class="g-pill'+(on?' on':'')+'" data-f="'+grp+'" data-v="'+esc(val)+'" onclick="ADEGA.setFilter(\''+grp+'\',this.getAttribute(\'data-v\'))">'+esc(lbl)+' <span class="ct">'+n+'</span></button>';}
+  function pillsHtml(){
+    var h='<div class="g-tabs" id="ad-f-oc"><span class="g-lbl">Ocasião</span>'+pill('oc','todos','Todas',rows.length,fOc==='todos');
+    OCAS.forEach(function(o){var n=rows.filter(function(r){return r.ocasiao===o;}).length;if(!n&&fOc!==o)return;h+=pill('oc',o,o,n,fOc===o);});
+    h+='</div><div class="g-tabs" id="ad-f-rep"><span class="g-lbl">Repetir?</span>'+pill('rep','todos','Todos',rows.length,fRep==='todos');
+    REPS.forEach(function(o){var n=rows.filter(function(r){return r.repetir===o;}).length;if(!n&&fRep!==o)return;h+=pill('rep',o,o,n,fRep===o);});
+    return h+'</div>';
+  }
+  function toolbarHtml(){return '<div class="bar"><div class="t-sec" style="margin:0">Histórico</div><div class="spacer"></div><button class="btn primary sm" onclick="ADEGA.openForm()"><i class="ti ti-plus"></i> Novo vinho</button></div>';}
+  function rowHtml(r){
+    var sec=[r.produtor,r.uva,(r.safra?'safra '+r.safra:'')].filter(Boolean).join(' · ');
+    var meta=[fdate(r.data),r.notas].filter(Boolean).join(' · ');
+    var acts='<div class="g-acts"><button title="Editar" onclick="ADEGA.openForm(\''+r.id+'\')"><i class="ti ti-edit"></i></button><button title="Excluir" onclick="ADEGA.del(\''+r.id+'\')"><i class="ti ti-trash"></i></button></div>';
+    return '<div class="g-row" data-id="'+esc(r.id)+'"><div style="flex:1;min-width:0"><div class="g-pri">'+esc(r.vinho)+(r.nota?' <span class="ad-stars" title="Nota Jucá '+r.nota+'/5">'+stars(r.nota)+'</span>':'')+'</div>'
+      +(sec?'<div class="g-sec">'+esc(sec)+'</div>':'')
+      +(r.harmonizacoes?'<div class="ad-harm"><b>Harmoniza:</b> '+esc(r.harmonizacoes)+'</div>':'')
+      +(meta?'<div class="g-sec">'+esc(meta)+'</div>':'')
+      +'<div style="margin-top:5px">'+bdg(r.ocasiao,OCOL)+(r.repetir?bdg('Repetir: '+r.repetir,{'Repetir: Sim':RCOL['Sim'],'Repetir: Não':RCOL['Não'],'Repetir: Talvez':RCOL['Talvez']}):'')+'</div>'
+      +'</div><div class="g-right">'+(r.custo_medio!=null?'<div class="ad-cost">'+hbrl(r.custo_medio)+'</div>':'')+acts+'</div></div>';
+  }
+  function listHtml(){
+    var list=filtered();
+    if(!rows.length)return '<div class="empty">Nenhum vinho ainda — use “Novo vinho”. Os 2 do Notion entram pela migration <code>sql/painel_adega.sql</code> (roda depois do 1º login).</div>';
+    if(!list.length)return '<div class="empty">Nenhum vinho com esse filtro.</div>';
+    return '<div class="panel">'+list.map(rowHtml).join('')+'</div>';
+  }
+  function paintList(){var el=$('ad-list');if(el)el.innerHTML=listHtml();}
+  function paintPills(){var el=$('ad-pills');if(el)el.innerHTML=pillsHtml();}
+  function paint(){var h=$('view-adega');if(!h)return;h.innerHTML=headHtml()+kpiHtml()+toolbarHtml()+'<div id="ad-pills">'+pillsHtml()+'</div><div id="ad-list">'+listHtml()+'</div>';}
+  function connectPrompt(){return '<div class="errbox" style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-weight:600"><i class="ti ti-lock" style="vertical-align:-2px"></i> Conectar uma vez</span><span class="g-sec" style="margin:0">mesmo login do resto do painel — depois abre direto.</span><input id="ad-email" type="email" placeholder="seu@email.com" style="padding:7px 9px;border:1px solid var(--line);border-radius:8px"><button class="btn primary sm" onclick="SB.signIn((document.getElementById(\'ad-email\')||{}).value)">Enviar link</button></div>';}
+  function render(){var h=$('view-adega');if(!h)return;if(!SB.enabled()){h.innerHTML=headHtml()+SB.bar();return;}if(!SB.loggedIn()){h.innerHTML=headHtml()+connectPrompt();return;}h.innerHTML=headHtml()+'<div class="loading">Abrindo a adega…</div>';load().then(function(){if(isOpen())paint();});}
+  function refreshIfOpen(){if(isOpen())render();}
+  function setFilter(grp,v){if(grp==='oc')fOc=v;else fRep=v;paintPills();paintList();}
+  function fieldInput(f,row){var v=row[f.k];var id='ad-f-'+f.k;var inner;
+    if(f.t==='sel'){inner='<select id="'+id+'">'+f.opts.map(function(o){return '<option value="'+esc(o)+'"'+(String(v==null?'':v)===o?' selected':'')+'>'+(o===''?'—':esc(o))+'</option>';}).join('')+'</select>';}
+    else if(f.t==='ta'){inner='<textarea id="'+id+'">'+esc(v==null?'':v)+'</textarea>';}
+    else{var typ=f.t==='date'?'date':(f.t==='num'?'number':'text');var val=v==null?'':v;if(f.t==='date'&&val)val=String(val).slice(0,10);inner='<input type="'+typ+'" id="'+id+'"'+(f.t==='num'?' step="0.01" min="0" inputmode="decimal"':'')+' value="'+esc(val)+'">';}
+    return '<div class="g-fld"><label>'+esc(f.l)+(f.req?' *':'')+'</label>'+inner+'</div>';
+  }
+  function openForm(id){var row=id?byId(id):{};if(!id&&!row.data){row={data:isoLocal(new Date())};}var body=FIELDS.map(function(f){return fieldInput(f,row);}).join('');closeModal();var bg=document.createElement('div');bg.className='gael-modal-bg';bg.id='ad-modal-bg';bg.onclick=function(e){if(e.target===bg)closeModal();};var ttl=(id?'Editar':'Novo')+' vinho';var dl=id?'<button class="btn sm" style="color:var(--danger);border-color:var(--danger)" onclick="ADEGA.del(\''+id+'\')"><i class="ti ti-trash"></i> Excluir</button>':'';bg.innerHTML='<div class="gael-modal"><h3>🍷 '+ttl+'</h3>'+body+'<div class="g-foot">'+dl+'<div class="spacer"></div><button class="btn sm" onclick="ADEGA.closeModal()">Cancelar</button><button class="btn primary sm" onclick="ADEGA.save('+(id?('\''+id+'\''):'null')+')">Salvar</button></div></div>';document.body.appendChild(bg);var n=$('ad-f-vinho');if(n)n.focus();}
+  function closeModal(){var m=$('ad-modal-bg');if(m&&m.parentNode)m.parentNode.removeChild(m);}
+  /* lê o formulário → objeto pronto pro PostgREST (pura, testável) */
+  function readForm(get){var body={};for(var i=0;i<FIELDS.length;i++){var f=FIELDS[i];var val=get(f.k);if(val==null)continue;val=String(val);if(val==='')val=null;
+      if(f.k==='nota'&&val!=null){val=parseInt(val,10);if(isNaN(val)||val<1||val>5)val=null;}
+      if(f.t==='num'&&val!=null){val=parseFloat(val.replace(',','.'));if(isNaN(val))val=null;}
+      body[f.k]=val;}return body;}
+  function save(id){if(!SB.loggedIn()){toast('Conecte pra salvar');return;}var body=readForm(function(k){var el=$('ad-f-'+k);return el?el.value:null;});if(!body.vinho){toast('Preencha: Vinho');return;}var p=id?SB.rest('PATCH',T+'?id=eq.'+encodeURIComponent(id),body,{Prefer:'return=minimal'}):SB.rest('POST',T,body,{Prefer:'return=minimal'});p.then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t||('HTTP '+r.status));});closeModal();toast(id?'Atualizado':'Vinho registrado 🍷');return load().then(function(){if(isOpen())paint();});}).catch(function(e){toast('Erro: '+String(e&&e.message||e).slice(0,90));});}
+  function del(id){if(!SB.loggedIn()){toast('Conecte pra excluir');return;}if(!confirm('Excluir este vinho?'))return;SB.rest('DELETE',T+'?id=eq.'+encodeURIComponent(id)).then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t||('HTTP '+r.status));});closeModal();toast('Excluído');return load().then(function(){if(isOpen())paint();});}).catch(function(e){toast('Erro: '+String(e&&e.message||e).slice(0,90));});}
+  return {render:render,refreshIfOpen:refreshIfOpen,setFilter:setFilter,openForm:openForm,save:save,del:del,closeModal:closeModal,
+          /* expostos pra teste */ agg:agg,stars:stars,readForm:readForm,filtered:filtered,_setRows:function(r){rows=sortRows(r);loaded=true;},_state:function(){return {fOc:fOc,fRep:fRep,rows:rows};}};
+})();
+
 /* ================= CONTATOS: base de contatos + WhatsApp de 1 clique (Supabase) =================
    painel_contatos (RLS owner). Telefone/email = PII → só logado (mesma regra do CASA/GAEL).
    Fundação da integração WhatsApp: os números guardados aqui é que as próximas fases
@@ -3715,7 +3849,7 @@ var MOB=(function(){
   function on(){ try{ return window.matchMedia('(max-width:880px)').matches; }catch(e){ return false; } }
   function cl(el,sel){ return (el&&el.closest)?el.closest(sel):null; }
   var TITLES={meudia:'Meu dia',hoje:'Agenda',tarefas:'Tarefas',projetos:'Projetos',inbox:'Inbox',feira:'Feira',
-    funcionario:'Funcionário',saude:'Saúde',gael:'Gael',contatos:'Contatos',
+    funcionario:'Funcionário',saude:'Saúde',adega:'Adega',gael:'Gael',contatos:'Contatos',
     camila:'Camila',atalhos:'Atalhos',config:'Configuração'};
   var TABS=['meudia','hoje','tarefas','inbox'];   /* destinos da barra inferior */
   var cur='meudia', last='meudia';
@@ -4279,7 +4413,7 @@ var MOB=(function(){
 })();
 MOB.init();
 
-SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();CONTATOS.refreshIfOpen();HUB.onAuth();try{MOB.syncBar();}catch(e){}EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
+SB.onChange(function(){CASA.refreshIfOpen();GAEL.refreshIfOpen();ADEGA.refreshIfOpen();CONTATOS.refreshIfOpen();HUB.onAuth();try{MOB.syncBar();}catch(e){}EVMETA.load().then(function(){try{loadAgendaView();}catch(e){}});});
 SB.init();
 try{var _q=new URLSearchParams(location.search);if(_q.get("demo")==="1"){nav("funcionario");CASA.demo(_q.get("ver")||"admin");}else if(_q.get("demo")==="hub"){T3.demo();nav("projetos");}}catch(e){}
 
